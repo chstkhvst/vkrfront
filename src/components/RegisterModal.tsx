@@ -50,6 +50,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose  }) => {
         new RegisterModel({
           userName,
           password,
+          email
         })
       )
 
@@ -98,7 +99,7 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose  }) => {
             />
 
             <TextField
-              label="Подтверждение пароля"
+              label="Повторите пароль"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}

@@ -9,12 +9,12 @@ const LoginPage: React.FC = () => {
 
   return (
     <Box>
-      {/* Контейнер для модального окна. */}
       <LoginModal
         open={open}
-        // Передаём состояние `open` в модальное окно для управления его видимостью.
-        onClose={() => setOpen(false)}
-        // Передаём функцию `onClose`, которая закрывает модальное окно, изменяя состояние `open` на `false`.
+        onClose={() => {
+          setOpen(false);
+          navigate("/events");
+        }}
       />
     </Box>
   )

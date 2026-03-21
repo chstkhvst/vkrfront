@@ -104,7 +104,7 @@ export const Header = () => {
                   py: 0.5,
                   borderRadius: 3,
                   background: 'rgba(255,255,255,0.6)',
-                  backdropFilter: 'blur(6px)',
+                  backdropFilter: 'blur(12px)',
                 }}
               >
                 <Avatar>

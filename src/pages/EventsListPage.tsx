@@ -6,11 +6,6 @@ import {
     Card, 
     CardContent, 
     CardActions,
-    TextField,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
     Box,
     Alert,
     CircularProgress,
@@ -20,29 +15,16 @@ import {
     DialogContent,
     DialogActions
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { VolunteerEventContext } from '../context/EventContext';
-import { CreateVolunteerEventDTO } from '../client/apiClient';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
     
     // Состояния для диалогов
-    const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
     const [participantsCount, setParticipantsCount] = useState<number>(0);
-    
-    // Состояния для формы создания
-    const [newEvent, setNewEvent] = useState({
-        name: '',
-        description: '',
-        categoryId: '',
-        cityId: '',
-        address: '',
-        eventDateTime: '',
-        eventPoints: 10,
-        participantsLimit: ''
-    });
 
     useEffect(() => {
         if (context) {
@@ -58,7 +40,7 @@ export const EventsListPage: React.FC = () => {
         return (
             <Container>
                 <Typography color="error">
-                    Ошибка: Контекст не найден. Оберните компонент в VolunteerEventProvider.
+                    Ошибка: Контекст не найден
                 </Typography>
             </Container>
         );
@@ -66,48 +48,12 @@ export const EventsListPage: React.FC = () => {
 
     const {
         filteredEvents,
-        eventCategories,
-        cities,
         isLoading,
         error,
-        fetchEvents,
-        createEvent,
         deleteEvent,
         registerForEvent,
         getParticipantsCount
     } = context;
-
-    const handleCreateEvent = async () => {
-        if (!newEvent.name || !newEvent.categoryId || !newEvent.cityId) {
-            alert('Пожалуйста, заполните обязательные поля');
-            return;
-        }
-
-        const eventData = new CreateVolunteerEventDTO();
-        eventData.name = newEvent.name;
-        eventData.description = newEvent.description || undefined;
-        eventData.eventCategoryId = Number(newEvent.categoryId);
-        eventData.cityId = Number(newEvent.cityId);
-        eventData.address = newEvent.address || undefined;
-        eventData.eventDateTime = newEvent.eventDateTime ? new Date(newEvent.eventDateTime) : new Date();
-        eventData.eventPoints = newEvent.eventPoints;
-        eventData.participantsLimit = newEvent.participantsLimit ? Number(newEvent.participantsLimit) : undefined;
-
-        const result = await createEvent(eventData);
-        if (result) {
-            setCreateDialogOpen(false);
-            setNewEvent({
-                name: '',
-                description: '',
-                categoryId: '',
-                cityId: '',
-                address: '',
-                eventDateTime: '',
-                eventPoints: 10,
-                participantsLimit: ''
-            });
-        }
-    };
 
     const handleDeleteEvent = async (id: number) => {
         if (window.confirm('Вы уверены, что хотите удалить это событие?')) {
@@ -148,7 +94,8 @@ export const EventsListPage: React.FC = () => {
                 <Button 
                     variant="contained" 
                     color="primary"
-                    onClick={() => setCreateDialogOpen(true)}
+                    component={RouterLink}
+                    to="/events/add"
                 >
                     Создать событие
                 </Button>
@@ -161,7 +108,7 @@ export const EventsListPage: React.FC = () => {
                 </Alert>
             )}
 
-           {/* Список событий */}
+            {/* Список событий */}
             <Grid container spacing={3}>
                 {filteredEvents.map((event) => (
                     <Grid size={12} key={event.id}>
@@ -232,98 +179,6 @@ export const EventsListPage: React.FC = () => {
                     </Grid>
                 ))}
             </Grid>
-
-            {/* Диалог создания события */}
-            <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Создать новое событие</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <TextField
-                            label="Название *"
-                            fullWidth
-                            value={newEvent.name}
-                            onChange={(e) => setNewEvent({...newEvent, name: e.target.value})}
-                        />
-                        
-                        <TextField
-                            label="Описание"
-                            fullWidth
-                            multiline
-                            rows={3}
-                            value={newEvent.description}
-                            onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
-                        />
-
-                        <FormControl fullWidth>
-                            <InputLabel>Категория *</InputLabel>
-                            <Select
-                                value={newEvent.categoryId}
-                                label="Категория *"
-                                onChange={(e) => setNewEvent({...newEvent, categoryId: e.target.value})}
-                            >
-                                {eventCategories.map(cat => (
-                                    <MenuItem key={cat.id} value={cat.id}>
-                                        {cat.categoryName}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth>
-                            <InputLabel>Город *</InputLabel>
-                            <Select
-                                value={newEvent.cityId}
-                                label="Город *"
-                                onChange={(e) => setNewEvent({...newEvent, cityId: e.target.value})}
-                            >
-                                {cities.map(city => (
-                                    <MenuItem key={city.id} value={city.id}>
-                                        {city.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <TextField
-                            label="Адрес"
-                            fullWidth
-                            value={newEvent.address}
-                            onChange={(e) => setNewEvent({...newEvent, address: e.target.value})}
-                        />
-
-                        <TextField
-                            label="Дата и время"
-                            type="datetime-local"
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                            value={newEvent.eventDateTime}
-                            onChange={(e) => setNewEvent({...newEvent, eventDateTime: e.target.value})}
-                        />
-
-                        <TextField
-                            label="Баллы"
-                            type="number"
-                            fullWidth
-                            value={newEvent.eventPoints}
-                            onChange={(e) => setNewEvent({...newEvent, eventPoints: Number(e.target.value)})}
-                        />
-
-                        <TextField
-                            label="Лимит участников (оставьте пустым если нет лимита)"
-                            type="number"
-                            fullWidth
-                            value={newEvent.participantsLimit}
-                            onChange={(e) => setNewEvent({...newEvent, participantsLimit: e.target.value})}
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setCreateDialogOpen(false)}>Отмена</Button>
-                    <Button onClick={handleCreateEvent} variant="contained" color="primary">
-                        Создать
-                    </Button>
-                </DialogActions>
-            </Dialog>
 
             {/* Диалог с количеством участников */}
             <Dialog open={participantsDialogOpen} onClose={() => setParticipantsDialogOpen(false)}>

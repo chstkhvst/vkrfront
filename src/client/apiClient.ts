@@ -2460,7 +2460,7 @@ export class CreateVolunteerEventDTO implements ICreateVolunteerEventDTO {
     cityId?: number;
     userId?: string | undefined;
     moderatedByUserId?: string | undefined;
-    isDeleted?: boolean;
+    isDeleted?: boolean | undefined;
 
     constructor(data?: ICreateVolunteerEventDTO) {
         if (data) {
@@ -2534,7 +2534,7 @@ export interface ICreateVolunteerEventDTO {
     cityId?: number;
     userId?: string | undefined;
     moderatedByUserId?: string | undefined;
-    isDeleted?: boolean;
+    isDeleted?: boolean | undefined;
 }
 
 export class EventAttendanceDTO implements IEventAttendanceDTO {
@@ -2905,6 +2905,7 @@ export class RegisterModel implements IRegisterModel {
     userName?: string | undefined;
     password?: string | undefined;
     fullName?: string | undefined;
+    email?: string | undefined;
     organizationName?: string | undefined;
     ogrn?: string | undefined;
 
@@ -2922,6 +2923,7 @@ export class RegisterModel implements IRegisterModel {
             this.userName = _data["userName"];
             this.password = _data["password"];
             this.fullName = _data["fullName"];
+            this.email = _data["email"];
             this.organizationName = _data["organizationName"];
             this.ogrn = _data["ogrn"];
         }
@@ -2939,6 +2941,7 @@ export class RegisterModel implements IRegisterModel {
         data["userName"] = this.userName;
         data["password"] = this.password;
         data["fullName"] = this.fullName;
+        data["email"] = this.email;
         data["organizationName"] = this.organizationName;
         data["ogrn"] = this.ogrn;
         return data;
@@ -2949,6 +2952,7 @@ export interface IRegisterModel {
     userName?: string | undefined;
     password?: string | undefined;
     fullName?: string | undefined;
+    email?: string | undefined;
     organizationName?: string | undefined;
     ogrn?: string | undefined;
 }
@@ -3192,6 +3196,7 @@ export interface IUser {
 export class UserDTO implements IUserDTO {
     id?: string | undefined;
     userName?: string | undefined;
+    profileImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
 
@@ -3208,6 +3213,7 @@ export class UserDTO implements IUserDTO {
         if (_data) {
             this.id = _data["id"];
             this.userName = _data["userName"];
+            this.profileImagePath = _data["profileImagePath"];
             this.volunteerProfile = _data["volunteerProfile"] ? VolunteerProfileDTO.fromJS(_data["volunteerProfile"]) : undefined as any;
             this.organizerProfile = _data["organizerProfile"] ? OrganizerProfileDTO.fromJS(_data["organizerProfile"]) : undefined as any;
         }
@@ -3224,6 +3230,7 @@ export class UserDTO implements IUserDTO {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["userName"] = this.userName;
+        data["profileImagePath"] = this.profileImagePath;
         data["volunteerProfile"] = this.volunteerProfile ? this.volunteerProfile.toJSON() : undefined as any;
         data["organizerProfile"] = this.organizerProfile ? this.organizerProfile.toJSON() : undefined as any;
         return data;
@@ -3233,6 +3240,7 @@ export class UserDTO implements IUserDTO {
 export interface IUserDTO {
     id?: string | undefined;
     userName?: string | undefined;
+    profileImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
 }
