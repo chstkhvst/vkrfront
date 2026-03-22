@@ -2,7 +2,6 @@ import { createContext, ReactNode, useEffect, useState } from "react"
 import { 
     Client, 
     VolunteerEventDTO, 
-    CreateVolunteerEventDTO,
     EventCategory,
     EventStatus,
     City,
@@ -18,7 +17,19 @@ export interface EventFilterParams {
     keyWords?: string;
     dateTime?: Date;
 }
-
+type CreateEventData = {
+    name: string;
+    description: string;
+    lat: number;
+    lng: number;
+    address: string;
+    eventDateTime: Date;
+    eventPoints: number;
+    participantsLimit: number;
+    eventCategoryId: number;
+    cityId: number;
+    image?: File;
+};
 // Интерфейс для контекста событий
 interface VolunteerEventContextProps {
     // Состояния
@@ -35,7 +46,7 @@ interface VolunteerEventContextProps {
     // Методы для работы с событиями
     fetchEvents: (filterParams?: EventFilterParams) => Promise<void>;
     fetchEventById: (id: number) => Promise<VolunteerEventDTO | null>;
-    createEvent: (eventData: CreateVolunteerEventDTO) => Promise<VolunteerEventDTO | null>;
+    createEvent: (eventData: CreateEventData) => Promise<VolunteerEventDTO | null>;
     updateEvent: (id: number, eventData: VolunteerEventDTO) => Promise<boolean>;
     deleteEvent: (id: number, softDelete?: boolean) => Promise<boolean>;
     
@@ -173,23 +184,39 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     };
 
     // Создание нового события
-    const createEvent = async (eventData: CreateVolunteerEventDTO): Promise<VolunteerEventDTO | null> => {
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            const createdEvent = await apiClient.createEvent(eventData);
-            // Обновляем список событий
-            await fetchEvents();
-            return createdEvent;
-        } catch (error) {
-            console.error("Ошибка при создании события:", error);
-            setError("Не удалось создать событие");
-            return null;
-        } finally {
-            setIsLoading(false);
-        }
-    };
+const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDTO | null> => {
+    setIsLoading(true);
+    setError(null);
+
+    try { //    ДОБАВЛЕНИЕ С КАРТИНКАМИ ПРАВКА
+        const fileParam = eventData.image
+            ? { data: eventData.image, fileName: eventData.image.name }
+            : { data: new Blob(), fileName: "" }; 
+
+        const createdEvent = await apiClient.createEvent(
+            eventData.name,
+            eventData.description,
+            eventData.lat,
+            eventData.lng,
+            eventData.address,
+            eventData.eventDateTime,
+            eventData.eventPoints,
+            eventData.participantsLimit,
+            fileParam,
+            eventData.eventCategoryId,
+            eventData.cityId,
+        );
+
+        await fetchEvents();
+        return createdEvent;
+    } catch (error) {
+        console.error("Ошибка при создании события:", error);
+        setError("Не удалось создать событие");
+        return null;
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     // Обновление события
     const updateEvent = async (id: number, eventData: VolunteerEventDTO): Promise<boolean> => {

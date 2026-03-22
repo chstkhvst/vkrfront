@@ -1470,20 +1470,73 @@ export class Client {
     }
 
     /**
-     * @param body (optional) 
+     * @param name (optional) 
+     * @param description (optional) 
+     * @param lat (optional) 
+     * @param lng (optional) 
+     * @param address (optional) 
+     * @param eventDateTime (optional) 
+     * @param eventPoints (optional) 
+     * @param participantsLimit (optional) 
+     * @param image (optional) 
+     * @param eventCategoryId (optional) 
+     * @param cityId (optional) 
      * @return OK
      */
-    createEvent(body?: CreateVolunteerEventDTO | undefined): Promise<VolunteerEventDTO> {
+    createEvent(name?: string | undefined, description?: string | undefined, lat?: number | undefined, lng?: number | undefined, address?: string | undefined, eventDateTime?: Date | undefined, eventPoints?: number | undefined, participantsLimit?: number | undefined, image?: FileParameter | undefined, eventCategoryId?: number | undefined, cityId?: number | undefined): Promise<VolunteerEventDTO> {
         let url_ = this.baseUrl + "/api/Event/CreateEvent";
         url_ = url_.replace(/[?&]$/, "");
 
-        const content_ = JSON.stringify(body);
+        const content_ = new FormData();
+        if (name === null || name === undefined)
+            throw new globalThis.Error("The parameter 'name' cannot be null.");
+        else
+            content_.append("Name", name.toString());
+        if (description === null || description === undefined)
+            throw new globalThis.Error("The parameter 'description' cannot be null.");
+        else
+            content_.append("Description", description.toString());
+        if (lat === null || lat === undefined)
+            throw new globalThis.Error("The parameter 'lat' cannot be null.");
+        else
+            content_.append("Lat", lat.toString());
+        if (lng === null || lng === undefined)
+            throw new globalThis.Error("The parameter 'lng' cannot be null.");
+        else
+            content_.append("Lng", lng.toString());
+        if (address === null || address === undefined)
+            throw new globalThis.Error("The parameter 'address' cannot be null.");
+        else
+            content_.append("Address", address.toString());
+        if (eventDateTime === null || eventDateTime === undefined)
+            throw new globalThis.Error("The parameter 'eventDateTime' cannot be null.");
+        else
+            content_.append("EventDateTime", eventDateTime.toJSON());
+        if (eventPoints === null || eventPoints === undefined)
+            throw new globalThis.Error("The parameter 'eventPoints' cannot be null.");
+        else
+            content_.append("EventPoints", eventPoints.toString());
+        if (participantsLimit === null || participantsLimit === undefined)
+            throw new globalThis.Error("The parameter 'participantsLimit' cannot be null.");
+        else
+            content_.append("ParticipantsLimit", participantsLimit.toString());
+        if (image === null || image === undefined)
+            throw new globalThis.Error("The parameter 'image' cannot be null.");
+        else
+            content_.append("Image", image.data, image.fileName ? image.fileName : "Image");
+        if (eventCategoryId === null || eventCategoryId === undefined)
+            throw new globalThis.Error("The parameter 'eventCategoryId' cannot be null.");
+        else
+            content_.append("EventCategoryId", eventCategoryId.toString());
+        if (cityId === null || cityId === undefined)
+            throw new globalThis.Error("The parameter 'cityId' cannot be null.");
+        else
+            content_.append("CityId", cityId.toString());
 
         let options_: RequestInit = {
             body: content_,
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
                 "Accept": "application/json"
             }
         };
@@ -2443,98 +2496,6 @@ export interface ICreateReportDTO {
     reportReason?: string | undefined;
     reportStatusId?: number;
     isDeleted?: boolean;
-}
-
-export class CreateVolunteerEventDTO implements ICreateVolunteerEventDTO {
-    name?: string | undefined;
-    description?: string | undefined;
-    lat?: number | undefined;
-    lng?: number | undefined;
-    address?: string | undefined;
-    eventDateTime?: Date | undefined;
-    eventPoints?: number;
-    participantsLimit?: number;
-    imagePath?: string | undefined;
-    eventCategoryId?: number;
-    eventStatusId?: number;
-    cityId?: number;
-    userId?: string | undefined;
-    moderatedByUserId?: string | undefined;
-    isDeleted?: boolean | undefined;
-
-    constructor(data?: ICreateVolunteerEventDTO) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.name = _data["name"];
-            this.description = _data["description"];
-            this.lat = _data["lat"];
-            this.lng = _data["lng"];
-            this.address = _data["address"];
-            this.eventDateTime = _data["eventDateTime"] ? new Date(_data["eventDateTime"].toString()) : undefined as any;
-            this.eventPoints = _data["eventPoints"];
-            this.participantsLimit = _data["participantsLimit"];
-            this.imagePath = _data["imagePath"];
-            this.eventCategoryId = _data["eventCategoryId"];
-            this.eventStatusId = _data["eventStatusId"];
-            this.cityId = _data["cityId"];
-            this.userId = _data["userId"];
-            this.moderatedByUserId = _data["moderatedByUserId"];
-            this.isDeleted = _data["isDeleted"];
-        }
-    }
-
-    static fromJS(data: any): CreateVolunteerEventDTO {
-        data = typeof data === 'object' ? data : {};
-        let result = new CreateVolunteerEventDTO();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["name"] = this.name;
-        data["description"] = this.description;
-        data["lat"] = this.lat;
-        data["lng"] = this.lng;
-        data["address"] = this.address;
-        data["eventDateTime"] = this.eventDateTime ? this.eventDateTime.toISOString() : undefined as any;
-        data["eventPoints"] = this.eventPoints;
-        data["participantsLimit"] = this.participantsLimit;
-        data["imagePath"] = this.imagePath;
-        data["eventCategoryId"] = this.eventCategoryId;
-        data["eventStatusId"] = this.eventStatusId;
-        data["cityId"] = this.cityId;
-        data["userId"] = this.userId;
-        data["moderatedByUserId"] = this.moderatedByUserId;
-        data["isDeleted"] = this.isDeleted;
-        return data;
-    }
-}
-
-export interface ICreateVolunteerEventDTO {
-    name?: string | undefined;
-    description?: string | undefined;
-    lat?: number | undefined;
-    lng?: number | undefined;
-    address?: string | undefined;
-    eventDateTime?: Date | undefined;
-    eventPoints?: number;
-    participantsLimit?: number;
-    imagePath?: string | undefined;
-    eventCategoryId?: number;
-    eventStatusId?: number;
-    cityId?: number;
-    userId?: string | undefined;
-    moderatedByUserId?: string | undefined;
-    isDeleted?: boolean | undefined;
 }
 
 export class EventAttendanceDTO implements IEventAttendanceDTO {
@@ -3695,6 +3656,11 @@ export interface IVolunteerRank {
     rankName: string;
     pointsRequired?: number;
     isDeleted?: boolean;
+}
+
+export interface FileParameter {
+    data: any;
+    fileName: string;
 }
 
 export class ApiException extends Error {

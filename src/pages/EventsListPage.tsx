@@ -13,7 +13,8 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Snackbar
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { VolunteerEventContext } from '../context/EventContext';
@@ -113,6 +114,21 @@ export const EventsListPage: React.FC = () => {
                 {filteredEvents.map((event) => (
                     <Grid size={12} key={event.id}>
                         <Card>
+                            {event.imagePath && (
+                                <Box
+                                    component="img"
+                                    src={event.imagePath}
+                                    alt={event.name}
+                                    sx={{
+                                        width: '100%',
+                                        height: 200,
+                                        objectFit: 'cover',
+                                    }}
+                                    onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                    }}
+                                />
+                            )}
                             <CardContent>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                                     <Typography variant="h5" component="h2" gutterBottom>

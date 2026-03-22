@@ -16,7 +16,6 @@ import {
 } from '@mui/material';
 import { Navigate, Link as RouterLink } from 'react-router-dom';
 import { VolunteerEventContext } from '../context/EventContext';
-import { CreateVolunteerEventDTO } from '../client/apiClient';
 import { Autocomplete } from '@mui/material';
 
 export const CreateEventPage: React.FC = () => {
@@ -37,6 +36,7 @@ export const CreateEventPage: React.FC = () => {
     const [success, setSuccess] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [citySearch, setCitySearch] = useState('');
+    const [image, setImage] = useState<File | undefined>(undefined);
 
     if (!context) {
         return (
@@ -55,56 +55,64 @@ export const CreateEventPage: React.FC = () => {
     } = context;
 
     const filteredCities = [...cities].sort((a, b) => {
-        const aNameMatch = a.name.toLowerCase().includes(citySearch.toLowerCase());
-        const bNameMatch = b.name.toLowerCase().includes(citySearch.toLowerCase());
+        const aNameMatch = a.name!.toLowerCase().includes(citySearch.toLowerCase());
+        const bNameMatch = b.name!.toLowerCase().includes(citySearch.toLowerCase());
 
         if (aNameMatch && !bNameMatch) return -1;
         if (!aNameMatch && bNameMatch) return 1;
 
-        return a.name.localeCompare(b.name);
+        return a.name!.localeCompare(b.name!);
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        if (!newEvent.name || !newEvent.categoryId || !newEvent.cityId) {
-            setErrorMessage('Пожалуйста, заполните обязательные поля');
-            return;
-        }
+    e.preventDefault();
 
-        setSubmitting(true);
-        setErrorMessage('');
+    if (!newEvent.name || !newEvent.categoryId || !newEvent.cityId) {
+        setErrorMessage('Пожалуйста, заполните обязательные поля');
+        return;
+    }
 
-        const eventData = new CreateVolunteerEventDTO();
-        eventData.name = newEvent.name;
-        eventData.description = newEvent.description || undefined;
-        eventData.eventCategoryId = Number(newEvent.categoryId);
-        eventData.cityId = Number(newEvent.cityId);
-        eventData.address = newEvent.address || undefined;
-        eventData.eventDateTime = newEvent.eventDateTime ? new Date(newEvent.eventDateTime) : new Date();
-        eventData.eventPoints = newEvent.eventPoints;
-        eventData.participantsLimit = newEvent.participantsLimit ? Number(newEvent.participantsLimit) : undefined;
+    setSubmitting(true);
+    setErrorMessage('');
 
-        const result = await createEvent(eventData);
-        
-        if (result) {
-            setSuccess(true);
-            // Сбрасываем форму
-            setNewEvent({
-                name: '',
-                description: '',
-                categoryId: '',
-                cityId: '',
-                address: '',
-                eventDateTime: '',
-                eventPoints: 10,
-                participantsLimit: ''
-            });
-        } else {
-            setErrorMessage('Ошибка при создании события');
-        }
-        
-        setSubmitting(false);
+    const eventData = {
+        name: newEvent.name,
+        description: newEvent.description || '',
+        lat: 0, // TODO FIX
+        lng: 0,
+        address: newEvent.address || '',
+        eventDateTime: newEvent.eventDateTime
+            ? new Date(newEvent.eventDateTime)
+            : new Date(),
+        eventPoints: newEvent.eventPoints,
+        participantsLimit: newEvent.participantsLimit
+            ? Number(newEvent.participantsLimit)
+            : 0,
+        eventCategoryId: Number(newEvent.categoryId),
+        cityId: Number(newEvent.cityId),
+        image: image
+    };
+
+    const result = await createEvent(eventData);
+
+    if (result) {
+        setSuccess(true);
+        setNewEvent({
+            name: '',
+            description: '',
+            categoryId: '',
+            cityId: '',
+            address: '',
+            eventDateTime: '',
+            eventPoints: 10,
+            participantsLimit: ''
+        });
+        setImage(undefined);
+    } else {
+        setErrorMessage('Ошибка при создании события');
+    }
+
+    setSubmitting(false);
     };
 
     if (success) {
@@ -140,6 +148,17 @@ export const CreateEventPage: React.FC = () => {
 
                 <form onSubmit={handleSubmit}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <Button variant="outlined" component="label">
+                            {image ? `Файл: ${image.name}` : "Загрузить изображение"}
+                            <input
+                                type="file"
+                                hidden
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    setImage(file);
+                                }}
+                            />
+                        </Button>
                         <TextField
                             label="Название"
                             fullWidth
