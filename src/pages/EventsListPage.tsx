@@ -14,28 +14,46 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Snackbar
+    Snackbar, //ИСПРАВИТЬ АЛЕРТЫ
+    TextField,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel, 
+    Pagination,
+    Autocomplete  
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { VolunteerEventContext } from '../context/EventContext';
+import { useAuth } from '../context/AuthContext';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
+    const { user } = useAuth(); 
     
     // Состояния для диалогов
     const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
     const [participantsCount, setParticipantsCount] = useState<number>(0);
+    const [search, setSearch] = useState('');
+    const [categoryId, setCategoryId] = useState<number | ''>('');
+    const [cityId, setCityId] = useState<number | ''>('');
+    const [citySearch, setCitySearch] = useState('');
 
+    const isOrganizer = user?.role === 'organizer' ;
+    
     useEffect(() => {
-        if (context) {
-            context.fetchEvents();
-            context.fetchEventCategories();
-            context.fetchCities();
-            context.fetchEventStatuses();
-            context.fetchAttendanceStatuses();
-        }
-    }, []);
+    if (!context) return;
+
+    const delay = setTimeout(() => {
+            context.setFilterParams({
+                keyWords: search || undefined,
+                catId: categoryId || undefined,
+                cityId: cityId || undefined
+            });
+        }, 300);
+        return () => clearTimeout(delay);
+    }, [search]);
 
     if (!context) {
         return (
@@ -46,22 +64,33 @@ export const EventsListPage: React.FC = () => {
             </Container>
         );
     }
-
     const {
-        filteredEvents,
+        events,
         isLoading,
         error,
-        deleteEvent,
+
+        pageNumber,
+        totalPages,
+
+        eventCategories,
+        cities,
+        setFilterParams,
+        clearFilters,
+
+        setPageNumber,  
         registerForEvent,
         getParticipantsCount
     } = context;
+    const filteredCities = [...cities].sort((a, b) => {
+        const aNameMatch = a.name!.toLowerCase().includes(citySearch.toLowerCase());
+        const bNameMatch = b.name!.toLowerCase().includes(citySearch.toLowerCase());
 
-    const handleDeleteEvent = async (id: number) => {
-        if (window.confirm('Вы уверены, что хотите удалить это событие?')) {
-            await deleteEvent(id);
-        }
-    };
+        if (aNameMatch && !bNameMatch) return -1;
+        if (!aNameMatch && bNameMatch) return 1;
+            return a.name!.localeCompare(b.name!);
+    });
 
+// ИСПРАВИТЬ НОРМАЛЬНО ЗАГЛУШКУ
     const handleRegister = async (eventId: number) => {
         const testUserId = "test-user-123";
         const success = await registerForEvent(eventId, testUserId);
@@ -69,7 +98,7 @@ export const EventsListPage: React.FC = () => {
             alert('Вы успешно зарегистрированы на событие!');
         }
     };
-
+    
     const handleShowParticipants = async (eventId: number) => {
         const count = await getParticipantsCount(eventId);
         setParticipantsCount(count);
@@ -77,7 +106,7 @@ export const EventsListPage: React.FC = () => {
         setParticipantsDialogOpen(true);
     };
 
-    if (isLoading && filteredEvents.length === 0) {
+    if (isLoading && events.length === 0) {
         return (
             <Container sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                 <CircularProgress />
@@ -87,19 +116,148 @@ export const EventsListPage: React.FC = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            {/* Заголовок и кнопка создания */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+            {/* Поиск */}
+            <TextField
+                label="Поиск"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                size="small"
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                            borderColor: '#949cff',
+                        },
+                        '&:hover fieldset': {
+                            borderColor: '#7c84f4',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: '#949cff',
+                        },                       
+                    },
+                    '& .MuiInputLabel-root': {
+                        color: '#5f6388',
+                        '&.Mui-focused': {
+                            color: '#949cff',
+                        },
+                    },
+                }}
+            />
+
+            {/* Категория */}
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+                <InputLabel sx={{
+                    color: '#5f6388',
+                    '&.Mui-focused': {
+                        color: '#949cff',
+                    },
+                }}>Категория</InputLabel>
+                <Select
+                    value={categoryId}
+                    label="Категория"
+                    onChange={(e) => setCategoryId(e.target.value as number)}
+                    sx={{
+                        '& .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#949cff',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#7c84f4',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: '#949cff',
+                        },
+                    }}
+                >
+                    {eventCategories.map(cat => (
+                        <MenuItem key={cat.id} value={cat.id}>
+                            {cat.categoryName}
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
+            {/* Город */}
+            <Autocomplete
+                options={filteredCities}
+                getOptionLabel={(option) => `${option.name}${option.subject ? ` (${option.subject})` : ''}`}
+                renderInput={(params) => (
+                    <TextField
+                        {...params}
+                        label="Город"
+                        size="small"
+                        onChange={(e) => setCitySearch(e.target.value)}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                    borderColor: '#949cff',
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: '#7c84f4',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: '#949cff',
+                                },
+                            },
+                            '& .MuiInputLabel-root': {
+                                color: '#5f6388',
+                                '&.Mui-focused': {
+                                    color: '#949cff',
+                                },
+                            },
+                        }}
+                    />
+                )}
+                value={cities.find(c => c.id === cityId) || null}
+                onChange={(_, newValue) => {
+                    setCityId(newValue?.id || '');
+                }}
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                sx={{ minWidth: 200 }}
+            />
+
+            {/* Применить */}
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={() =>
+                    setFilterParams({
+                        keyWords: search || undefined,
+                        catId: categoryId || undefined,
+                        cityId: cityId || undefined
+                    })
+                }
+            >
+                Применить
+            </Button>
+
+            {/* Сброс */}
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={() => {
+                    setSearch('');
+                    setCategoryId('');
+                    setCityId('');
+                    clearFilters();
+                }}
+            >
+                Сброс
+            </Button>
+        </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4" component="h1">
                     Список событий
                 </Typography>
-                <Button 
-                    variant="contained" 
-                    color="primary"
-                    component={RouterLink}
-                    to="/events/add"
-                >
-                    Создать событие
-                </Button>
+                 {isOrganizer && (
+                    <Button 
+                        variant="contained" 
+                        color="primary"
+                        component={RouterLink}
+                        to="/events/add"
+                    >
+                        Создать событие
+                    </Button>
+                )}
             </Box>
 
             {/* Ошибки */}
@@ -111,7 +269,7 @@ export const EventsListPage: React.FC = () => {
 
             {/* Список событий */}
             <Grid container spacing={3}>
-                {filteredEvents.map((event) => (
+                {events.map((event) => (
                     <Grid size={12} key={event.id}>
                         <Card>
                             {event.imagePath && (
@@ -134,13 +292,6 @@ export const EventsListPage: React.FC = () => {
                                     <Typography variant="h5" component="h2" gutterBottom>
                                         {event.name}
                                     </Typography>
-                                    <Button 
-                                        size="small" 
-                                        color="error"
-                                        onClick={() => handleDeleteEvent(event.id!)}
-                                    >
-                                        Удалить
-                                    </Button>
                                 </Box>
                                 
                                 <Typography color="text.secondary" paragraph>
@@ -208,6 +359,14 @@ export const EventsListPage: React.FC = () => {
                     <Button onClick={() => setParticipantsDialogOpen(false)}>Закрыть</Button>
                 </DialogActions>
             </Dialog>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Pagination
+                    count={totalPages}
+                    page={pageNumber}
+                    onChange={(_, value) => setPageNumber(value)}
+                    color="primary"
+                />
+            </Box>
         </Container>
     );
 };

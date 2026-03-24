@@ -34,7 +34,6 @@ type CreateEventData = {
 interface VolunteerEventContextProps {
     // Состояния
     events: VolunteerEventDTO[];
-    filteredEvents: VolunteerEventDTO[];
     selectedEvent: VolunteerEventDTO | null;
     eventCategories: EventCategory[];
     eventStatuses: EventStatus[];
@@ -42,7 +41,10 @@ interface VolunteerEventContextProps {
     attendanceStatuses: AttendanceStatus[];
     isLoading: boolean;
     error: string | null;
-    
+    pageNumber: number;
+    pageSize: number;
+    totalPages: number;
+    setPageNumber: (page: number) => void;
     // Методы для работы с событиями
     fetchEvents: (filterParams?: EventFilterParams) => Promise<void>;
     fetchEventById: (id: number) => Promise<VolunteerEventDTO | null>;
@@ -70,6 +72,7 @@ interface VolunteerEventContextProps {
     
     // Метод для выбора события
     selectEvent: (event: VolunteerEventDTO | null) => void;
+
 }
 
 // Создание контекста
@@ -79,7 +82,6 @@ export const VolunteerEventContext = createContext<VolunteerEventContextProps | 
 export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Состояния
     const [events, setEvents] = useState<VolunteerEventDTO[]>([]);
-    const [filteredEvents, setFilteredEvents] = useState<VolunteerEventDTO[]>([]);
     const [selectedEvent, setSelectedEvent] = useState<VolunteerEventDTO | null>(null);
     const [eventCategories, setEventCategories] = useState<EventCategory[]>([]);
     const [eventStatuses, setEventStatuses] = useState<EventStatus[]>([]);
@@ -87,9 +89,15 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     const [attendanceStatuses, setAttendanceStatuses] = useState<AttendanceStatus[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [pageSize, setPageSize] = useState(5);
+    const [totalPages, setTotalPages] = useState(1);
     
     // Текущие параметры фильтрации
     const [filterParams, setFilterParamsState] = useState<EventFilterParams>({});
+    const changePage = (newPage: number) => {
+    setPageNumber(newPage);
+};
 
     // Инициализация клиента API
     const apiClient = new Client(process.env.REACT_APP_API_URL || '');
@@ -102,43 +110,9 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         fetchAttendanceStatuses();
     }, []);
 
-    // Применение фильтров при изменении событий или параметров фильтрации
     useEffect(() => {
-        applyFilters();
-    }, [events, filterParams]);
-
-    // Применение фильтров к списку событий
-    const applyFilters = () => {
-        let filtered = [...events];
-        
-        if (filterParams.catId) {
-            filtered = filtered.filter(event => event.eventCategoryId === filterParams.catId);
-        }
-        
-        if (filterParams.cityId) {
-            filtered = filtered.filter(event => event.cityId === filterParams.cityId);
-        }
-        
-        if (filterParams.keyWords) {
-            const keywords = filterParams.keyWords.toLowerCase();
-            filtered = filtered.filter(event => 
-                event.name?.toLowerCase().includes(keywords) ||
-                event.description?.toLowerCase().includes(keywords) ||
-                event.address?.toLowerCase().includes(keywords)
-            );
-        }
-        
-        if (filterParams.dateTime) {
-            const filterDate = new Date(filterParams.dateTime).toDateString();
-            filtered = filtered.filter(event => {
-                if (!event.eventDateTime) return false;
-                const eventDate = new Date(event.eventDateTime).toDateString();
-                return eventDate === filterDate;
-            });
-        }
-        
-        setFilteredEvents(filtered);
-    };
+    fetchEvents(filterParams);
+    }, [pageNumber, pageSize, filterParams]);
 
     // Получение всех событий с фильтрацией
     const fetchEvents = async (params?: EventFilterParams): Promise<void> => {
@@ -146,18 +120,18 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         setError(null);
         
         try {
-            const data = await apiClient.getAllEvents(
+            const result = await apiClient.getPagedEvents(
+                pageNumber,
+                pageSize,
                 params?.catId,
                 params?.cityId,
                 params?.keyWords,
                 params?.dateTime
             );
-            setEvents(data || []);
+
+            setEvents(result.items || []);
+            setTotalPages(result.totalPages || 1);
             
-            // Обновляем параметры фильтрации, если они переданы
-            if (params) {
-                setFilterParamsState(params);
-            }
         } catch (error) {
             console.error("Ошибка при загрузке событий:", error);
             setError("Не удалось загрузить список событий");
@@ -207,7 +181,7 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
             eventData.cityId,
         );
 
-        await fetchEvents();
+        await fetchEvents(filterParams);
         return createdEvent;
     } catch (error) {
         console.error("Ошибка при создании события:", error);
@@ -226,7 +200,7 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
         try {
             await apiClient.updateEvent(id, eventData);
             // Обновляем список событий
-            await fetchEvents();
+            await fetchEvents(filterParams);
             return true;
         } catch (error) {
             console.error(`Ошибка при обновлении события с ID ${id}:`, error);
@@ -249,7 +223,7 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
                 await apiClient.deleteEvent(id);
             }
             // Обновляем список событий
-            await fetchEvents();
+            await fetchEvents(filterParams);
             
             // Если удалено выбранное событие, сбрасываем выбор
             if (selectedEvent?.id === id) {
@@ -288,7 +262,7 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
                 userId: userId,
                 eventId: eventId,
                 attendanceStatusId: 1
-                // isDeleted не нужен
+                
             });
             
             await apiClient.create(attendanceData);
@@ -401,11 +375,12 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
     // Установка параметров фильтрации
     const setFilterParams = (params: EventFilterParams): void => {
         setFilterParamsState(params);
+        setPageNumber(1);
     };
-
     // Очистка фильтров
     const clearFilters = (): void => {
         setFilterParamsState({});
+        setPageNumber(1);
     };
 
     // Выбор события
@@ -417,7 +392,6 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
         <VolunteerEventContext.Provider value={{
             // Состояния
             events,
-            filteredEvents,
             selectedEvent,
             eventCategories,
             eventStatuses,
@@ -426,6 +400,11 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
             isLoading,
             error,
             
+            // для пагинации
+            pageNumber,
+            pageSize,
+            totalPages,
+            setPageNumber: changePage,
             // Методы для работы с событиями
             fetchEvents,
             fetchEventById,

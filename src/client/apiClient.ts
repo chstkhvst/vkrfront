@@ -1430,6 +1430,73 @@ export class Client {
     }
 
     /**
+     * @param pageNumber (optional) 
+     * @param pageSize (optional) 
+     * @param catId (optional) 
+     * @param cityId (optional) 
+     * @param keyWords (optional) 
+     * @param dateTime (optional) 
+     * @return OK
+     */
+    getPagedEvents(pageNumber?: number | undefined, pageSize?: number | undefined, catId?: number | undefined, cityId?: number | undefined, keyWords?: string | undefined, dateTime?: Date | undefined): Promise<VolunteerEventDTOPaginatedResponse> {
+        let url_ = this.baseUrl + "/api/Event/GetPagedEvents?";
+        if (pageNumber === null)
+            throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
+        else if (pageNumber !== undefined)
+            url_ += "pageNumber=" + encodeURIComponent("" + pageNumber) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (catId === null)
+            throw new globalThis.Error("The parameter 'catId' cannot be null.");
+        else if (catId !== undefined)
+            url_ += "catId=" + encodeURIComponent("" + catId) + "&";
+        if (cityId === null)
+            throw new globalThis.Error("The parameter 'cityId' cannot be null.");
+        else if (cityId !== undefined)
+            url_ += "cityId=" + encodeURIComponent("" + cityId) + "&";
+        if (keyWords === null)
+            throw new globalThis.Error("The parameter 'keyWords' cannot be null.");
+        else if (keyWords !== undefined)
+            url_ += "keyWords=" + encodeURIComponent("" + keyWords) + "&";
+        if (dateTime === null)
+            throw new globalThis.Error("The parameter 'dateTime' cannot be null.");
+        else if (dateTime !== undefined)
+            url_ += "dateTime=" + encodeURIComponent(dateTime ? "" + dateTime.toISOString() : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetPagedEvents(_response);
+        });
+    }
+
+    protected processGetPagedEvents(response: Response): Promise<VolunteerEventDTOPaginatedResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = VolunteerEventDTOPaginatedResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<VolunteerEventDTOPaginatedResponse>(null as any);
+    }
+
+    /**
      * @return OK
      */
     getEventById(id: number): Promise<VolunteerEventDTO> {
@@ -3516,6 +3583,66 @@ export interface IVolunteerEventDTO {
     user?: UserDTO;
     moderatedByUser?: UserDTO;
     attendees?: EventAttendanceDTO[] | undefined;
+}
+
+export class VolunteerEventDTOPaginatedResponse implements IVolunteerEventDTOPaginatedResponse {
+    items?: VolunteerEventDTO[] | undefined;
+    totalCount?: number;
+    pageSize?: number;
+    currentPage?: number;
+    totalPages?: number;
+
+    constructor(data?: IVolunteerEventDTOPaginatedResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(VolunteerEventDTO.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.pageSize = _data["pageSize"];
+            this.currentPage = _data["currentPage"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): VolunteerEventDTOPaginatedResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerEventDTOPaginatedResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["totalCount"] = this.totalCount;
+        data["pageSize"] = this.pageSize;
+        data["currentPage"] = this.currentPage;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IVolunteerEventDTOPaginatedResponse {
+    items?: VolunteerEventDTO[] | undefined;
+    totalCount?: number;
+    pageSize?: number;
+    currentPage?: number;
+    totalPages?: number;
 }
 
 export class VolunteerProfile implements IVolunteerProfile {

@@ -16,7 +16,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        backgroundColor: theme.palette.background.default,
+        //backgroundColor: theme.palette.background.default,
       }}
     >
       <Header

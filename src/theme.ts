@@ -45,56 +45,219 @@ export const customTheme = createTheme({
   },
 
   components: {
-    MuiCssBaseline: {
+    MuiCssBaseline: { //градиент на фон
       styleOverrides: {
         body: {
-          background: `
-            radial-gradient(circle at 20% 20%, #949cff33, transparent 40%),
-            radial-gradient(circle at 80% 0%, #ffed8644, transparent 35%),
-            linear-gradient(180deg, #f6f7ff 0%, #eef1ff 100%)
-          `,
-          minHeight: '100vh',
-        },
+    background: `
+      radial-gradient(circle at 15% 25%, #949cff22, transparent 45%), 
+      radial-gradient(circle at 85% 10%, #ffed891a, transparent 40%),
+      linear-gradient(180deg, #eef1ff 0%, #e4e8ff 100%)
+    `,
+    minHeight: '100vh',
+  },
       },
     },
-
-    MuiAppBar: {
+    
+  MuiPopover: {
       styleOverrides: {
-        root: {
-          background: 'rgba(255,255,255,0.6)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(0,0,0,0.05)',
+        paper: {
+          backgroundColor: '#ffffff', //комбобоксы
+          backdropFilter: 'none',
         },
       },
     },
-
-    MuiButton: {
-      defaultProps: {
-        disableElevation: true,
+    MuiMenu: {
+    styleOverrides: {
+      paper: {
+        backgroundColor: '#ffffff', // Select
       },
-      styleOverrides: {
-        root: {
-          borderRadius: 10,
-          padding: '8px 18px',
-        },
+    },
+  },
 
-        containedPrimary: {
-          background: 'linear-gradient(135deg, #949cff, #7c84f4)',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #7c84f4, #6c74e6)',
-          },
-        },
+  MuiAutocomplete: {
+    styleOverrides: {
+      paper: {
+        backgroundColor: '#ffffff', //Autocomplete
+      },
+    },
+  },
+  MuiAppBar: {
+    styleOverrides: {
+      root: {
+        background: 'rgba(255,255,255,0.6)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(0,0,0,0.05)',
+      },
+    },
+  },
 
-        containedSecondary: {
-          background: 'linear-gradient(135deg, #ffed86, #ffe45c)',
-          color: '#2a2a2a',
-          '&:hover': {
-            background: 'linear-gradient(135deg, #ffe45c, #f4d96a)',
-          },
-        },
+  MuiButton: {
+  defaultProps: {
+    disableElevation: true,
+  },
+  styleOverrides: {
+    root: {
+      borderRadius: 10,
+      padding: '8px 18px',
+      transition: 'all 0.2s ease',
+      fontWeight: 600,
+      textTransform: 'none',
+    },
+    
+    // CONTAINED 
+    contained: {
+    },
+    
+    containedPrimary: {
+      background: '#949cff',
+      color: '#ffed86', // ← желтый текст на синей кнопке
+      '&:hover': {
+        background: 'linear-gradient(135deg, #7c84f4, #6c74e6)',
       },
     },
 
+    containedSecondary: {
+      background: 'linear-gradient(135deg, #ffed86, #ffe45c)',
+      color: '#949cff', // ← синий текст на желтой кнопке
+      '&:hover': {
+        background: 'linear-gradient(135deg, #ffe45c, #f4d96a)',
+      },
+    },
+    
+    containedSuccess: {
+      background: 'linear-gradient(135deg, #4caf50, #45a049)',
+      color: '#ffffff',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #45a049, #3e8e41)',
+      },
+    },
+    
+    containedError: {
+      background: 'linear-gradient(135deg, #f44336, #d32f2f)',
+      color: '#ffffff',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #d32f2f, #c62828)',
+      },
+    },
+    
+    containedWarning: {
+      background: 'linear-gradient(135deg, #ff9800, #f57c00)',
+      color: '#ffffff',
+      '&:hover': {
+        background: 'linear-gradient(135deg, #f57c00, #ef6c00)',
+      },
+    },
+    
+    // TEXT 
+    text: {
+    },
+    
+    textPrimary: {
+      color: '#949cff',
+      '&:hover': {
+        backgroundColor: 'rgba(148, 156, 255, 0.08)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    textSecondary: {
+      color: '#ffed86',
+      '&:hover': {
+        backgroundColor: 'rgba(255, 237, 134, 0.12)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    textSuccess: {
+      color: '#4caf50',
+      '&:hover': {
+        backgroundColor: 'rgba(76, 175, 80, 0.08)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    textError: {
+      color: '#f44336',
+      '&:hover': {
+        backgroundColor: 'rgba(244, 67, 54, 0.08)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    textWarning: {
+      color: '#ff9800',
+      '&:hover': {
+        backgroundColor: 'rgba(255, 152, 0, 0.08)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    // OUTLINED 
+    outlined: {
+    },
+    
+    outlinedPrimary: {
+      borderColor: '#949cff',
+      color: '#949cff',
+      '&:hover': {
+        borderColor: '#7c84f4',
+        backgroundColor: 'rgba(148, 156, 255, 0.08)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    outlinedSecondary: {
+      borderColor: '#ffed86',
+      color: '#ffed86',
+      '&:hover': {
+        borderColor: '#ffe45c',
+        backgroundColor: 'rgba(255, 237, 134, 0.12)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    outlinedSuccess: {
+      borderColor: '#4caf50',
+      color: '#4caf50',
+      '&:hover': {
+        borderColor: '#45a049',
+        backgroundColor: 'rgba(76, 175, 80, 0.08)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    outlinedError: {
+      borderColor: '#f44336',
+      color: '#f44336',
+      '&:hover': {
+        borderColor: '#d32f2f',
+        backgroundColor: 'rgba(244, 67, 54, 0.08)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    outlinedWarning: {
+      borderColor: '#ff9800',
+      color: '#ff9800',
+      '&:hover': {
+        borderColor: '#f57c00',
+        backgroundColor: 'rgba(255, 152, 0, 0.08)',
+        transform: 'translateY(-1px)',
+      },
+    },
+    
+    // SIZE
+    sizeSmall: {
+      padding: '4px 12px',
+      fontSize: '0.1rem',
+    },
+    
+    sizeLarge: {
+      padding: '12px 24px',
+      fontSize: '1rem',
+    },
+  },
+},
     MuiCard: {
       styleOverrides: {
         root: {
