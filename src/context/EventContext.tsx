@@ -5,9 +5,6 @@ import {
     EventCategory,
     EventStatus,
     City,
-    AttendanceStatus,
-    EventAttendanceDTO,
-    CreateEventAttendanceDTO
 } from "../client/apiClient"
 
 // Интерфейс для параметров фильтрации событий
@@ -38,7 +35,7 @@ interface VolunteerEventContextProps {
     eventCategories: EventCategory[];
     eventStatuses: EventStatus[];
     cities: City[];
-    attendanceStatuses: AttendanceStatus[];
+
     isLoading: boolean;
     error: string | null;
     pageNumber: number;
@@ -47,25 +44,17 @@ interface VolunteerEventContextProps {
     setPageNumber: (page: number) => void;
     // Методы для работы с событиями
     fetchEvents: (filterParams?: EventFilterParams) => Promise<void>;
+    fetchEventsForUser: (filterParams?: EventFilterParams) => Promise<void>;
     fetchEventById: (id: number) => Promise<VolunteerEventDTO | null>;
     getEventsByUserId: (userId: string) => Promise<VolunteerEventDTO[]>;
     createEvent: (eventData: CreateEventData) => Promise<VolunteerEventDTO | null>;
     updateEvent: (id: number, eventData: VolunteerEventDTO) => Promise<boolean>;
     deleteEvent: (id: number, softDelete?: boolean) => Promise<boolean>;
     
-    // Методы для работы с участниками
-    fetchEventAttendees: (eventId: number) => Promise<EventAttendanceDTO[]>;
-    registerForEvent: (eventId: number, userId: string) => Promise<boolean>;
-    unregisterFromEvent: (attendanceId: number) => Promise<boolean>;
-    updateAttendanceStatus: (attendanceId: number, statusId: number) => Promise<boolean>;
-    checkUserAttendance: (eventId: number, userId: string) => Promise<EventAttendanceDTO | null>;
-    getParticipantsCount: (eventId: number) => Promise<number>;
-    
     // Методы для справочников
     fetchEventCategories: () => Promise<void>;
     fetchEventStatuses: () => Promise<void>;
     fetchCities: () => Promise<void>;
-    fetchAttendanceStatuses: () => Promise<void>;
     
     // Методы для фильтрации
     setFilterParams: (params: EventFilterParams) => void;
@@ -87,7 +76,6 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     const [eventCategories, setEventCategories] = useState<EventCategory[]>([]);
     const [eventStatuses, setEventStatuses] = useState<EventStatus[]>([]);
     const [cities, setCities] = useState<City[]>([]);
-    const [attendanceStatuses, setAttendanceStatuses] = useState<AttendanceStatus[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
@@ -108,12 +96,11 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         fetchEventCategories();
         fetchEventStatuses();
         fetchCities();
-        fetchAttendanceStatuses();
     }, []);
 
-    useEffect(() => {
-    fetchEvents(filterParams);
-    }, [pageNumber, pageSize, filterParams]);
+    // useEffect(() => {
+    // fetchEvents(filterParams);
+    // }, [pageNumber, pageSize, filterParams]);
 
     // Получение всех событий с фильтрацией
     const fetchEvents = async (params?: EventFilterParams): Promise<void> => {
@@ -129,12 +116,37 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
                 params?.keyWords,
                 params?.dateTime
             );
-
+            console.log(result);
             setEvents(result.items || []);
             setTotalPages(result.totalPages || 1);
             
         } catch (error) {
             console.error("Ошибка при загрузке событий:", error);
+            setError("Не удалось загрузить список событий");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    const fetchEventsForUser = async ( params?: EventFilterParams): Promise<void> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const result = await apiClient.getPagedForUser(
+                pageNumber,
+                pageSize,
+                params?.catId,
+                params?.cityId,
+                params?.keyWords,
+                params?.dateTime
+            );
+            console.log(result);
+
+            setEvents(result.items || []);
+            setTotalPages(result.totalPages || 1);
+
+        } catch (error) {
+            console.error("Ошибка при загрузке событий пользователя:", error);
             setError("Не удалось загрузить список событий");
         } finally {
             setIsLoading(false);
@@ -256,98 +268,6 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
         }
     };
 
-    // Получение участников события
-    const fetchEventAttendees = async (eventId: number): Promise<EventAttendanceDTO[]> => {
-        try {
-            return await apiClient.getAttendanceByEventId(eventId);
-        } catch (error) {
-            console.error(`Ошибка при загрузке участников события ${eventId}:`, error);
-            setError("Не удалось загрузить список участников");
-            return [];
-        }
-    };
-
-    // Регистрация на событие
-    const registerForEvent = async (eventId: number, userId: string): Promise<boolean> => {
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            // Создаем через fromJS с простым объектом
-            const attendanceData = CreateEventAttendanceDTO.fromJS({
-                userId: userId,
-                eventId: eventId,
-                attendanceStatusId: 1
-                
-            });
-            
-            await apiClient.create(attendanceData);
-            return true;
-        } catch (error) {
-            console.error(`Ошибка при регистрации на событие ${eventId}:`, error);
-            setError("Не удалось зарегистрироваться на событие");
-            return false;
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Отмена регистрации
-    const unregisterFromEvent = async (attendanceId: number): Promise<boolean> => {
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            await apiClient.softDelete(attendanceId);
-            return true;
-        } catch (error) {
-            console.error(`Ошибка при отмене регистрации ${attendanceId}:`, error);
-            setError("Не удалось отменить регистрацию");
-            return false;
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Обновление статуса участия
-    const updateAttendanceStatus = async (attendanceId: number, statusId: number): Promise<boolean> => {
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            const attendance = await apiClient.getAttendanceById(attendanceId);
-            attendance.attendanceStatusId = statusId;
-            await apiClient.update(attendanceId, attendance);
-            return true;
-        } catch (error) {
-            console.error(`Ошибка при обновлении статуса участия ${attendanceId}:`, error);
-            setError("Не удалось обновить статус участия");
-            return false;
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Проверка участия пользователя в событии
-    const checkUserAttendance = async (eventId: number, userId: string): Promise<EventAttendanceDTO | null> => {
-        try {
-            return await apiClient.getByUserAndEvent(userId, eventId);
-        } catch (error) {
-            console.error(`Ошибка при проверке участия пользователя в событии ${eventId}:`, error);
-            return null;
-        }
-    };
-
-    // Получение количества участников
-    const getParticipantsCount = async (eventId: number): Promise<number> => {
-        try {
-            return await apiClient.countParticipants(eventId);
-        } catch (error) {
-            console.error(`Ошибка при подсчете участников события ${eventId}:`, error);
-            return 0;
-        }
-    };
-
     // Загрузка категорий событий
     const fetchEventCategories = async (): Promise<void> => {
         try {
@@ -378,16 +298,6 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
         }
     };
 
-    // Загрузка статусов участия
-    const fetchAttendanceStatuses = async (): Promise<void> => {
-        try {
-            const data = await apiClient.getAttendanceStatuses();
-            setAttendanceStatuses(data || []);
-        } catch (error) {
-            console.error("Ошибка при загрузке статусов участия:", error);
-        }
-    };
-
     // Установка параметров фильтрации
     const setFilterParams = (params: EventFilterParams): void => {
         setFilterParamsState(params);
@@ -412,7 +322,6 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
             eventCategories,
             eventStatuses,
             cities,
-            attendanceStatuses,
             isLoading,
             error,
             
@@ -428,21 +337,13 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
             updateEvent,
             deleteEvent,
             getEventsByUserId,
-            
-            // Методы для работы с участниками
-            fetchEventAttendees,
-            registerForEvent,
-            unregisterFromEvent,
-            updateAttendanceStatus,
-            checkUserAttendance,
-            getParticipantsCount,
+            fetchEventsForUser,
             
             // Методы для справочников
             fetchEventCategories,
             fetchEventStatuses,
             fetchCities,
-            fetchAttendanceStatuses,
-            
+
             // Методы для фильтрации
             setFilterParams,
             clearFilters,

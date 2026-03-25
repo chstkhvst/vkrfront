@@ -61,18 +61,22 @@ function App() {
                 <Route
                   path="/"
                   element={
+                    <AttendanceProvider>
                     <VolunteerEventProvider>
                       <EventsListPage />
                     </VolunteerEventProvider>
+                    </AttendanceProvider>
                   }
                 />
 
                 <Route
                   path="/events"
                   element={
+                    <AttendanceProvider>
                     <VolunteerEventProvider>
                       <EventsListPage />
                     </VolunteerEventProvider>
+                    </AttendanceProvider>
                   }
                 />
 
@@ -92,7 +96,9 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <AttendanceProvider>
+                        <VolunteerEventProvider>
                         <MyEventPage />
+                        </VolunteerEventProvider>
                       </AttendanceProvider>
                     </ProtectedRoute>
                   }

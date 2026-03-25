@@ -25,11 +25,16 @@ import {
 } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { VolunteerEventContext } from '../context/EventContext';
+import { AttendanceContext } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
+import { NotificationProvider, useNotification } from '../components/Notification';
+import { EventAttendanceDTO } from '../client/apiClient';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
+    const attContext = useContext(AttendanceContext);
     const { user } = useAuth(); 
+    const { showNotification } = useNotification();
     
     // Состояния для диалогов
     const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
@@ -39,31 +44,6 @@ export const EventsListPage: React.FC = () => {
     const [categoryId, setCategoryId] = useState<number | ''>('');
     const [cityId, setCityId] = useState<number | ''>('');
     const [citySearch, setCitySearch] = useState('');
-
-    const isOrganizer = user?.role === 'organizer' ;
-    
-    useEffect(() => {
-    if (!context) return;
-
-    const delay = setTimeout(() => {
-            context.setFilterParams({
-                keyWords: search || undefined,
-                catId: categoryId || undefined,
-                cityId: cityId || undefined
-            });
-        }, 300);
-        return () => clearTimeout(delay);
-    }, [search]);
-
-    if (!context) {
-        return (
-            <Container>
-                <Typography color="error">
-                    Ошибка: Контекст не найден
-                </Typography>
-            </Container>
-        );
-    }
     const {
         events,
         isLoading,
@@ -78,9 +58,33 @@ export const EventsListPage: React.FC = () => {
         clearFilters,
 
         setPageNumber,  
-        registerForEvent,
-        getParticipantsCount
-    } = context;
+    } = context!;
+    
+    const {
+        createAttendance,
+        getParticipantsCount,  
+    } = attContext!;
+
+     useEffect(() => {
+        const delay = setTimeout(() => {
+            handleChangeFilters();
+        }, 300);
+
+        return () => clearTimeout(delay);
+    }, [search]);
+
+
+    useEffect(() => {
+        if (!user) return;
+        console.log(user)
+        if (user?.role === "volunteer") {
+            context!.fetchEventsForUser();
+        } else {
+            context!.fetchEvents();
+        }
+    }, [pageNumber, user?.role]);
+
+
     const filteredCities = [...cities].sort((a, b) => {
         const aNameMatch = a.name!.toLowerCase().includes(citySearch.toLowerCase());
         const bNameMatch = b.name!.toLowerCase().includes(citySearch.toLowerCase());
@@ -90,12 +94,63 @@ export const EventsListPage: React.FC = () => {
             return a.name!.localeCompare(b.name!);
     });
 
-// ИСПРАВИТЬ НОРМАЛЬНО ЗАГЛУШКУ
+    const handleChangeFilters = (overrideParams?: any) => {
+        console.log("labuba");
+        const params = overrideParams ?? {
+            keyWords: search || undefined,
+            catId: categoryId || undefined,
+            cityId: cityId || undefined
+        };
+
+        context!.setFilterParams(params);
+
+        if (user?.role === "volunteer") {
+            context!.fetchEventsForUser(params);
+        } else {
+            context!.fetchEvents(params);
+        }
+    };
+
     const handleRegister = async (eventId: number) => {
-        const testUserId = "test-user-123";
-        const success = await registerForEvent(eventId, testUserId);
+        if (!createAttendance || !user?.user?.id) {
+            showNotification('Ошибка: пользователь не авторизован', 'error');
+            return;
+        }
+
+        const attendanceData = {
+            userId: user.user.id,
+            eventId: eventId,
+            attendanceStatusId: 1 //зарегистрирован
+        };
+        
+        const existing = await attContext!.fetchAttendanceByUserAndEvent(
+            user.user.id,
+            eventId
+        );
+        
+        let success = false;
+
+        if (existing) {
+            const updated = new EventAttendanceDTO({
+                ...existing,
+                attendanceStatusId: 1
+            });
+
+            success = await attContext!.updateAttendance(existing.id!, updated);
+        } else {
+            success = await createAttendance(attendanceData as any);
+        }
+        
         if (success) {
-            alert('Вы успешно зарегистрированы на событие!');
+            showNotification('Вы успешно зарегистрированы на событие!', 'success');
+            context?.fetchEventsForUser();
+            // Обновляем количество участников для этого события
+            const count = await getParticipantsCount(eventId);
+            if (selectedEventId === eventId) {
+                setParticipantsCount(count);
+            }
+        } else {
+            showNotification('Ошибка при регистрации на событие', 'error');
         }
     };
     
@@ -219,13 +274,12 @@ export const EventsListPage: React.FC = () => {
             <Button
                 variant="contained"
                 color="primary"
-                onClick={() =>
-                    setFilterParams({
-                        keyWords: search || undefined,
-                        catId: categoryId || undefined,
-                        cityId: cityId || undefined
-                    })
-                }
+                onClick={() => handleChangeFilters({
+                    keyWords: search || undefined,
+                    catId: categoryId || undefined,
+                    cityId: cityId || undefined
+                })}
+
             >
                 Применить
             </Button>
@@ -235,29 +289,27 @@ export const EventsListPage: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={() => {
-                    setSearch('');
-                    setCategoryId('');
-                    setCityId('');
-                    clearFilters();
-                }}
+                const params = {
+                    keyWords: undefined,
+                    catId: undefined,
+                    cityId: undefined
+                };
+
+                setSearch('');
+                setCategoryId('');
+                setCityId('');
+                clearFilters();
+                handleChangeFilters(params);
+            }}
+
             >
                 Сброс
             </Button>
         </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" component="h1">
-                    Список событий
+                <Typography variant="h4" component="h1" color="#1c022c">
+                    Все мероприятия
                 </Typography>
-                 {isOrganizer && (
-                    <Button 
-                        variant="contained" 
-                        color="primary"
-                        component={RouterLink}
-                        to="/events/add"
-                    >
-                        Создать событие
-                    </Button>
-                )}
             </Box>
 
             {/* Ошибки */}
@@ -269,9 +321,11 @@ export const EventsListPage: React.FC = () => {
 
             {/* Список событий */}
             <Grid container spacing={3}>
-                {events.map((event) => (
+                {events
+                .map((event) => (
                     <Grid size={12} key={event.id}>
                         <Card>
+                            {/*</Card><Card sx={{ bgcolor: 'rgba(148, 156, 255, 0.3)' }}>*/}
                             {event.imagePath && (
                                 <Box
                                     component="img"
@@ -326,15 +380,21 @@ export const EventsListPage: React.FC = () => {
                                 </Grid>
                             </CardContent>
                             
-                            <CardActions>
+                            <CardActions sx={{ justifyContent: 'flex-end' }}>
+                                {user?.role === 'volunteer' && (
+                                    <Button 
+                                        variant="contained"
+                                        color="primary"
+                                        sx={{ opacity: 0.9 }}
+                                        onClick={() => handleRegister(event.id!)}
+                                    >
+                                        Зарегистрироваться
+                                    </Button>
+                                )}
                                 <Button 
-                                    color="success"
-                                    onClick={() => handleRegister(event.id!)}
-                                >
-                                    Зарегистрироваться
-                                </Button>
-                                <Button 
-                                    color="info"
+                                    variant="contained"
+                                    color="primary"
+                                    sx={{ opacity: 0.9 }}
                                     onClick={() => handleShowParticipants(event.id!)}
                                 >
                                     Участники

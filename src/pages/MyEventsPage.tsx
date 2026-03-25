@@ -16,30 +16,47 @@ import {
   GridLegacy
 } from '@mui/material';
 import { AttendanceContext } from '../context/AttendanceContext';
+import { VolunteerEventContext } from '../context/EventContext';
 import { useAuth } from '../context/AuthContext';
-import { EventAttendanceDTO } from '../client/apiClient';
+import { EventAttendanceDTO, VolunteerEventDTO } from '../client/apiClient';
 
 export const MyEventPage: React.FC = () => {
   const context = useContext(AttendanceContext);
+  const eventContext = useContext(VolunteerEventContext);
   const { user } = useAuth();
 
   const [tab, setTab] = useState(0);
   const [data, setData] = useState<EventAttendanceDTO[]>([]);
+  const [organizedEvents, setOrganizedEvents] = useState<VolunteerEventDTO[]>([]);
+  const {
+  fetchAttendancesByUserId,
+  fetchAttendanceStatuses,
+  attendanceStatuses,
+  updateAttendance,
+  isLoading,
+  error,
+  } = context!;
     useEffect(() => {
     const userId = user?.user?.id;
     if (!userId) return;
-
     const load = async () => {
-        const attendances = await fetchAttendancesByUserId(userId);
-        setData(attendances);
-        await fetchAttendanceStatuses();
-    };
+      const attendances = await fetchAttendancesByUserId(userId);
+      setData(attendances);
+
+      await fetchAttendanceStatuses();
+
+      if (user?.role === 'organizer' && eventContext) {
+          const events = await eventContext.getEventsByUserId(userId);
+          setOrganizedEvents(events);
+      }
+   };
 
     load();
-    }, [user?.user?.id]);
-
-
-  if (!context) {
+    }, []);
+    
+  if (!context || !eventContext) {
+    console.log(context);
+    console.log(eventContext);
     return (
       <Container>
         <Typography color="error">Ошибка контекста</Typography>
@@ -47,28 +64,21 @@ export const MyEventPage: React.FC = () => {
     );
   }
 
-  const {
-    fetchAttendancesByUserId,
-    fetchAttendanceStatuses,
-    attendanceStatuses,
-    updateAttendance,
-    isLoading,
-    error,
-  } = context;
-
   const STATUS = {
     UPCOMING: 1,
     CANCELLED: 2,
     ATTENDED: 3,
     NO_SHOW: 4,
   };
+  const now = new Date();
 
-  const getStatusName = (id?: number) => {
-    return (
-      attendanceStatuses.find(s => s.id === id)?.attendanceStatusName ||
-      'Неизвестно'
-    );
-  };
+  const organizerUpcoming = organizedEvents.filter(
+    e => e.eventDateTime && new Date(e.eventDateTime) > now
+  );
+
+  const organizerHistory = organizedEvents.filter(
+    e => e.eventDateTime && new Date(e.eventDateTime) <= now
+  );
 
   const upcoming = data.filter(
     a => a.attendanceStatusId === STATUS.UPCOMING
@@ -159,7 +169,7 @@ export const MyEventPage: React.FC = () => {
 
                   <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
                     <Chip
-                      label={getStatusName(a.attendanceStatusId)}
+                      label={(a.attendanceStatus?.name)}
                     />
                   </Box>
                 </CardContent>
