@@ -1,40 +1,29 @@
 import './App.css';
 import { CircularProgress } from '@mui/material';
-import { Snackbar, Alert } from "@mui/material";
 import ErrorBoundary from './components/layout/ErrorBoundary';
-import { Header } from './components/layout/Header';
 import { Layout } from './components/layout/Layout';
-import { AuthProvider } from './context/AuthContext';
-
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { VolunteerEventProvider } from './context/EventContext';
+import { AttendanceProvider } from './context/AttendanceContext';
+
 import { EventsListPage } from './pages/EventsListPage';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from "./context/AuthContext";
+import { CreateEventPage } from './pages/CreateEventPage';
+import { MyEventPage } from './pages/MyEventsPage';
+
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import { CreateEventPage } from './pages/CreateEventPage';
+
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from 'react-router-dom';
+
 import React from 'react';
 import { NotificationProvider, useNotification } from './components/Notification';
 
-// const ProtectedRoute: React.FC<{ children: React.ReactElement, allowedRoles?: string[] }> = ({
-//   children,
-//   allowedRoles,
-// }) => {
-//   const { user, isLoading, userRole } = useAuth();
-  
-//   if (isLoading) return <CircularProgress/>
-//   if (!user) {
-//     alert("Недостаточно прав. Выполните вход!");
-//     return <Navigate to="/" replace />;
-//   }
-
-//   if (allowedRoles && allowedRoles.length > 0 && (!userRole || !allowedRoles.includes(userRole))) {
-//     alert("У вас недостаточно прав для доступа к этой странице.");
-//     return <Navigate to="/" replace />;
-//   }
-
-//   return children;
-// };
 const ProtectedRoute: React.FC<{ children: React.ReactElement, allowedRoles?: string[] }> = ({
   children,
   allowedRoles,
@@ -63,27 +52,56 @@ function App() {
       <NotificationProvider>
         <BrowserRouter>
           <AuthProvider>
-            <VolunteerEventProvider>
-              <Layout>
-                <Routes>
-                  <Route path="/login" element={<ErrorBoundary><LoginPage /></ErrorBoundary>} />
-                  <Route path="/register" element={<ErrorBoundary><RegisterPage /></ErrorBoundary>} />
-                  {/* Публичные маршруты */}
-                  <Route path="/" element={<EventsListPage />} />
-                  <Route path="/events" element={<EventsListPage />} />
-                  <Route 
-                    path="/events/add" 
-                    element={
-                      <ProtectedRoute allowedRoles={["organizer"]}>
-                        <ErrorBoundary><CreateEventPage /></ErrorBoundary>
-                      </ProtectedRoute>
-                    } 
-                  />
-                  {/* Редирект для неизвестных маршрутов */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Layout>
-            </VolunteerEventProvider>
+            <Layout>
+              <Routes>
+
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+
+                <Route
+                  path="/"
+                  element={
+                    <VolunteerEventProvider>
+                      <EventsListPage />
+                    </VolunteerEventProvider>
+                  }
+                />
+
+                <Route
+                  path="/events"
+                  element={
+                    <VolunteerEventProvider>
+                      <EventsListPage />
+                    </VolunteerEventProvider>
+                  }
+                />
+
+                <Route
+                  path="/events/add"
+                  element={
+                    <ProtectedRoute allowedRoles={['organizer']}>
+                      <VolunteerEventProvider>
+                        <CreateEventPage />
+                      </VolunteerEventProvider>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/myevents"
+                  element={
+                    <ProtectedRoute>
+                      <AttendanceProvider>
+                        <MyEventPage />
+                      </AttendanceProvider>
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route path="*" element={<Navigate to="/" replace />} />
+
+              </Routes>
+            </Layout>
           </AuthProvider>
         </BrowserRouter>
       </NotificationProvider>

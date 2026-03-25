@@ -110,9 +110,15 @@ export const Header = () => {
               color="secondary"
               onClick={() => navigate('/events')}
             >
-              Мероприятия
+              Все мероприятия
             </Button>
-            
+            <Button
+              variant="text"
+              color="secondary"
+              onClick={() => navigate('/myevents')}
+            >
+              Мои мероприятия
+            </Button>
             {isOrganizer && (
               <Button
                 variant="text"
@@ -120,7 +126,7 @@ export const Header = () => {
                 startIcon={<Add sx={{ fontSize: 20 }} />}
                 onClick={handleCreateEvent}
               >
-                Создать событие
+                Создать мероприятие
               </Button>
             )}
           </Stack>

@@ -48,6 +48,7 @@ interface VolunteerEventContextProps {
     // Методы для работы с событиями
     fetchEvents: (filterParams?: EventFilterParams) => Promise<void>;
     fetchEventById: (id: number) => Promise<VolunteerEventDTO | null>;
+    getEventsByUserId: (userId: string) => Promise<VolunteerEventDTO[]>;
     createEvent: (eventData: CreateEventData) => Promise<VolunteerEventDTO | null>;
     updateEvent: (id: number, eventData: VolunteerEventDTO) => Promise<boolean>;
     deleteEvent: (id: number, softDelete?: boolean) => Promise<boolean>;
@@ -152,6 +153,21 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             console.error(`Ошибка при загрузке события с ID ${id}:`, error);
             setError("Не удалось загрузить информацию о событии");
             return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    const getEventsByUserId = async (userId: string): Promise<VolunteerEventDTO[]> => {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const result = await apiClient.getEventsByUserId(userId);
+            return result || [];
+        } catch (error) {
+            console.error(`Ошибка при загрузке событий пользователя ${userId}:`, error);
+            setError("Не удалось загрузить события пользователя");
+            return [];
         } finally {
             setIsLoading(false);
         }
@@ -411,6 +427,7 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
             createEvent,
             updateEvent,
             deleteEvent,
+            getEventsByUserId,
             
             // Методы для работы с участниками
             fetchEventAttendees,

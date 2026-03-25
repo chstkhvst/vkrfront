@@ -16,7 +16,7 @@ import {
     DialogActions,
     Snackbar, //ИСПРАВИТЬ АЛЕРТЫ
     TextField,
-    Select,
+    Select, 
     MenuItem,
     FormControl,
     InputLabel, 
@@ -328,14 +328,12 @@ export const EventsListPage: React.FC = () => {
                             
                             <CardActions>
                                 <Button 
-                                    size="small" 
                                     color="success"
                                     onClick={() => handleRegister(event.id!)}
                                 >
                                     Зарегистрироваться
                                 </Button>
                                 <Button 
-                                    size="small" 
                                     color="info"
                                     onClick={() => handleShowParticipants(event.id!)}
                                 >
