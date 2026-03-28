@@ -23,18 +23,19 @@ import {
     Pagination,
     Autocomplete  
 } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
 import { VolunteerEventContext } from '../context/EventContext';
 import { AttendanceContext } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
-import { NotificationProvider, useNotification } from '../components/Notification';
+import { useNotification } from '../components/Notification';
 import { EventAttendanceDTO } from '../client/apiClient';
+import { useNavigate } from 'react-router-dom';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
     const attContext = useContext(AttendanceContext);
-    const { user } = useAuth(); 
+    const { user, isLoading: authLoading } = useAuth(); 
     const { showNotification } = useNotification();
+    const navigate = useNavigate();
     
     // Состояния для диалогов
     const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
@@ -74,15 +75,28 @@ export const EventsListPage: React.FC = () => {
     }, [search]);
 
 
+    // useEffect(() => {
+    //     if (!user) return;
+    //     console.log(user)
+    //     if (user?.role === "volunteer") {
+    //         context!.fetchEventsForUser();
+    //     } else {
+    //         context!.fetchEvents();
+    //     }
+    // }, [pageNumber, user?.role]);
+
     useEffect(() => {
-        if (!user) return;
+        
+        if(authLoading) return;
+
+        //if (!user) return;
         console.log(user)
-        if (user?.role === "volunteer") {
-            context!.fetchEventsForUser();
-        } else {
+        if (user?.role === "moderator") {
             context!.fetchEvents();
+        } else {
+            context!.fetchEventsForUser();
         }
-    }, [pageNumber, user?.role]);
+    }, [pageNumber, user?.role, authLoading]);
 
 
     const filteredCities = [...cities].sort((a, b) => {
@@ -324,7 +338,19 @@ export const EventsListPage: React.FC = () => {
                 {events
                 .map((event) => (
                     <Grid size={12} key={event.id}>
-                        <Card>
+                        <Card 
+                            sx={{ 
+                                cursor: 'pointer',
+                                transition: 'all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1)',
+                                backdropFilter: 'blur(10px)',
+                                '&:hover': {
+                                transform: 'scale(1.01)',
+                                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                                background: 'rgba(148, 156, 255, 0.01)',
+                                }
+                            }}
+                            onClick={() => navigate(`/events/${event.id}`)} //TODO FIX
+                        >
                             {/*</Card><Card sx={{ bgcolor: 'rgba(148, 156, 255, 0.3)' }}>*/}
                             {event.imagePath && (
                                 <Box
@@ -386,7 +412,10 @@ export const EventsListPage: React.FC = () => {
                                         variant="contained"
                                         color="primary"
                                         sx={{ opacity: 0.9 }}
-                                        onClick={() => handleRegister(event.id!)}
+                                        onClick={(e) => {
+                                        e.stopPropagation(); 
+                                        handleRegister(event.id!);
+                                        }}
                                     >
                                         Зарегистрироваться
                                     </Button>
@@ -395,7 +424,10 @@ export const EventsListPage: React.FC = () => {
                                     variant="contained"
                                     color="primary"
                                     sx={{ opacity: 0.9 }}
-                                    onClick={() => handleShowParticipants(event.id!)}
+                                    onClick={(e) => {
+                                        e.stopPropagation(); 
+                                        handleShowParticipants(event.id!);
+                                    }}
                                 >
                                     Участники
                                 </Button>

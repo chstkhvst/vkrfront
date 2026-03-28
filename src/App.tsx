@@ -23,6 +23,7 @@ import {
 
 import React from 'react';
 import { NotificationProvider, useNotification } from './components/Notification';
+import { EventDetailsPage } from './pages/EventDetailsPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement, allowedRoles?: string[] }> = ({
   children,
@@ -97,14 +98,25 @@ function App() {
                     <ProtectedRoute>
                       <AttendanceProvider>
                         <VolunteerEventProvider>
-                        <MyEventPage />
+                          <MyEventPage />
                         </VolunteerEventProvider>
                       </AttendanceProvider>
                     </ProtectedRoute>
                   }
                 />
-
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route
+                  path="/events/:id"
+                  element={
+                    <ProtectedRoute >
+                      <VolunteerEventProvider>
+                        <AttendanceProvider>
+                          <EventDetailsPage/>
+                        </AttendanceProvider>
+                      </VolunteerEventProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/events" replace />} />
 
               </Routes>
             </Layout>

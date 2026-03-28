@@ -111,6 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setCurrentUser(null);
     setUserRole(null);
+
   }
 
   return (

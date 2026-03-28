@@ -20,6 +20,9 @@ export const customTheme = createTheme({
     mode: 'light',
     primary: PRIMARY,
     secondary: SECONDARY,
+    error: {
+      main: '#f436696f',
+    },
 
     background: {
       default: '#f4f6ff',
