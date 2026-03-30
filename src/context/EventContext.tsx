@@ -5,6 +5,7 @@ import {
     EventCategory,
     EventStatus,
     City,
+    GeocodeResult
 } from "../client/apiClient"
 
 // Интерфейс для параметров фильтрации событий
@@ -17,8 +18,8 @@ export interface EventFilterParams {
 type CreateEventData = {
     name: string;
     description: string;
-    lat: number;
-    lng: number;
+    lat: string;
+    lng: string;
     address: string;
     eventDateTime: Date;
     eventPoints: number;
@@ -51,6 +52,8 @@ interface VolunteerEventContextProps {
     updateEvent: (id: number, eventData: VolunteerEventDTO) => Promise<boolean>;
     deleteEvent: (id: number, softDelete?: boolean) => Promise<boolean>;
     
+    geocode: (query: string) => Promise<GeocodeResult[]>;
+
     // Методы для справочников
     fetchEventCategories: () => Promise<void>;
     fetchEventStatuses: () => Promise<void>;
@@ -184,17 +187,28 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             setIsLoading(false);
         }
     };
+    const geocode = async (query: string): Promise<GeocodeResult[]> => {
+        try {
+            if (!query) return [];
+
+            const data = await apiClient.geocode(query);
+            return data || [];
+        } catch (error) {
+            console.error("Ошибка геокодинга:", error);
+            return [];
+        }
+    };
 
     // Создание нового события
 const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDTO | null> => {
     setIsLoading(true);
     setError(null);
 
-    try { //    ДОБАВЛЕНИЕ С КАРТИНКАМИ ПРАВКА
+    try { 
         const fileParam = eventData.image
             ? { data: eventData.image, fileName: eventData.image.name }
             : { data: new Blob(), fileName: "" }; 
-
+        console.log(eventData);
         const createdEvent = await apiClient.createEvent(
             eventData.name,
             eventData.description,
@@ -209,10 +223,15 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
             eventData.cityId,
         );
 
-        await fetchEvents(filterParams);
+        //await fetchEvents(filterParams);
         return createdEvent;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Ошибка при создании события:", error);
+
+    console.error("message:", error?.message);
+    console.error("status:", error?.status);
+    console.error("response:", error?.response);
+    console.error("headers:", error?.headers);
         setError("Не удалось создать событие");
         return null;
     } finally {
@@ -339,6 +358,8 @@ const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDT
             getEventsByUserId,
             fetchEventsForUser,
             
+            geocode,
+
             // Методы для справочников
             fetchEventCategories,
             fetchEventStatuses,

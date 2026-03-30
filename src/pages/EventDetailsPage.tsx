@@ -20,6 +20,7 @@ import { AttendanceContext } from "../context/AttendanceContext";
 import { useNotification } from '../components/Notification';
 import { useAuth } from "../context/AuthContext";
 import { EventAttendanceDTO } from "../client/apiClient";
+import { MapView } from "../components/MapView";
 
 export const EventDetailsPage: React.FC = () => {
   const { id } = useParams();
@@ -45,6 +46,7 @@ export const EventDetailsPage: React.FC = () => {
         const load = async () => {
         if (!id) return;
         const data = await fetchEventById(Number(id));
+        console.log('Event data:', data)
         setEvent(data);
         setLoading(false);
         if (data?.id) {
@@ -138,7 +140,27 @@ const handleRegister = async (eventId: number) => {
             </Typography>
             <Typography>🏙 {event.city?.name}</Typography>
             <Typography>⭐ {event.eventPoints}</Typography>
-            <Typography>👥 Лимит: {event.participantsLimit}</Typography>
+            <Box sx={{ mt: 1 }}>
+              <Typography variant="body2">
+                  👥 Участники: {participantsCount} / {event.participantsLimit || '∞'}
+              </Typography>
+              {event.participantsLimit && (
+                <Box sx={{ 
+                  width: '100%', 
+                  bgcolor: 'rgba(148,156,255,0.2)', 
+                  borderRadius: 1, 
+                  mt: 0.5,
+                  height: 6 
+                }}>
+                  <Box sx={{ 
+                    width: `${(participantsCount / event.participantsLimit) * 100}%`, 
+                    bgcolor: '#949cff', 
+                    borderRadius: 1, 
+                    height: '100%' 
+                  }} />
+              </Box>
+              )}
+            </Box>
           </Box>
 
           <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
@@ -151,13 +173,25 @@ const handleRegister = async (eventId: number) => {
             sx={{
               mt: 3,
               height: 300,
-              bgcolor: "rgba(148,156,255,0.1)",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              borderRadius: 2,
+              overflow: "hidden",
             }}
           >
-            Карта будет тут ({event.lat}, {event.lng})
+            {event.lat && event.lng ? (
+              <MapView lat={event.lat} lng={event.lng} />
+            ) : (
+              <Box
+                sx={{
+                  height: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  bgcolor: "rgba(148,156,255,0.1)",
+                }}
+              >
+                Нет координат
+              </Box>
+            )}
           </Box>
 
           {/* ВОЛОНТЕР */}

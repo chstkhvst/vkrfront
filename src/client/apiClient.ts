@@ -1651,6 +1651,55 @@ export class Client {
     }
 
     /**
+     * @param query (optional) 
+     * @return OK
+     */
+    geocode(query?: string | undefined): Promise<GeocodeResult[]> {
+        let url_ = this.baseUrl + "/api/Event/geocode?";
+        if (query === null)
+            throw new globalThis.Error("The parameter 'query' cannot be null.");
+        else if (query !== undefined)
+            url_ += "query=" + encodeURIComponent("" + query) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGeocode(_response);
+        });
+    }
+
+    protected processGeocode(response: Response): Promise<GeocodeResult[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(GeocodeResult.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<GeocodeResult[]>(null as any);
+    }
+
+    /**
      * @param name (optional) 
      * @param description (optional) 
      * @param lat (optional) 
@@ -1664,7 +1713,7 @@ export class Client {
      * @param cityId (optional) 
      * @return OK
      */
-    createEvent(name?: string | undefined, description?: string | undefined, lat?: number | undefined, lng?: number | undefined, address?: string | undefined, eventDateTime?: Date | undefined, eventPoints?: number | undefined, participantsLimit?: number | undefined, image?: FileParameter | undefined, eventCategoryId?: number | undefined, cityId?: number | undefined): Promise<VolunteerEventDTO> {
+    createEvent(name?: string | undefined, description?: string | undefined, lat?: string | undefined, lng?: string | undefined, address?: string | undefined, eventDateTime?: Date | undefined, eventPoints?: number | undefined, participantsLimit?: number | undefined, image?: FileParameter | undefined, eventCategoryId?: number | undefined, cityId?: number | undefined): Promise<VolunteerEventDTO> {
         let url_ = this.baseUrl + "/api/Event/CreateEvent";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2909,6 +2958,50 @@ export class EventStatusDTO implements IEventStatusDTO {
 export interface IEventStatusDTO {
     id?: number;
     name?: string | undefined;
+}
+
+export class GeocodeResult implements IGeocodeResult {
+    lat?: string | undefined;
+    lon?: string | undefined;
+    display_name?: string | undefined;
+
+    constructor(data?: IGeocodeResult) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.lat = _data["lat"];
+            this.lon = _data["lon"];
+            this.display_name = _data["display_name"];
+        }
+    }
+
+    static fromJS(data: any): GeocodeResult {
+        data = typeof data === 'object' ? data : {};
+        let result = new GeocodeResult();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["lat"] = this.lat;
+        data["lon"] = this.lon;
+        data["display_name"] = this.display_name;
+        return data;
+    }
+}
+
+export interface IGeocodeResult {
+    lat?: string | undefined;
+    lon?: string | undefined;
+    display_name?: string | undefined;
 }
 
 export class LoginModel implements ILoginModel {

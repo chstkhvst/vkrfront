@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef  } from 'react';
 import {
     Container,
     Typography,
@@ -17,10 +17,12 @@ import {
 import { Navigate, Link as RouterLink } from 'react-router-dom';
 import { VolunteerEventContext } from '../context/EventContext';
 import { Autocomplete } from '@mui/material';
+import { MapPicker } from "../components/MapPicker";
+import { useNotification } from '../components/Notification';
 
 export const CreateEventPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
-    
+
     const [newEvent, setNewEvent] = useState({
         name: '',
         description: '',
@@ -31,12 +33,22 @@ export const CreateEventPage: React.FC = () => {
         eventPoints: 10,
         participantsLimit: ''
     });
-    
+
+    const { showNotification } = useNotification();
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [citySearch, setCitySearch] = useState('');
     const [image, setImage] = useState<File | undefined>(undefined);
+    const [coords, setCoords] = useState<{
+        lat: number | null;
+        lng: number | null;
+    }>({
+        lat: null,
+        lng: null
+    });
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const debounceRef = useRef<any>(null);
 
     if (!context) {
         return (
@@ -51,7 +63,8 @@ export const CreateEventPage: React.FC = () => {
     const {
         eventCategories,
         cities,
-        createEvent
+        createEvent,
+        geocode 
     } = context;
 
     const filteredCities = [...cities].sort((a, b) => {
@@ -64,10 +77,23 @@ export const CreateEventPage: React.FC = () => {
         return a.name!.localeCompare(b.name!);
     });
 
+    const handleSearch = (value: string) => {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+
+        debounceRef.current = setTimeout(async () => {
+            if (!value) return;
+
+            const data = await geocode(value);
+            setSuggestions(data);
+        }, 600);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newEvent.name || !newEvent.categoryId || !newEvent.cityId) {
+    if (!newEvent.name || !newEvent.categoryId || !newEvent.cityId || !coords.lat || !coords.lng) {
         setErrorMessage('Пожалуйста, заполните обязательные поля');
         return;
     }
@@ -78,8 +104,8 @@ export const CreateEventPage: React.FC = () => {
     const eventData = {
         name: newEvent.name,
         description: newEvent.description || '',
-        lat: 0, // TODO FIX
-        lng: 0,
+        lat: (coords.lat).toString(),
+        lng: coords.lng.toString(),
         address: newEvent.address || '',
         eventDateTime: newEvent.eventDateTime
             ? new Date(newEvent.eventDateTime)
@@ -96,6 +122,7 @@ export const CreateEventPage: React.FC = () => {
     const result = await createEvent(eventData);
 
     if (result) {
+        console.log(result);
         setSuccess(true);
         setNewEvent({
             name: '',
@@ -108,6 +135,7 @@ export const CreateEventPage: React.FC = () => {
             participantsLimit: ''
         });
         setImage(undefined);
+        showNotification('Ваща заявка отправлена. Подробности в разделе "Мои мероприятия".', 'info');
     } else {
         setErrorMessage('Ошибка при создании события');
     }
@@ -209,12 +237,37 @@ export const CreateEventPage: React.FC = () => {
                             isOptionEqualToValue={(option, value) => option.id === value?.id}
                         />
 
-                        <TextField
-                            label="Адрес"
-                            fullWidth
-                            value={newEvent.address}
-                            onChange={(e) => setNewEvent({...newEvent, address: e.target.value})}
+                        <Autocomplete
+                            options={suggestions}
+                            getOptionLabel={(option) => option.display_name || ""}
+                            isOptionEqualToValue={(option, value) =>
+                                option.lat === value.lat && option.lon === value.lon
+                            }
+                            onInputChange={(_, value) => {
+                                handleSearch(value);
+                            }}
+
+                            onChange={(_, value) => {
+                                if (!value) return;
+
+                                const lat = parseFloat(value.lat);
+                                const lng = parseFloat(value.lon);
+
+                                setCoords({ lat, lng });
+
+                                setNewEvent({
+                                    ...newEvent,
+                                    address: value.display_name
+                                });
+                            }}
+
+                            renderInput={(params) => (
+                                <TextField {...params} label="Поиск адреса" fullWidth />
+                            )}
                         />
+                        <Box sx={{ height: 300, mt: 2, borderRadius: 2, overflow: "hidden" }}>
+                            <MapPicker coords={coords} setCoords={setCoords} />
+                        </Box>
 
                         <TextField
                             label="Дата и время"

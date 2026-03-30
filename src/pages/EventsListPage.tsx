@@ -27,19 +27,16 @@ import { VolunteerEventContext } from '../context/EventContext';
 import { AttendanceContext } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../components/Notification';
-import { EventAttendanceDTO } from '../client/apiClient';
 import { useNavigate } from 'react-router-dom';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
-    const attContext = useContext(AttendanceContext);
     const { user, isLoading: authLoading } = useAuth(); 
     const { showNotification } = useNotification();
     const navigate = useNavigate();
     
     // Состояния для диалогов
     const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
-    const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
     const [participantsCount, setParticipantsCount] = useState<number>(0);
     const [search, setSearch] = useState('');
     const [categoryId, setCategoryId] = useState<number | ''>('');
@@ -55,17 +52,11 @@ export const EventsListPage: React.FC = () => {
 
         eventCategories,
         cities,
-        setFilterParams,
         clearFilters,
 
         setPageNumber,  
     } = context!;
     
-    const {
-        createAttendance,
-        getParticipantsCount,  
-    } = attContext!;
-
      useEffect(() => {
         const delay = setTimeout(() => {
             handleChangeFilters();
@@ -118,61 +109,11 @@ export const EventsListPage: React.FC = () => {
 
         context!.setFilterParams(params);
 
-        if (user?.role === "volunteer") {
+        if (user?.role != "moderator") {
             context!.fetchEventsForUser(params);
         } else {
             context!.fetchEvents(params);
         }
-    };
-
-    const handleRegister = async (eventId: number) => {
-        if (!createAttendance || !user?.user?.id) {
-            showNotification('Ошибка: пользователь не авторизован', 'error');
-            return;
-        }
-
-        const attendanceData = {
-            userId: user.user.id,
-            eventId: eventId,
-            attendanceStatusId: 1 //зарегистрирован
-        };
-        
-        const existing = await attContext!.fetchAttendanceByUserAndEvent(
-            user.user.id,
-            eventId
-        );
-        
-        let success = false;
-
-        if (existing) {
-            const updated = new EventAttendanceDTO({
-                ...existing,
-                attendanceStatusId: 1
-            });
-
-            success = await attContext!.updateAttendance(existing.id!, updated);
-        } else {
-            success = await createAttendance(attendanceData as any);
-        }
-        
-        if (success) {
-            showNotification('Вы успешно зарегистрированы на событие!', 'success');
-            context?.fetchEventsForUser();
-            // Обновляем количество участников для этого события
-            const count = await getParticipantsCount(eventId);
-            if (selectedEventId === eventId) {
-                setParticipantsCount(count);
-            }
-        } else {
-            showNotification('Ошибка при регистрации на событие', 'error');
-        }
-    };
-    
-    const handleShowParticipants = async (eventId: number) => {
-        const count = await getParticipantsCount(eventId);
-        setParticipantsCount(count);
-        setSelectedEventId(eventId);
-        setParticipantsDialogOpen(true);
     };
 
     if (isLoading && events.length === 0) {
@@ -404,34 +345,7 @@ export const EventsListPage: React.FC = () => {
                                         </Typography>
                                     </Grid>
                                 </Grid>
-                            </CardContent>
-                            
-                            <CardActions sx={{ justifyContent: 'flex-end' }}>
-                                {user?.role === 'volunteer' && (
-                                    <Button 
-                                        variant="contained"
-                                        color="primary"
-                                        sx={{ opacity: 0.9 }}
-                                        onClick={(e) => {
-                                        e.stopPropagation(); 
-                                        handleRegister(event.id!);
-                                        }}
-                                    >
-                                        Зарегистрироваться
-                                    </Button>
-                                )}
-                                <Button 
-                                    variant="contained"
-                                    color="primary"
-                                    sx={{ opacity: 0.9 }}
-                                    onClick={(e) => {
-                                        e.stopPropagation(); 
-                                        handleShowParticipants(event.id!);
-                                    }}
-                                >
-                                    Участники
-                                </Button>
-                            </CardActions>
+                            </CardContent>                                                       
                         </Card>
                     </Grid>
                 ))}
