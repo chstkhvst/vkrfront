@@ -21,13 +21,16 @@ import {
     FormControl,
     InputLabel, 
     Pagination,
-    Autocomplete  
+    Autocomplete,  
+    Chip,
+    Divider
 } from '@mui/material';
 import { VolunteerEventContext } from '../context/EventContext';
 import { AttendanceContext } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../components/Notification';
 import { useNavigate } from 'react-router-dom';
+import { CalendarToday, Category, FilterList, FilterListOff, LocationOn, Search, Star } from '@mui/icons-material';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
@@ -126,78 +129,30 @@ export const EventsListPage: React.FC = () => {
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-            {/* Поиск */}
-            <TextField
-                label="Поиск"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                size="small"
-                sx={{
-                    '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                            borderColor: '#949cff',
-                        },
-                        '&:hover fieldset': {
-                            borderColor: '#7c84f4',
-                        },
-                        '&.Mui-focused fieldset': {
-                            borderColor: '#949cff',
-                        },                       
-                    },
-                    '& .MuiInputLabel-root': {
-                        color: '#5f6388',
-                        '&.Mui-focused': {
-                            color: '#949cff',
-                        },
-                    },
+                        <Card 
+                elevation={0} 
+                sx={{ 
+                    mb: 4, 
+                    p: 3, 
+                    background: 'linear-gradient(135deg, rgba(148, 156, 255, 0.05) 0%, rgba(124, 132, 244, 0.05) 100%)',
+                    border: '1px solid rgba(148, 156, 255, 0.2)',
+                    borderRadius: 3
                 }}
-            />
-
-            {/* Категория */}
-            <FormControl size="small" sx={{ minWidth: 150 }}>
-                <InputLabel sx={{
-                    color: '#5f6388',
-                    '&.Mui-focused': {
-                        color: '#949cff',
-                    },
-                }}>Категория</InputLabel>
-                <Select
-                    value={categoryId}
-                    label="Категория"
-                    onChange={(e) => setCategoryId(e.target.value as number)}
-                    sx={{
-                        '& .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#949cff',
-                        },
-                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#7c84f4',
-                        },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                            borderColor: '#949cff',
-                        },
-                    }}
-                >
-                    {eventCategories.map(cat => (
-                        <MenuItem key={cat.id} value={cat.id}>
-                            {cat.categoryName}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </FormControl>
-
-            {/* Город */}
-            <Autocomplete
-                options={filteredCities}
-                getOptionLabel={(option) => `${option.name}${option.subject ? ` (${option.subject})` : ''}`}
-                renderInput={(params) => (
+            >
+                <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                    {/* Поиск */}
                     <TextField
-                        {...params}
-                        label="Город"
+                        label="Поиск"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
                         size="small"
-                        onChange={(e) => setCitySearch(e.target.value)}
+                        InputProps={{
+                            startAdornment: <Search sx={{ mr: 1, color: '#949cff' }} fontSize="small" />
+                        }}
                         sx={{
+                            flex: '1 1 250px',
                             '& .MuiOutlinedInput-root': {
+                                bgcolor: 'white',
                                 '& fieldset': {
                                     borderColor: '#949cff',
                                 },
@@ -206,7 +161,7 @@ export const EventsListPage: React.FC = () => {
                                 },
                                 '&.Mui-focused fieldset': {
                                     borderColor: '#949cff',
-                                },
+                                },                       
                             },
                             '& .MuiInputLabel-root': {
                                 color: '#5f6388',
@@ -216,51 +171,132 @@ export const EventsListPage: React.FC = () => {
                             },
                         }}
                     />
-                )}
-                value={cities.find(c => c.id === cityId) || null}
-                onChange={(_, newValue) => {
-                    setCityId(newValue?.id || '');
-                }}
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                sx={{ minWidth: 200 }}
-            />
 
-            {/* Применить */}
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={() => handleChangeFilters({
-                    keyWords: search || undefined,
-                    catId: categoryId || undefined,
-                    cityId: cityId || undefined
-                })}
+                    {/* Категория */}
+                    <FormControl size="small" sx={{ minWidth: 180, flex: '0 1 auto' }}>
+                        <InputLabel sx={{
+                            color: '#5f6388',
+                            '&.Mui-focused': {
+                                color: '#949cff',
+                            },
+                        }}>Категория</InputLabel>
+                        <Select
+                            value={categoryId}
+                            label="Категория"
+                            onChange={(e) => setCategoryId(e.target.value as number)}
+                            sx={{
+                                bgcolor: 'white',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#949cff',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#7c84f4',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#949cff',
+                                },
+                            }}
+                        >
+                            {eventCategories.map(cat => (
+                                <MenuItem key={cat.id} value={cat.id}>
+                                    {cat.categoryName}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
 
-            >
-                Применить
-            </Button>
+                    {/* Город */}
+                    <Autocomplete
+                        options={filteredCities}
+                        getOptionLabel={(option) => `${option.name}${option.subject ? ` (${option.subject})` : ''}`}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Город"
+                                size="small"
+                                onChange={(e) => setCitySearch(e.target.value)}
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        bgcolor: 'white',
+                                        '& fieldset': {
+                                            borderColor: '#949cff',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: '#7c84f4',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#949cff',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        color: '#5f6388',
+                                        '&.Mui-focused': {
+                                            color: '#949cff',
+                                        },
+                                    },
+                                }}
+                            />
+                        )}
+                        value={cities.find(c => c.id === cityId) || null}
+                        onChange={(_, newValue) => {
+                            setCityId(newValue?.id || '');
+                        }}
+                        isOptionEqualToValue={(option, value) => option.id === value?.id}
+                        sx={{ minWidth: 220, flex: '0 1 auto' }}
+                    />
 
-            {/* Сброс */}
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={() => {
-                const params = {
-                    keyWords: undefined,
-                    catId: undefined,
-                    cityId: undefined
-                };
+                    {/* Применить */}
+                    <Button
+                        variant="contained"
+                        startIcon={<FilterList />}
+                        onClick={() => handleChangeFilters({
+                            keyWords: search || undefined,
+                            catId: categoryId || undefined,
+                            cityId: cityId || undefined
+                        })}
+                        sx={{
+                            bgcolor: '#949cff',
+                            '&:hover': {
+                                bgcolor: '#7c84f4',
+                            },
+                            textTransform: 'none',
+                            px: 3
+                        }}
+                    >
+                        Применить
+                    </Button>
 
-                setSearch('');
-                setCategoryId('');
-                setCityId('');
-                clearFilters();
-                handleChangeFilters(params);
-            }}
+                    {/* Сброс */}
+                    <Button
+                        variant="outlined"
+                        startIcon={<FilterListOff />}
+                        onClick={() => {
+                            const params = {
+                                keyWords: undefined,
+                                catId: undefined,
+                                cityId: undefined
+                            };
 
-            >
-                Сброс
-            </Button>
-        </Box>
+                            setSearch('');
+                            setCategoryId('');
+                            setCityId('');
+                            clearFilters();
+                            handleChangeFilters(params);
+                        }}
+                        sx={{
+                            borderColor: '#949cff',
+                            color: '#949cff',
+                            '&:hover': {
+                                borderColor: '#7c84f4',
+                                bgcolor: 'rgba(148, 156, 255, 0.05)',
+                            },
+                            textTransform: 'none'
+                        }}
+                    >
+                        Сброс
+                    </Button>
+                </Box>
+            </Card>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4" component="h1" color="#1c022c">
                     Все мероприятия
@@ -290,7 +326,7 @@ export const EventsListPage: React.FC = () => {
                                 background: 'rgba(148, 156, 255, 0.01)',
                                 }
                             }}
-                            onClick={() => navigate(`/events/${event.id}`)} //TODO FIX
+                            onClick={() => navigate(`/events/${event.id}`)} 
                         >
                             {/*</Card><Card sx={{ bgcolor: 'rgba(148, 156, 255, 0.3)' }}>*/}
                             {event.imagePath && (
@@ -308,44 +344,88 @@ export const EventsListPage: React.FC = () => {
                                     }}
                                 />
                             )}
-                            <CardContent>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                                    <Typography variant="h5" component="h2" gutterBottom>
-                                        {event.name}
+                                                            <CardContent sx={{ p: 3 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                                        <Typography variant="h5" component="h2" sx={{ 
+                                            fontWeight: 600,
+                                            color: '#1c022c',
+                                            flex: 1
+                                        }}>
+                                            {event.name}
+                                        </Typography>
+                                        {event.eventCategory?.name && (
+                                            <Chip 
+                                                icon={<Category sx={{ fontSize: 18 }} />}
+                                                label={event.eventCategory.name} 
+                                                size="small"
+                                                sx={{ 
+                                                    ml: 2,
+                                                    bgcolor: 'rgba(148, 156, 255, 0.1)',
+                                                    color: '#949cff',
+                                                    fontWeight: 500,
+                                                    border: '1px solid rgba(148, 156, 255, 0.3)'
+                                                }}
+                                            />
+                                        )}
+                                    </Box>
+                                    
+                                    <Typography color="text.secondary" sx={{ mb: 3, lineHeight: 1.6 }}>
+                                        {event.description || 'Нет описания'}
                                     </Typography>
-                                </Box>
-                                
-                                <Typography color="text.secondary" paragraph>
-                                    {event.description || 'Нет описания'}
-                                </Typography>
 
-                                <Grid container spacing={2} sx={{ mt: 1 }}>
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography variant="body2">
-                                            📍 {event.address || 'Адрес не указан'}
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            📅 {event.eventDateTime 
-                                                ? new Date(event.eventDateTime).toLocaleString() 
-                                                : 'Дата не указана'}
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            🏷️ Категория: {event.eventCategory?.name || 'Не указана'}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid size={{ xs: 12, sm: 6 }}>
-                                        <Typography variant="body2">
-                                            🏙️ Город: {event.city?.name || 'Не указан'}
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            ⭐ Баллы: {event.eventPoints || 0}
-                                        </Typography>
-                                        <Typography variant="body2">
-                                            👥 Лимит: {event.participantsLimit || 'Не ограничено'}
-                                        </Typography>
-                                    </Grid>
-                                </Grid>
-                            </CardContent>                                                       
+                                    <Divider sx={{ my: 2, borderColor: 'rgba(148, 156, 255, 0.1)' }} />
+
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: 3, 
+                                        flexWrap: 'wrap',
+                                        justifyContent: 'space-between'
+                                    }}>
+                                        <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', flex: 1 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <LocationOn sx={{ fontSize: 20, color: '#949cff' }} />
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {event.address || 'Адрес не указан'}
+                                                </Typography>
+                                            </Box>
+                                            
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <CalendarToday sx={{ fontSize: 20, color: '#949cff' }} />
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {event.eventDateTime 
+                                                        ? new Date(event.eventDateTime).toLocaleString('ru-RU', {
+                                                            day: 'numeric',
+                                                            month: 'long',
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })
+                                                        : 'Дата не указана'}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                        
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: 1,
+                                            bgcolor: 'rgba(255, 215, 0, 0.1)',
+                                            px: 2,
+                                            py: 1,
+                                            borderRadius: 2,
+                                            border: '1px solid rgba(255, 215, 0, 0.3)'
+                                        }}>
+                                            <Star sx={{ fontSize: 22, color: '#FFD700' }} />
+                                            <Typography variant="body1" sx={{ fontWeight: 600, color: '#1c022c' }}>
+                                                {event.eventPoints || 0}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                баллов
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </CardContent>                                                        
                         </Card>
                     </Grid>
                 ))}

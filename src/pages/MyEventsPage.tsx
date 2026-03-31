@@ -13,7 +13,11 @@ import {
   Alert,
   Grid,
   Chip,
-  GridLegacy
+  GridLegacy,
+  Dialog, 
+  DialogTitle,
+  DialogContent, 
+  DialogActions 
 } from '@mui/material';
 import {
   PendingOutlined as PendingIcon,
@@ -29,6 +33,7 @@ import {
 import { AttendanceContext } from '../context/AttendanceContext';
 import { VolunteerEventContext } from '../context/EventContext';
 import { useAuth } from '../context/AuthContext';
+import { ParticipantsList } from "../components/ParticipantsList";
 import { EventAttendanceDTO, VolunteerEventDTO } from '../client/apiClient';
 
 export const MyEventPage: React.FC = () => {
@@ -38,6 +43,8 @@ export const MyEventPage: React.FC = () => {
 
   const [tab, setTab] = useState(0);
   const [data, setData] = useState<EventAttendanceDTO[]>([]);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [organizedEvents, setOrganizedEvents] = useState<VolunteerEventDTO[]>([]);
   const {
   fetchAttendancesByUserId,
@@ -338,7 +345,10 @@ const getEventStatusSx = (statusId: number | undefined) => {
                 <Button
                   variant="outlined"
                   color="primary"
-                  onClick={() => {/* Просмотр участников */}}
+                  onClick={() => {
+                      setSelectedEventId(orgEvent.id!);
+                      setParticipantsOpen(true);
+                  }}
                 >
                   Участники
                 </Button>
@@ -347,6 +357,26 @@ const getEventStatusSx = (statusId: number | undefined) => {
           </GridLegacy>
         ))}
       </Grid>
+      <Dialog
+          open={participantsOpen}
+          onClose={() => setParticipantsOpen(false)}
+          maxWidth="md"
+          fullWidth
+      >
+          <DialogTitle>Участники события</DialogTitle>
+
+          <DialogContent>
+              {selectedEventId && participantsOpen && (
+                  <ParticipantsList eventId={selectedEventId} />
+              )}
+          </DialogContent>
+
+          <DialogActions>
+              <Button onClick={() => setParticipantsOpen(false)}>
+                  Закрыть
+              </Button>
+          </DialogActions>
+      </Dialog>
     </Container>
   );
 };

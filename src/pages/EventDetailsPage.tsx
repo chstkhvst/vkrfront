@@ -13,7 +13,22 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Divider,
+  LinearProgress,
+  Paper
 } from "@mui/material";
+import { 
+  LocationOn, 
+  CalendarToday, 
+  LocationCity, 
+  Star, 
+  People,
+  Category,
+  CheckCircle,
+  Cancel,
+  HowToReg,
+  Map
+} from '@mui/icons-material';
 import { useParams } from "react-router-dom";
 import { VolunteerEventContext } from "../context/EventContext";
 import { AttendanceContext } from "../context/AttendanceContext";
@@ -107,97 +122,289 @@ const handleRegister = async (eventId: number) => {
 
   if (!event) return <Alert severity="error">Событие не найдено</Alert>;
 
+  const participantsRatio = event.participantsLimit 
+    ? (participantsCount / event.participantsLimit) * 100 
+    : 0;
+
   return (
-    <Container sx={{ py: 4 }}>
-      <Card>
-        <CardContent>
-          <Typography variant="h4">{event.name}</Typography>
-          {event.imagePath && (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Card 
+        elevation={0}
+        sx={{ 
+          borderRadius: 3,
+          border: '1px solid rgba(148, 156, 255, 0.2)',
+          overflow: 'hidden'
+        }}
+      >
+        {event.imagePath && (
+          <Box
+            sx={{
+              position: 'relative',
+              width: '100%',
+              height: 400,
+              overflow: 'hidden',
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '40%',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)',
+              }
+            }}
+          >
             <Box
               component="img"
               src={event.imagePath}
               alt={event.name}
               sx={{
                 width: '100%',
-                maxHeight: 400,
+                height: '100%',
                 objectFit: 'cover',
-                borderRadius: 2,
-                mt: 2,
-                mb: 2,
               }}
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-          )}
-
-          <Typography sx={{ mt: 2 }}>{event.description}</Typography>
-
-          <Box sx={{ mt: 2 }}>
-            <Typography>📍 {event.address}</Typography>
-            <Typography>
-              📅 {new Date(event.eventDateTime).toLocaleString()}
+          </Box>
+        )}
+        
+        <CardContent sx={{ p: 4 }}>
+          {/* Заголовок и категория */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 3, gap: 2, flexWrap: 'wrap' }}>
+            <Typography 
+              variant="h3" 
+              component="h1"
+              sx={{ 
+                fontWeight: 700,
+                color: '#1c022c',
+                flex: 1,
+                minWidth: 0
+              }}
+            >
+              {event.name}
             </Typography>
-            <Typography>🏙 {event.city?.name}</Typography>
-            <Typography>⭐ {event.eventPoints}</Typography>
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="body2">
-                  👥 Участники: {participantsCount} / {event.participantsLimit || '∞'}
-              </Typography>
-              {event.participantsLimit && (
-                <Box sx={{ 
-                  width: '100%', 
-                  bgcolor: 'rgba(148,156,255,0.2)', 
-                  borderRadius: 1, 
-                  mt: 0.5,
-                  height: 6 
-                }}>
-                  <Box sx={{ 
-                    width: `${(participantsCount / event.participantsLimit) * 100}%`, 
-                    bgcolor: '#949cff', 
-                    borderRadius: 1, 
-                    height: '100%' 
-                  }} />
-              </Box>
+            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+              {event.eventCategory?.name && (
+                <Chip 
+                  icon={<Category sx={{ fontSize: 18 }} />}
+                  label={event.eventCategory.name} 
+                  sx={{ 
+                    bgcolor: 'rgba(148, 156, 255, 0.1)',
+                    color: '#949cff',
+                    fontWeight: 500,
+                    border: '1px solid rgba(148, 156, 255, 0.3)',
+                    px: 1
+                  }}
+                />
+              )}
+              {event.eventStatus?.name && (
+                <Chip 
+                  label={event.eventStatus.name}
+                  sx={{ 
+                    bgcolor: event.eventStatusId === 2 
+                      ? 'rgba(76, 175, 80, 0.1)' 
+                      : event.eventStatusId === 3 
+                      ? 'rgba(244, 67, 54, 0.1)'
+                      : 'rgba(255, 152, 0, 0.1)',
+                    color: event.eventStatusId === 2 
+                      ? '#4caf50' 
+                      : event.eventStatusId === 3 
+                      ? '#f44336'
+                      : '#ff9800',
+                    border: `1px solid ${event.eventStatusId === 2 
+                      ? 'rgba(76, 175, 80, 0.3)' 
+                      : event.eventStatusId === 3 
+                      ? 'rgba(244, 67, 54, 0.3)'
+                      : 'rgba(255, 152, 0, 0.3)'}`,
+                    fontWeight: 500,
+                    px: 1
+                  }}
+                />
               )}
             </Box>
           </Box>
 
-          <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-            <Chip label={event.eventCategory?.name} />
-            <Chip label={event.eventStatus?.name} />
+          {/* Описание */}
+          <Typography 
+            variant="body1" 
+            color="text.secondary"
+            sx={{ mb: 3, lineHeight: 1.8, fontSize: '1.1rem' }}
+          >
+            {event.description}
+          </Typography>
+
+          <Divider sx={{ my: 3, borderColor: 'rgba(148, 156, 255, 0.1)' }} />
+
+          {/* Основная информация */}
+          <Box sx={{ mb: 3 }}>
+            <Typography 
+              variant="h6" 
+              sx={{ 
+                mb: 2, 
+                fontWeight: 600,
+                color: '#1c022c'
+              }}
+            >
+              Детали события
+            </Typography>
+            
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <LocationOn sx={{ fontSize: 24, color: '#949cff' }} />
+                <Typography variant="body1" color="text.secondary">
+                  {event.address}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <CalendarToday sx={{ fontSize: 24, color: '#949cff' }} />
+                <Typography variant="body1" color="text.secondary">
+                  {new Date(event.eventDateTime).toLocaleString('ru-RU', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <LocationCity sx={{ fontSize: 24, color: '#949cff' }} />
+                <Typography variant="body1" color="text.secondary">
+                  {event.city?.name}
+                </Typography>
+              </Box>
+              
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Paper 
+                  elevation={0}
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1,
+                    bgcolor: 'rgba(255, 215, 0, 0.1)',
+                    px: 2,
+                    py: 1,
+                    borderRadius: 2,
+                    border: '1px solid rgba(255, 215, 0, 0.3)'
+                  }}
+                >
+                  <Star sx={{ fontSize: 24, color: '#FFD700' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#1c022c' }}>
+                    {event.eventPoints}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    баллов
+                  </Typography>
+                </Paper>
+              </Box>
+            </Box>
           </Box>
 
-          {/* КАРТА */}
-          <Box
-            sx={{
-              mt: 3,
-              height: 300,
+          {/* Участники */}
+          <Paper 
+            elevation={0}
+            sx={{ 
+              p: 2.5, 
+              mb: 3,
               borderRadius: 2,
-              overflow: "hidden",
+              bgcolor: 'rgba(148, 156, 255, 0.05)',
+              border: '1px solid rgba(148, 156, 255, 0.2)'
             }}
           >
-            {event.lat && event.lng ? (
-              <MapView lat={event.lat} lng={event.lng} />
-            ) : (
-              <Box
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
+              <People sx={{ fontSize: 24, color: '#949cff' }} />
+              <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                Участники: <strong>{participantsCount}</strong> / {event.participantsLimit || '∞'}
+              </Typography>
+            </Box>
+            {event.participantsLimit && (
+              <LinearProgress 
+                variant="determinate" 
+                value={Math.min(participantsRatio, 100)}
                 sx={{
-                  height: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  bgcolor: "rgba(148,156,255,0.1)",
+                  height: 8,
+                  borderRadius: 4,
+                  bgcolor: 'rgba(148, 156, 255, 0.2)',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 4,
+                    bgcolor: participantsRatio >= 90 
+                      ? '#ff6b6b' 
+                      : participantsRatio >= 70 
+                      ? '#ffd93d' 
+                      : '#949cff'
+                  }
+                }}
+              />
+            )}
+          </Paper>
+
+          {/* КАРТА */}
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Map sx={{ fontSize: 24, color: '#949cff' }} />
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  fontWeight: 600,
+                  color: '#1c022c'
                 }}
               >
-                Нет координат
-              </Box>
-            )}
+                Местоположение
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                height: 350,
+                borderRadius: 2,
+                overflow: "hidden",
+                border: '1px solid rgba(148, 156, 255, 0.2)'
+              }}
+            >
+              {event.lat && event.lng ? (
+                <MapView lat={event.lat} lng={event.lng} />
+              ) : (
+                <Box
+                  sx={{
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    bgcolor: "rgba(148,156,255,0.05)",
+                    color: 'text.secondary'
+                  }}
+                >
+                  Координаты не указаны
+                </Box>
+              )}
+            </Box>
           </Box>
 
           {/* ВОЛОНТЕР */}
           {user?.role === "volunteer" && !isRegistered && (
-            <Button sx={{ mt: 3 }} onClick={() => setConfirmOpen(true)}>
-              Зарегистрироваться
+            <Button 
+              variant="contained"
+              size="large"
+              fullWidth
+              startIcon={<HowToReg />}
+              onClick={() => setConfirmOpen(true)}
+              sx={{
+                mt: 2,
+                py: 1.5,
+                bgcolor: '#949cff',
+                '&:hover': {
+                  bgcolor: '#7c84f4',
+                },
+                textTransform: 'none',
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                borderRadius: 2
+              }}
+            >
+              Зарегистрироваться на событие
             </Button>
           )}
 
@@ -205,22 +412,46 @@ const handleRegister = async (eventId: number) => {
           {user?.role === "moderator" && event.eventStatusId === 1 && (
             <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
               <Button
+                variant="contained"
+                startIcon={<CheckCircle />}
+                fullWidth
                 onClick={() =>
                   updateEvent(event.id, {
                     ...event,
                     eventStatusId: 2,
                   })
                 }
+                sx={{
+                  bgcolor: '#4caf50',
+                  '&:hover': {
+                    bgcolor: '#45a049',
+                  },
+                  textTransform: 'none',
+                  py: 1.5,
+                  fontWeight: 600
+                }}
               >
                 Одобрить
               </Button>
               <Button
+                variant="contained"
+                startIcon={<Cancel />}
+                fullWidth
                 onClick={() =>
                   updateEvent(event.id, {
                     ...event,
                     eventStatusId: 3,
                   })
                 }
+                sx={{
+                  bgcolor: '#f44336',
+                  '&:hover': {
+                    bgcolor: '#da190b',
+                  },
+                  textTransform: 'none',
+                  py: 1.5,
+                  fontWeight: 600
+                }}
               >
                 Отклонить
               </Button>
@@ -230,20 +461,44 @@ const handleRegister = async (eventId: number) => {
       </Card>
 
       {/* CONFIRM */}
-      <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle>Подтверждение</DialogTitle>
+      <Dialog 
+        open={confirmOpen} 
+        onClose={() => setConfirmOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600 }}>Подтверждение регистрации</DialogTitle>
         <DialogContent>
-          Записаться на "{event.name}"?
+          <Typography>
+            Вы действительно хотите зарегистрироваться на событие <strong>"{event.name}"</strong>?
+          </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmOpen(false)}>Нет</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={() => setConfirmOpen(false)}
+            sx={{ textTransform: 'none' }}
+          >
+            Отмена
+          </Button>
           <Button
+            variant="contained"
             onClick={async () => {
               await handleRegister(event.id);
               setConfirmOpen(false);
             }}
+            sx={{
+              bgcolor: '#949cff',
+              '&:hover': {
+                bgcolor: '#7c84f4',
+              },
+              textTransform: 'none'
+            }}
           >
-            Да
+            Подтвердить
           </Button>
         </DialogActions>
       </Dialog>

@@ -3431,6 +3431,7 @@ export interface IUser {
 export class UserDTO implements IUserDTO {
     id?: string | undefined;
     userName?: string | undefined;
+    fullname?: string | undefined;
     profileImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
@@ -3448,6 +3449,7 @@ export class UserDTO implements IUserDTO {
         if (_data) {
             this.id = _data["id"];
             this.userName = _data["userName"];
+            this.fullname = _data["fullname"];
             this.profileImagePath = _data["profileImagePath"];
             this.volunteerProfile = _data["volunteerProfile"] ? VolunteerProfileDTO.fromJS(_data["volunteerProfile"]) : undefined as any;
             this.organizerProfile = _data["organizerProfile"] ? OrganizerProfileDTO.fromJS(_data["organizerProfile"]) : undefined as any;
@@ -3465,6 +3467,7 @@ export class UserDTO implements IUserDTO {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["userName"] = this.userName;
+        data["fullname"] = this.fullname;
         data["profileImagePath"] = this.profileImagePath;
         data["volunteerProfile"] = this.volunteerProfile ? this.volunteerProfile.toJSON() : undefined as any;
         data["organizerProfile"] = this.organizerProfile ? this.organizerProfile.toJSON() : undefined as any;
@@ -3475,6 +3478,7 @@ export class UserDTO implements IUserDTO {
 export interface IUserDTO {
     id?: string | undefined;
     userName?: string | undefined;
+    fullname?: string | undefined;
     profileImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
