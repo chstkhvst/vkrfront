@@ -115,6 +115,7 @@ export const Header = () => {
             >
               Все мероприятия
             </Button>
+            {(isOrganizer || isVolunteer) && (
             <Button
               variant="text"
               color="secondary"
@@ -122,6 +123,7 @@ export const Header = () => {
             >
               Мои мероприятия
             </Button>
+            )}
             {isOrganizer && (
               <Button
                 variant="text"

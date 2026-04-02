@@ -11,7 +11,8 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions
+    DialogActions,
+    TextField  
 } from "@mui/material";
 import { AttendanceContext } from "../context/AttendanceContext";
 import { EventAttendanceDTO } from "../client/apiClient";
@@ -35,6 +36,7 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
     const [loading, setLoading] = useState(false);
     const [markingAllNoShow, setMarkingAllNoShow] = useState(false);
     const { showNotification } = useNotification();
+    const [searchTerm, setSearchTerm] = useState("");
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const isMounted = useRef(true);
 
@@ -51,7 +53,9 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
             const data = await fetchAttendancesByEventId(eventId);
 
             if (isMounted.current) {
-                setParticipants(data || []);
+                setParticipants(
+                    (data || []).filter(p => p.attendanceStatusId !== STATUS.CANCELLED)
+                );
             }
         } catch {
             if (isMounted.current) {
@@ -77,7 +81,15 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
     const activeParticipants = participants.filter(
         p => p.attendanceStatusId !== STATUS.CANCELLED
     );
-    
+    const filteredParticipants = activeParticipants.filter(p => {
+        const search = searchTerm.toLowerCase().trim();
+        if (!search) return true;
+        
+        const fullname = p.user?.fullname?.toLowerCase() || "";
+        const username = p.user?.userName?.toLowerCase() || "";
+        
+        return fullname.includes(search) || username.includes(search);
+    });
     const canMarkAttendance = (() => {
         if (!eventDateTime) return false;
 
@@ -161,16 +173,22 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
 
     return (
         <Box>
-            {activeParticipants.length === 0 &&  (
+            {filteredParticipants.length === 0 &&  (
                 <Typography color="text.secondary" sx={{ textAlign: "center", py: 3 }}>
                     Нет участников
                 </Typography>
             )}
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="h6">
-                    Участники ({activeParticipants.length})
+                    Участники ({filteredParticipants.length})
                 </Typography>
-                
+                    <TextField
+                    size="small"
+                    placeholder="Поиск по имени или логину"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    sx={{ width: 250 }}
+                />
                 {canMarkAttendance && (
                     <Button
                         variant="outlined"
@@ -188,7 +206,7 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
             </Box>
 
             <List sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            {activeParticipants.map(p => {
+            {filteredParticipants.map(p => {
                 const user = p.user;
                 const isFinal =
                 p.attendanceStatusId === STATUS.ATTENDED ||

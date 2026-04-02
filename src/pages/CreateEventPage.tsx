@@ -40,6 +40,7 @@ export const CreateEventPage: React.FC = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [citySearch, setCitySearch] = useState('');
     const [image, setImage] = useState<File | undefined>(undefined);
+    const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
     const [coords, setCoords] = useState<{
         lat: number | null;
         lng: number | null;
@@ -64,7 +65,8 @@ export const CreateEventPage: React.FC = () => {
         eventCategories,
         cities,
         createEvent,
-        geocode 
+        geocode,
+        reverseGeocode
     } = context;
 
     const filteredCities = [...cities].sort((a, b) => {
@@ -88,6 +90,26 @@ export const CreateEventPage: React.FC = () => {
             const data = await geocode(value);
             setSuggestions(data);
         }, 600);
+    };
+
+    const handleMapLocationSelect = async (lat: number, lng: number) => {
+        console.log("CLICK", lat, lng);
+
+        const result = await reverseGeocode(lat, lng);
+        console.log("REVERSE RESULT", result);
+        if (!result) return;
+        const option = {
+            lat: result.lat,
+            lon: result.lon,
+            display_name: result.display_name
+        };
+
+        setSelectedAddress(option);
+
+        setNewEvent(prev => ({
+            ...prev,
+            address: result.display_name || ""
+        }));
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -238,12 +260,15 @@ export const CreateEventPage: React.FC = () => {
 
                         <Autocomplete
                             options={suggestions}
+                            value={selectedAddress}
                             getOptionLabel={(option) => option.display_name || ""}
                             isOptionEqualToValue={(option, value) =>
                                 option.lat === value.lat && option.lon === value.lon
                             }
-                            onInputChange={(_, value) => {
-                                handleSearch(value);
+                            onInputChange={(_, value, reason) => {
+                                if (reason === "input") {
+                                    handleSearch(value);
+                                }
                             }}
 
                             onChange={(_, value) => {
@@ -253,6 +278,7 @@ export const CreateEventPage: React.FC = () => {
                                 const lng = parseFloat(value.lon);
 
                                 setCoords({ lat, lng });
+                                setSelectedAddress(value);
 
                                 setNewEvent({
                                     ...newEvent,
@@ -265,7 +291,11 @@ export const CreateEventPage: React.FC = () => {
                             )}
                         />
                         <Box sx={{ height: 300, mt: 2, borderRadius: 2, overflow: "hidden" }}>
-                            <MapPicker coords={coords} setCoords={setCoords} />
+                            <MapPicker 
+                                coords={coords} 
+                                setCoords={setCoords}
+                                onLocationSelect={handleMapLocationSelect}
+                            />
                         </Box>
 
                         <TextField

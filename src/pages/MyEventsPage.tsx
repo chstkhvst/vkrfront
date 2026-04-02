@@ -50,6 +50,8 @@ export const MyEventPage: React.FC = () => {
   const [organizedEvents, setOrganizedEvents] = useState<VolunteerEventDTO[]>([]);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [eventToCancel, setEventToCancel] = useState<VolunteerEventDTO | null>(null);
+  const [cancelAttendanceDialogOpen, setCancelAttendanceDialogOpen] = useState(false);
+  const [attendanceToCancel, setAttendanceToCancel] = useState<EventAttendanceDTO | null>(null);
   const {
     fetchAttendancesByUserId,
     fetchAttendanceStatuses,
@@ -224,22 +226,28 @@ const getEventStatusSx = (statusId: number | undefined) => {
     return diffMs >= 24 * 60 * 60 * 1000; 
   };
 
-  const handleCancel = async (attendance: EventAttendanceDTO) => {
-      if (!attendance.id) return;
-
-      const updated = new EventAttendanceDTO({
-      ...attendance,
+  const handleConfirmCancelAttendance = async () => {
+    if (!attendanceToCancel?.id) return;
+    
+    const updated = new EventAttendanceDTO({
+      ...attendanceToCancel,
       attendanceStatusId: ATTENDANCE_STATUS.CANCELLED,
-      });
+    });
 
-      const success = await updateAttendance(attendance.id, updated);
+    const success = await updateAttendance(attendanceToCancel.id, updated);
 
-      if (success) {
-        setData(prev =>
-          prev.map(a => (a.id === attendance.id ? updated : a))
-        );
-      }
-    };
+    if (success) {
+      setData(prev =>
+        prev.map(a => (a.id === attendanceToCancel.id ? updated : a))
+      );
+      showNotification('Участие отменено', 'success');
+    } else {
+      showNotification('Ошибка при отмене участия', 'error');
+    }
+    
+    setCancelAttendanceDialogOpen(false);
+    setAttendanceToCancel(null);
+  };
 
     const handleCancelEvent = async () => {
     if (!eventToCancel?.id) return;
@@ -285,10 +293,17 @@ const getEventStatusSx = (statusId: number | undefined) => {
 
   const getCurrentList = () => {
       if (isVolunteer) {
-        return tab === 0 ? volunteerUpcoming : volunteerHistory;
-      } else if (isOrganizer) {
-        return tab === 0 ? organizerUpcoming : organizerHistory;
+          if (tab === 0) return volunteerUpcoming;
+          // Реверс для истории волонтера
+          return [...volunteerHistory].reverse();
+      } 
+      
+      if (isOrganizer) {
+          if (tab === 0) return organizerUpcoming;
+          // Реверс для истории организатора
+          return [...organizerHistory].reverse();
       }
+      
       return [];
   };
   const currentList = getCurrentList();
@@ -371,7 +386,10 @@ const getEventStatusSx = (statusId: number | undefined) => {
                     <Button
                       variant="contained"
                       color="secondary"
-                      onClick={() => handleCancel(a)}
+                      onClick={() => {
+                        setAttendanceToCancel(a);
+                        setCancelAttendanceDialogOpen(true);
+                      }}
                     >
                       Отменить участие
                     </Button>
@@ -472,7 +490,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
               </Button>
           </DialogActions>
       </Dialog>
-            {/* Диалог подтверждения отмены мероприятия */}
+      {/* Диалог подтверждения отмены мероприятия */}
       <Dialog
         open={cancelDialogOpen}
         onClose={() => setCancelDialogOpen(false)}
@@ -499,6 +517,35 @@ const getEventStatusSx = (statusId: number | undefined) => {
             autoFocus
           >
             Да, отменить
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={cancelAttendanceDialogOpen}
+        onClose={() => setCancelAttendanceDialogOpen(false)}
+      >
+        <DialogTitle sx={{ color: '#f44336' }}>
+          Отмена участия
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы уверены, что хотите отменить участие в мероприятии?
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 1, fontSize: '0.875rem' }}>
+            Это действие нельзя отменить.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCancelAttendanceDialogOpen(false)}>
+            Нет
+          </Button>
+          <Button 
+            onClick={handleConfirmCancelAttendance} 
+            variant="contained" 
+            color="error"
+            autoFocus
+          >
+            Да
           </Button>
         </DialogActions>
       </Dialog>

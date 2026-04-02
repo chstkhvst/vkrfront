@@ -53,6 +53,7 @@ interface VolunteerEventContextProps {
     deleteEvent: (id: number, softDelete?: boolean) => Promise<boolean>;
     
     geocode: (query: string) => Promise<GeocodeResult[]>;
+    reverseGeocode: (lat: number, lon: number) => Promise<GeocodeResult | null>;
 
     // Методы для справочников
     fetchEventCategories: () => Promise<void>;
@@ -196,6 +197,15 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         } catch (error) {
             console.error("Ошибка геокодинга:", error);
             return [];
+        }
+    };
+    const reverseGeocode = async (lat: number, lon: number): Promise<GeocodeResult | null> => {
+        try {
+            const data = await apiClient.reverseGeocode(lat, lon);
+            return data || null;
+        } catch (error) {
+            console.error("Ошибка reverse geocode:", error);
+            return null;
         }
     };
 
@@ -359,6 +369,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             fetchEventsForUser,
             
             geocode,
+            reverseGeocode,
 
             // Методы для справочников
             fetchEventCategories,
