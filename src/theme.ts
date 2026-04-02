@@ -26,7 +26,7 @@ export const customTheme = createTheme({
 
     background: {
       default: '#f4f6ff',
-      paper: 'rgba(255,255,255,0.7)',
+      // paper: 'rgba(255,255,255,0.7)',
     },
 
     text: {
@@ -250,11 +250,6 @@ export const customTheme = createTheme({
     },
     
     // SIZE
-    sizeSmall: {
-      padding: '4px 12px',
-      fontSize: '0.1rem',
-    },
-    
     sizeLarge: {
       padding: '12px 24px',
       fontSize: '1rem',
@@ -265,7 +260,7 @@ export const customTheme = createTheme({
       styleOverrides: {
         root: {
           backdropFilter: 'blur(10px)',
-          background: 'rgba(255,255,255,0.7)',
+          // background: 'rgba(255,255,255,0.7)',
           border: '1px solid rgba(255,255,255,0.4)',
           boxShadow: '0 8px 30px rgba(0,0,0,0.06)',
         },

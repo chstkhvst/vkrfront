@@ -4,17 +4,21 @@ import {
     Typography,
     List,
     ListItem,
-    ListItemText,
     Button,
     Chip,
     CircularProgress,
-    Alert,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from "@mui/material";
 import { AttendanceContext } from "../context/AttendanceContext";
 import { EventAttendanceDTO } from "../client/apiClient";
-
+import { useNotification } from '../components/Notification';
 type Props = {
     eventId: number;
+    eventDateTime: Date;
 };
 
 const STATUS = {
@@ -24,73 +28,86 @@ const STATUS = {
     NO_SHOW: 4,
 };
 
-export const ParticipantsList: React.FC<Props> = ({ eventId }) => {
+export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) => {
     const context = useContext(AttendanceContext);
     
     const [participants, setParticipants] = useState<EventAttendanceDTO[]>([]);
     const [loading, setLoading] = useState(false);
-    const [localError, setLocalError] = useState<string | null>(null);
-    
-    // Ref для отслеживания монтирования компонента
+    const [markingAllNoShow, setMarkingAllNoShow] = useState(false);
+    const { showNotification } = useNotification();
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
     const isMounted = useRef(true);
-    // Ref для предотвращения повторных загрузок с одинаковым eventId
-    const lastLoadedEventId = useRef<number | null>(null);
 
     const {
         fetchAttendancesByEventId,
         updateAttendance,
-        isLoading: contextLoading,
-        error: contextError,
+        markNoShow
     } = context!;
 
-    // Функция загрузки участников с защитой от дублирования
-    const loadParticipants = useCallback(async () => {
-        // Предотвращаем повторную загрузку для того же eventId
-        if (lastLoadedEventId.current === eventId) {
-            return;
-        }
-
+    const loadParticipants = async () => {
         try {
             setLoading(true);
-            setLocalError(null);
-            
+
             const data = await fetchAttendancesByEventId(eventId);
-            
+
             if (isMounted.current) {
                 setParticipants(data || []);
-                lastLoadedEventId.current = eventId;
             }
-        } catch (err) {
+        } catch {
             if (isMounted.current) {
-                setLocalError(err instanceof Error ? err.message : "Ошибка загрузки участников");
-                console.error("Error loading participants:", err);
+                showNotification("Ошибка загрузки участников", "error");
             }
         } finally {
             if (isMounted.current) {
                 setLoading(false);
             }
         }
-    }, [eventId, fetchAttendancesByEventId]);
+    };
 
-    // Загрузка при монтировании или изменении eventId
     useEffect(() => {
         isMounted.current = true;
-        
-        // Сбрасываем lastLoadedEventId при изменении eventId
-        if (lastLoadedEventId.current !== eventId) {
-            loadParticipants();
-        }
-        
+
+        loadParticipants();
+
         return () => {
             isMounted.current = false;
         };
-    }, [eventId, loadParticipants]);
+    }, [eventId]);
 
-    // Обновление одного участника
+    const activeParticipants = participants.filter(
+        p => p.attendanceStatusId !== STATUS.CANCELLED
+    );
+    
+    const canMarkAttendance = (() => {
+        if (!eventDateTime) return false;
+
+        const now = new Date();
+        const event = new Date(eventDateTime);
+
+        const diffMs = event.getTime() - now.getTime();
+
+        return diffMs <= 2 * 60 * 60 * 1000; // 2 часа
+    })();
+
+    const handleOpenConfirmDialog = useCallback(() => {
+        setConfirmDialogOpen(true);
+    }, []);
+    const handleMarkAllAsNoShow = useCallback(async () => {
+        setMarkingAllNoShow(true);
+        try {
+            await markNoShow(eventId);
+            await loadParticipants(); 
+            showNotification("Неявки успешно отмечены", "success");
+        } catch {
+            showNotification("Ошибка при отметке неявок", "error");
+        } finally {
+            setMarkingAllNoShow(false);
+        }
+    }, [eventId, markNoShow, loadParticipants]);
+    
     const updateStatus = useCallback(async (attendance: EventAttendanceDTO, statusId: number) => {
         if (!attendance.id) return;
 
-        // Оптимистичное обновление UI
         const updated = new EventAttendanceDTO({
             ...attendance,
             attendanceStatusId: statusId,
@@ -102,55 +119,15 @@ export const ParticipantsList: React.FC<Props> = ({ eventId }) => {
 
         try {
             await updateAttendance(attendance.id, updated);
-        } catch (err) {
-            // Откат при ошибке
+        } catch {
             if (isMounted.current) {
                 setParticipants(prev =>
                     prev.map(p => (p.id === attendance.id ? attendance : p))
                 );
-                setLocalError("Ошибка при обновлении статуса");
-                console.error("Error updating status:", err);
+                showNotification("Ошибка при обновлении статуса", "error");
             }
         }
     }, [updateAttendance]);
-
-    // Отметить всех
-    const markAll = useCallback(async (statusId: number) => {
-        if (participants.length === 0) return;
-
-        // Сохраняем копию для возможного отката
-        const originalParticipants = [...participants];
-        
-        // Оптимистичное обновление
-        const updatedList = participants.map(p => ({
-            ...p,
-            attendanceStatusId: statusId,
-        }));
-        
-        setParticipants(updatedList as EventAttendanceDTO[]);
-
-        try {
-            await Promise.all(
-                updatedList.map(p => {
-                    if (!p.id) return Promise.resolve();
-                    
-                    const updated = new EventAttendanceDTO({
-                        ...p,
-                        attendanceStatusId: statusId,
-                    });
-                    
-                    return updateAttendance(p.id, updated);
-                })
-            );
-        } catch (err) {
-            // Откат при ошибке
-            if (isMounted.current) {
-                setParticipants(originalParticipants);
-                setLocalError("Ошибка при массовом обновлении статусов");
-                console.error("Error in mass update:", err);
-            }
-        }
-    }, [participants, updateAttendance]);
 
     const getStatusLabel = useCallback((statusId?: number) => {
         switch (statusId) {
@@ -158,8 +135,6 @@ export const ParticipantsList: React.FC<Props> = ({ eventId }) => {
                 return "Присутствовал";
             case STATUS.NO_SHOW:
                 return "Неявка";
-            case STATUS.CANCELLED:
-                return "Отменено";
             default:
                 return "Ожидается";
         }
@@ -171,15 +146,12 @@ export const ParticipantsList: React.FC<Props> = ({ eventId }) => {
                 return "success";
             case STATUS.NO_SHOW:
                 return "error";
-            case STATUS.CANCELLED:
-                return "default";
             default:
                 return "warning";
         }
     }, []);
 
-    // Показываем загрузку
-    if (loading || contextLoading) {
+    if (loading) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
                 <CircularProgress />
@@ -187,98 +159,135 @@ export const ParticipantsList: React.FC<Props> = ({ eventId }) => {
         );
     }
 
-    const displayError = localError || contextError;
-
     return (
         <Box>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-                Участники ({participants.length})
-            </Typography>
-
-            {displayError && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                    {displayError}
-                </Alert>
-            )}
-
-            {/* Массовые действия - показываем только если есть участники */}
-            {participants.length > 0 && (
-                <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => markAll(STATUS.ATTENDED)}
-                    >
-                        Отметить всех как пришедших
-                    </Button>
-
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={() => markAll(STATUS.NO_SHOW)}
-                    >
-                        Отметить всех как неявку
-                    </Button>
-                </Box>
-            )}
-
-            {participants.length === 0 && !displayError && (
+            {activeParticipants.length === 0 &&  (
                 <Typography color="text.secondary" sx={{ textAlign: "center", py: 3 }}>
                     Нет участников
                 </Typography>
             )}
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography variant="h6">
+                    Участники ({activeParticipants.length})
+                </Typography>
+                
+                {canMarkAttendance && (
+                    <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={handleOpenConfirmDialog}
+                        disabled={markingAllNoShow || activeParticipants.every(p => 
+                            p.attendanceStatusId === STATUS.ATTENDED || 
+                            p.attendanceStatusId === STATUS.NO_SHOW
+                        )}
+                        startIcon={markingAllNoShow ? <CircularProgress size={20} /> : null}
+                    >
+                        {markingAllNoShow ? "Отметка..." : "Отметить оставшихся как неявку"}
+                    </Button>
+                )}
+            </Box>
 
-            <List>
-                {participants.map(p => {
-                    const user = p.user;
+            <List sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+            {activeParticipants.map(p => {
+                const user = p.user;
+                const isFinal =
+                p.attendanceStatusId === STATUS.ATTENDED ||
+                p.attendanceStatusId === STATUS.NO_SHOW;
 
-                    return (
-                        <ListItem
-                            key={p.id}
-                            sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                borderBottom: "1px solid #eee",
-                                "&:last-child": {
-                                    borderBottom: "none",
-                                },
-                            }}
+                return (
+                <ListItem
+                    key={p.id}
+                    sx={{
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    px: 2,
+                    py: 1.5,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    backgroundColor: "#fff",
+                    }}
+                >
+                    {/* Левая часть */}
+                    <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Typography fontWeight={500}>
+                        {user?.fullname ||
+                        user?.userName ||
+                        `Пользователь ID: ${user?.id}` ||
+                        "Без имени"}
+                    </Typography>
+
+                    {user?.userName && (
+                        <Typography variant="body2" color="text.secondary">
+                        @{user.userName}
+                        </Typography>
+                    )}
+                    </Box>
+
+                    {/* Правая часть */}
+                    <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1.5,
+                    }}
+                    >
+                    <Chip
+                        label={getStatusLabel(p.attendanceStatusId)}
+                        color={getStatusColor(p.attendanceStatusId)}
+                        variant="outlined"
+                    />
+
+                    {!isFinal && canMarkAttendance && (
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => updateStatus(p, STATUS.ATTENDED)}
                         >
-                            <ListItemText
-                                primary={
-                                    user?.fullname || 
-                                    user?.userName || 
-                                    `Пользователь ID: ${user?.id}` ||
-                                    "Без имени"
-                                }
-                                secondary={user?.userName ? `@${user.userName}` : undefined}
-                            />
+                            Присутствовал
+                        </Button>
 
-                            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
-                                <Chip
-                                    label={getStatusLabel(p.attendanceStatusId)}
-                                    color={getStatusColor(p.attendanceStatusId)}
-                                    variant="outlined"
-                                    size="small"
-                                />
-
-                                {p.attendanceStatusId !== STATUS.ATTENDED && (
-                                    <Button
-                                        size="small"
-                                        variant="outlined"
-                                        color="success"
-                                        onClick={() => updateStatus(p, STATUS.ATTENDED)}
-                                        title="Отметить как пришедшего"
-                                    >
-                                        ✔
-                                    </Button>
-                                )}
-                            </Box>
-                        </ListItem>
-                    );
-                })}
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => updateStatus(p, STATUS.NO_SHOW)}
+                        >
+                            Неявка
+                        </Button>
+                        </Box>
+                    )}
+                    </Box>
+                </ListItem>
+                );
+            })}
             </List>
+            <Dialog
+                open={confirmDialogOpen}
+                onClose={() => setConfirmDialogOpen(false)}
+            >
+                <DialogTitle sx={{ color: '#f44336' }}>
+                    Отметка всех участников
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Вы уверены, что хотите отметить всех неотмеченных участников как неявившихся?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmDialogOpen(false)}>
+                        Отмена
+                    </Button>
+                    <Button 
+                        onClick={handleMarkAllAsNoShow} 
+                        variant="contained" 
+                        color="error"
+                        autoFocus
+                    >
+                        Подтвердить
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

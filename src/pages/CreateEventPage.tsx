@@ -91,61 +91,60 @@ export const CreateEventPage: React.FC = () => {
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+        e.preventDefault();
+        if (!newEvent.name || !newEvent.address || !newEvent.categoryId || !newEvent.cityId || !coords.lat || !coords.lng) {
+            setErrorMessage('Пожалуйста, заполните обязательные поля');
+            return;
+        }
 
-    if (!newEvent.name || !newEvent.categoryId || !newEvent.cityId || !coords.lat || !coords.lng) {
-        setErrorMessage('Пожалуйста, заполните обязательные поля');
-        return;
-    }
+        setSubmitting(true);
+        setErrorMessage('');
 
-    setSubmitting(true);
-    setErrorMessage('');
+        const eventData = {
+            name: newEvent.name,
+            description: newEvent.description || '',
+            lat: (coords.lat).toString(),
+            lng: coords.lng.toString(),
+            address: newEvent.address || '',
+            eventDateTime: newEvent.eventDateTime
+                ? new Date(newEvent.eventDateTime)
+                : new Date(),
+            eventPoints: newEvent.eventPoints,
+            participantsLimit: newEvent.participantsLimit
+                ? Number(newEvent.participantsLimit)
+                : 0,
+            eventCategoryId: Number(newEvent.categoryId),
+            cityId: Number(newEvent.cityId),
+            image: image
+        };
 
-    const eventData = {
-        name: newEvent.name,
-        description: newEvent.description || '',
-        lat: (coords.lat).toString(),
-        lng: coords.lng.toString(),
-        address: newEvent.address || '',
-        eventDateTime: newEvent.eventDateTime
-            ? new Date(newEvent.eventDateTime)
-            : new Date(),
-        eventPoints: newEvent.eventPoints,
-        participantsLimit: newEvent.participantsLimit
-            ? Number(newEvent.participantsLimit)
-            : 0,
-        eventCategoryId: Number(newEvent.categoryId),
-        cityId: Number(newEvent.cityId),
-        image: image
-    };
+        const result = await createEvent(eventData);
 
-    const result = await createEvent(eventData);
+        if (result) {
+            console.log(result);
+            setSuccess(true);
+            setNewEvent({
+                name: '',
+                description: '',
+                categoryId: '',
+                cityId: '',
+                address: '',
+                eventDateTime: '',
+                eventPoints: 10,
+                participantsLimit: ''
+            });
+            setImage(undefined);
+            showNotification('Ваща заявка отправлена. Подробности в разделе "Мои мероприятия".', 'info');
+        } else {
+            setErrorMessage('Ошибка при создании события');
+        }
 
-    if (result) {
-        console.log(result);
-        setSuccess(true);
-        setNewEvent({
-            name: '',
-            description: '',
-            categoryId: '',
-            cityId: '',
-            address: '',
-            eventDateTime: '',
-            eventPoints: 10,
-            participantsLimit: ''
-        });
-        setImage(undefined);
-        showNotification('Ваща заявка отправлена. Подробности в разделе "Мои мероприятия".', 'info');
-    } else {
-        setErrorMessage('Ошибка при создании события');
-    }
+        setSubmitting(false);
+        };
 
-    setSubmitting(false);
-    };
-
-    if (success) {
-        return <Navigate to="/events" replace />;
-    }
+        if (success) {
+            return <Navigate to="/events" replace />;
+        }
 
     return (
         <Container maxWidth="md" sx={{ py: 4 }}>

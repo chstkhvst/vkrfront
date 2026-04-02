@@ -553,6 +553,78 @@ export class Client {
     /**
      * @return OK
      */
+    markNoShow(eventId: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Attendance/MarkNoShow/{eventId}";
+        if (eventId === undefined || eventId === null)
+            throw new globalThis.Error("The parameter 'eventId' must be defined.");
+        url_ = url_.replace("{eventId}", encodeURIComponent("" + eventId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMarkNoShow(_response);
+        });
+    }
+
+    protected processMarkNoShow(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    markCancelled(eventId: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Attendance/MarkCancelled/{eventId}";
+        if (eventId === undefined || eventId === null)
+            throw new globalThis.Error("The parameter 'eventId' must be defined.");
+        url_ = url_.replace("{eventId}", encodeURIComponent("" + eventId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMarkCancelled(_response);
+        });
+    }
+
+    protected processMarkCancelled(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     delete(id: number): Promise<void> {
         let url_ = this.baseUrl + "/api/Attendance/Delete/{id}";
         if (id === undefined || id === null)

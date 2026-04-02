@@ -25,6 +25,8 @@ export const Header = () => {
   const isAuthenticated = !!user;
   const userName = currentUser?.userName || 'Пользователь';
   const isOrganizer = user?.role === 'organizer';
+    const isVolunteer = user?.role === 'volunteer';
+      const isModer = user?.role === 'moder';
 
   const handleLogin = () => navigate('/login');
   const handleLogout = async () => {
@@ -39,7 +41,8 @@ export const Header = () => {
   };
 
   const handleRegister = () => navigate('/register');
-  const handleCreateEvent = () => navigate('/events/add');
+  const handleCreateEvent = () => navigate('/events/add');  
+  const handleCreateEventForUser = () => navigate('/events/add');
 
   return (
     <AppBar
@@ -103,7 +106,7 @@ export const Header = () => {
             </Box>
           </Box>
 
-          {/* НАВИГАЦИЯ - ИСПОЛЬЗУЕМ ГЛОБАЛЬНЫЕ СТИЛИ */}
+          {/* НАВИГАЦИЯ*/}
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Button
               variant="text"
@@ -127,6 +130,16 @@ export const Header = () => {
                 onClick={handleCreateEvent}
               >
                 Создать мероприятие
+              </Button>
+            )}
+            {isVolunteer && (
+              <Button
+                variant="text"
+                color="secondary"
+                startIcon={<Add sx={{ fontSize: 20 }} />}
+                onClick={handleCreateEvent}
+              >
+                Предложить мероприятие
               </Button>
             )}
           </Stack>

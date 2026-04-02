@@ -200,44 +200,44 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     };
 
     // Создание нового события
-const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDTO | null> => {
-    setIsLoading(true);
-    setError(null);
+    const createEvent = async (eventData: CreateEventData): Promise<VolunteerEventDTO | null> => {
+        setIsLoading(true);
+        setError(null);
 
-    try { 
-        const fileParam = eventData.image
-            ? { data: eventData.image, fileName: eventData.image.name }
-            : { data: new Blob(), fileName: "" }; 
-        console.log(eventData);
-        const createdEvent = await apiClient.createEvent(
-            eventData.name,
-            eventData.description,
-            eventData.lat,
-            eventData.lng,
-            eventData.address,
-            eventData.eventDateTime,
-            eventData.eventPoints,
-            eventData.participantsLimit,
-            fileParam,
-            eventData.eventCategoryId,
-            eventData.cityId,
-        );
+        try { 
+            const fileParam = eventData.image
+                ? { data: eventData.image, fileName: eventData.image.name }
+                : { data: new Blob(), fileName: "" }; 
+            console.log(eventData);
+            const createdEvent = await apiClient.createEvent(
+                eventData.name,
+                eventData.description,
+                eventData.lat,
+                eventData.lng,
+                eventData.address,
+                eventData.eventDateTime,
+                eventData.eventPoints,
+                eventData.participantsLimit,
+                fileParam,
+                eventData.eventCategoryId,
+                eventData.cityId,
+            );
 
-        //await fetchEvents(filterParams);
-        return createdEvent;
-    } catch (error: any) {
-        console.error("Ошибка при создании события:", error);
+            //await fetchEvents(filterParams);
+            return createdEvent;
+        } catch (error: any) {
+            console.error("Ошибка при создании события:", error);
 
-    console.error("message:", error?.message);
-    console.error("status:", error?.status);
-    console.error("response:", error?.response);
-    console.error("headers:", error?.headers);
-        setError("Не удалось создать событие");
-        return null;
-    } finally {
-        setIsLoading(false);
-    }
-};
+        console.error("message:", error?.message);
+        console.error("status:", error?.status);
+        console.error("response:", error?.response);
+        console.error("headers:", error?.headers);
+            setError("Не удалось создать событие");
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Обновление события
     const updateEvent = async (id: number, eventData: VolunteerEventDTO): Promise<boolean> => {

@@ -28,6 +28,8 @@ interface AttendanceContextProps {
     deleteAttendance: (id: number) => Promise<boolean>;
     softDeleteAttendance: (id: number) => Promise<boolean>;
     selectAttendance: (attendance: EventAttendanceDTO | null) => void;
+    markNoShow: (eventId: number) => Promise<boolean>;
+    markCancelled: (eventId: number) => Promise<boolean>;
 }
 
 // Создание контекста
@@ -105,8 +107,8 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
 
     // Получение записей по ID события
     const fetchAttendancesByEventId = async (eventId: number): Promise<EventAttendanceDTO[]> => {
-        setIsLoading(true);
-        setError(null);
+        //setIsLoading(true);
+        //setError(null);
         
         try {
             const result = await apiClient.getAttendanceByEventId(eventId);
@@ -116,7 +118,7 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
             setError("Не удалось загрузить участников события");
             return [];
         } finally {
-            setIsLoading(false);
+            //setIsLoading(false);
         }
     };
 
@@ -165,6 +167,38 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
         }
     };
 
+    const markNoShow = async (eventId: number): Promise<boolean> => {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            await apiClient.markNoShow(eventId);
+            // После успешной отметки обновляем список участников для этого события
+            const updatedAttendances = await apiClient.getAttendanceByEventId(eventId);
+            setAttendances(prev => 
+                prev.map(a => a.eventId === eventId ? updatedAttendances.find(u => u.id === a.id) || a : a)
+            );
+            return true;
+        } catch (error) {
+            console.error(`Ошибка при отметке неявок для события ${eventId}:`, error);
+            setError("Не удалось отметить неявки");
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    const markCancelled = async (eventId: number): Promise<boolean> => {
+        setIsLoading(true); 
+        try {
+            await apiClient.markCancelled(eventId);
+            return true;
+        } catch (error) {
+            console.error(`Ошибка при отметке неявок для события ${eventId}:`, error);
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
     // Обновление записи о посещаемости
     const updateAttendance = async (id: number, attendanceData: EventAttendanceDTO): Promise<boolean> => {
         setIsLoading(true);
@@ -263,6 +297,8 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
             updateAttendance,
             deleteAttendance,
             softDeleteAttendance,
+            markNoShow,
+            markCancelled,
             
             // Метод для выбора
             selectAttendance

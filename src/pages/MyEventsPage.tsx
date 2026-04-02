@@ -35,25 +35,29 @@ import { VolunteerEventContext } from '../context/EventContext';
 import { useAuth } from '../context/AuthContext';
 import { ParticipantsList } from "../components/ParticipantsList";
 import { EventAttendanceDTO, VolunteerEventDTO } from '../client/apiClient';
+import { useNotification } from '../components/Notification';
 
 export const MyEventPage: React.FC = () => {
   const context = useContext(AttendanceContext);
   const eventContext = useContext(VolunteerEventContext);
   const { user } = useAuth();
+  const { showNotification } = useNotification();
 
   const [tab, setTab] = useState(0);
   const [data, setData] = useState<EventAttendanceDTO[]>([]);
   const [participantsOpen, setParticipantsOpen] = useState(false);
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<VolunteerEventDTO | null>(null);
   const [organizedEvents, setOrganizedEvents] = useState<VolunteerEventDTO[]>([]);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [eventToCancel, setEventToCancel] = useState<VolunteerEventDTO | null>(null);
   const {
-  fetchAttendancesByUserId,
-  fetchAttendanceStatuses,
-  attendanceStatuses,
-  updateAttendance,
-  isLoading,
-  error,
+    fetchAttendancesByUserId,
+    fetchAttendanceStatuses,
+    updateAttendance,
+    isLoading,
+    error,
   } = context!;
+
     useEffect(() => {
     const userId = user?.user?.id;
     if (!userId) return;
@@ -161,16 +165,47 @@ const getEventStatusSx = (statusId: number | undefined) => {
       return { borderColor: '#949cff', color: '#949cff' };
   }
 };
-  const now = new Date();
+  const organizerUpcoming = organizedEvents.filter(e => {
+    if (!e.eventDateTime) return false;
 
-  const organizerUpcoming = organizedEvents.filter(
-    e => e.eventDateTime && new Date(e.eventDateTime) > now
-  );
+    const now = new Date();
+    const event = new Date(e.eventDateTime);
 
-  const organizerHistory = organizedEvents.filter(
-    e => e.eventDateTime && new Date(e.eventDateTime) <= now
-  );
+    const todayLocal = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
 
+    const eventLocal = new Date(
+      event.getFullYear(),
+      event.getMonth(),
+      event.getDate()
+    );
+
+    return eventLocal >= todayLocal;
+  });
+
+  const organizerHistory = organizedEvents.filter(e => {
+    if (!e.eventDateTime) return false;
+
+    const now = new Date();
+    const event = new Date(e.eventDateTime);
+
+    const todayLocal = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
+    const eventLocal = new Date(
+      event.getFullYear(),
+      event.getMonth(),
+      event.getDate()
+    );
+
+    return eventLocal < todayLocal;
+  });
   const volunteerUpcoming = data.filter(
     a => a.attendanceStatusId === ATTENDANCE_STATUS.UPCOMING
   );
@@ -179,22 +214,66 @@ const getEventStatusSx = (statusId: number | undefined) => {
     a => a.attendanceStatusId !== ATTENDANCE_STATUS.UPCOMING
   );
 
-  const handleCancel = async (attendance: EventAttendanceDTO) => {
-    if (!attendance.id) return;
-
-    const updated = new EventAttendanceDTO({
-    ...attendance,
-    attendanceStatusId: ATTENDANCE_STATUS.CANCELLED,
-    });
-
-    const success = await updateAttendance(attendance.id, updated);
-
-    if (success) {
-      setData(prev =>
-        prev.map(a => (a.id === attendance.id ? updated : a))
-      );
-    }
+  const canCancelEvent = (eventDateTime: Date | undefined): boolean => {
+    if (!eventDateTime) return false;
+    
+    const now = new Date();
+    const event = new Date(eventDateTime);
+    const diffMs = event.getTime() - now.getTime();
+    
+    return diffMs >= 24 * 60 * 60 * 1000; 
   };
+
+  const handleCancel = async (attendance: EventAttendanceDTO) => {
+      if (!attendance.id) return;
+
+      const updated = new EventAttendanceDTO({
+      ...attendance,
+      attendanceStatusId: ATTENDANCE_STATUS.CANCELLED,
+      });
+
+      const success = await updateAttendance(attendance.id, updated);
+
+      if (success) {
+        setData(prev =>
+          prev.map(a => (a.id === attendance.id ? updated : a))
+        );
+      }
+    };
+
+    const handleCancelEvent = async () => {
+    if (!eventToCancel?.id) return;
+    
+    //Отменяем все заявки участников
+    const success = await context.markCancelled(eventToCancel.id);
+    
+    if (success) {
+      const updatedEvent = new VolunteerEventDTO({
+        ...eventToCancel,
+        eventStatusId: 4, 
+      });
+      
+      // статус мероприятия
+      const updateSuccess = await eventContext.updateEvent(eventToCancel.id, updatedEvent);
+      
+      if (updateSuccess) {
+        showNotification('Мероприятие успешно отменено', 'success');
+        // Обновляем список мероприятий
+        if (user?.user?.id) {
+          const events = await eventContext.getEventsByUserId(user.user.id);
+          setOrganizedEvents(events);
+        }
+      } else {
+        showNotification('Ошибка при обновлении статуса мероприятия', 'error');
+      }
+    } else {
+      showNotification('Ошибка при отмене заявок участников', 'error');
+    }
+    
+    setCancelDialogOpen(false);
+    setEventToCancel(null);
+  };
+
 
   if (isLoading) {
     return (
@@ -335,6 +414,19 @@ const getEventStatusSx = (statusId: number | undefined) => {
                 </Typography>
               </CardContent>
               <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
+                  {(orgEvent.eventStatus?.id === EVENT_STATUS.APPROVED || orgEvent.eventStatus?.id === EVENT_STATUS.ON_MODERATION) && tab === 0 &&
+                  canCancelEvent(orgEvent.eventDateTime) && (
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => {
+                        setEventToCancel(orgEvent);
+                        setCancelDialogOpen(true);
+                      }}
+                    >
+                      Отменить мероприятие
+                    </Button>
+                  )}
                 <Button
                   variant="contained"
                   color="primary"
@@ -346,7 +438,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
                   variant="outlined"
                   color="primary"
                   onClick={() => {
-                      setSelectedEventId(orgEvent.id!);
+                      setSelectedEvent(orgEvent);
                       setParticipantsOpen(true);
                   }}
                 >
@@ -366,8 +458,11 @@ const getEventStatusSx = (statusId: number | undefined) => {
           <DialogTitle>Участники события</DialogTitle>
 
           <DialogContent>
-              {selectedEventId && participantsOpen && (
-                  <ParticipantsList eventId={selectedEventId} />
+              {selectedEvent && participantsOpen && (
+                  <ParticipantsList 
+                      eventId={selectedEvent.id!} 
+                      eventDateTime={selectedEvent.eventDateTime!}
+                  />
               )}
           </DialogContent>
 
@@ -376,6 +471,36 @@ const getEventStatusSx = (statusId: number | undefined) => {
                   Закрыть
               </Button>
           </DialogActions>
+      </Dialog>
+            {/* Диалог подтверждения отмены мероприятия */}
+      <Dialog
+        open={cancelDialogOpen}
+        onClose={() => setCancelDialogOpen(false)}
+      >
+        <DialogTitle sx={{ color: '#f44336' }}>
+          Отмена мероприятия
+        </DialogTitle>
+        <DialogContent>
+          <Typography>
+            Вы уверены, что хотите отменить мероприятие?
+          </Typography>
+          <Typography color="text.secondary" sx={{ mt: 1, fontSize: '0.875rem' }}>
+            Это действие нельзя отменить. Все заявки участников будут отменены.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCancelDialogOpen(false)}>
+            Нет, оставить
+          </Button>
+          <Button 
+            onClick={handleCancelEvent} 
+            variant="contained" 
+            color="error"
+            autoFocus
+          >
+            Да, отменить
+          </Button>
+        </DialogActions>
       </Dialog>
     </Container>
   );
