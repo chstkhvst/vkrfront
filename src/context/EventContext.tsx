@@ -32,6 +32,7 @@ type CreateEventData = {
 interface VolunteerEventContextProps {
     // Состояния
     events: VolunteerEventDTO[];
+    communityEvents: VolunteerEventDTO[];
     selectedEvent: VolunteerEventDTO | null;
     eventCategories: EventCategory[];
     eventStatuses: EventStatus[];
@@ -42,10 +43,12 @@ interface VolunteerEventContextProps {
     pageNumber: number;
     pageSize: number;
     totalPages: number;
+    communityTotalPages: number;
     setPageNumber: (page: number) => void;
     // Методы для работы с событиями
     fetchEvents: (filterParams?: EventFilterParams) => Promise<void>;
     fetchEventsForUser: (filterParams?: EventFilterParams) => Promise<void>;
+    fetchCommunityEvents: (filterParams?: EventFilterParams) => Promise<void>;
     fetchEventById: (id: number) => Promise<VolunteerEventDTO | null>;
     getEventsByUserId: (userId: string) => Promise<VolunteerEventDTO[]>;
     createEvent: (eventData: CreateEventData) => Promise<VolunteerEventDTO | null>;
@@ -76,6 +79,7 @@ export const VolunteerEventContext = createContext<VolunteerEventContextProps | 
 export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     // Состояния
     const [events, setEvents] = useState<VolunteerEventDTO[]>([]);
+    const [communityEvents, setCommunityEvents] = useState<VolunteerEventDTO[]>([]); 
     const [selectedEvent, setSelectedEvent] = useState<VolunteerEventDTO | null>(null);
     const [eventCategories, setEventCategories] = useState<EventCategory[]>([]);
     const [eventStatuses, setEventStatuses] = useState<EventStatus[]>([]);
@@ -85,6 +89,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     const [pageNumber, setPageNumber] = useState(1);
     const [pageSize, setPageSize] = useState(5);
     const [totalPages, setTotalPages] = useState(1);
+    const [communityTotalPages, setCommunityTotalPages] = useState(1);
     
     // Текущие параметры фильтрации
     const [filterParams, setFilterParamsState] = useState<EventFilterParams>({});
@@ -156,7 +161,31 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             setIsLoading(false);
         }
     };
-
+    const fetchCommunityEvents = async (params?: EventFilterParams): Promise<void> => {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            const result = await apiClient.getPagedCommunityEvents(
+                pageNumber,
+                pageSize,
+                params?.catId,
+                params?.cityId,
+                params?.keyWords,
+                params?.dateTime
+            );
+            console.log(result);
+            
+            setCommunityEvents(result.items || []);
+            setCommunityTotalPages(result.totalPages || 1);
+            
+        } catch (error) {
+            console.error("Ошибка при загрузке событий от волонтеров:", error);
+            setError("Не удалось загрузить список событий волонтеров");
+        } finally {
+            setIsLoading(false);
+        }
+    };
     // Получение события по ID
     const fetchEventById = async (id: number): Promise<VolunteerEventDTO | null> => {
         setIsLoading(true);
@@ -347,6 +376,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         <VolunteerEventContext.Provider value={{
             // Состояния
             events,
+            communityEvents,
             selectedEvent,
             eventCategories,
             eventStatuses,
@@ -358,6 +388,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             pageNumber,
             pageSize,
             totalPages,
+            communityTotalPages,
             setPageNumber: changePage,
             // Методы для работы с событиями
             fetchEvents,
@@ -367,6 +398,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             deleteEvent,
             getEventsByUserId,
             fetchEventsForUser,
+            fetchCommunityEvents,
             
             geocode,
             reverseGeocode,

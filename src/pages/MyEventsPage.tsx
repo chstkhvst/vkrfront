@@ -47,7 +47,7 @@ export const MyEventPage: React.FC = () => {
   const [data, setData] = useState<EventAttendanceDTO[]>([]);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<VolunteerEventDTO | null>(null);
-  const [organizedEvents, setOrganizedEvents] = useState<VolunteerEventDTO[]>([]);
+  const [myEvents, setMyEvents] = useState<VolunteerEventDTO[]>([]);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [eventToCancel, setEventToCancel] = useState<VolunteerEventDTO | null>(null);
   const [cancelAttendanceDialogOpen, setCancelAttendanceDialogOpen] = useState(false);
@@ -69,9 +69,9 @@ export const MyEventPage: React.FC = () => {
 
       await fetchAttendanceStatuses();
 
-      if (user?.role === 'organizer' && eventContext) {
+      if (eventContext) {
           const events = await eventContext.getEventsByUserId(userId);
-          setOrganizedEvents(events);
+          setMyEvents(events);
       }
    };
 
@@ -97,35 +97,6 @@ export const MyEventPage: React.FC = () => {
     ATTENDED: 3,
     NO_SHOW: 4,
   };
-
-  const getAttendanceStatusIcon = (statusId: number | undefined) => {
-    switch (statusId) {
-      case ATTENDANCE_STATUS.UPCOMING:
-        return <UpcomingIcon fontSize="small" />;
-      case ATTENDANCE_STATUS.CANCELLED:
-        return <CancelledAttendanceIcon fontSize="small" />;
-      case ATTENDANCE_STATUS.ATTENDED:
-        return <AttendedIcon fontSize="small" />;
-      case ATTENDANCE_STATUS.NO_SHOW:
-        return <NoShowIcon fontSize="small" />;
-      default:
-        return undefined;
-    }
-  };
-  const getAttendanceStatusSx = (statusId: number | undefined) => {
-  switch (statusId) {
-    case ATTENDANCE_STATUS.UPCOMING:
-      return { borderColor: '#949cff', color: '#949cff' };
-    case ATTENDANCE_STATUS.CANCELLED:
-      return { borderColor: '#f44336', color: '#f44336' };
-    case ATTENDANCE_STATUS.ATTENDED:
-      return { borderColor: '#4caf50', color: '#4caf50' };
-    case ATTENDANCE_STATUS.NO_SHOW:
-      return { borderColor: '#5f6388', color: '#5f6388' };
-    default:
-      return { borderColor: '#5f6388', color: '#5f6388' };
-  }
-};
 
   const EVENT_STATUS = {
     ON_MODERATION: 1,
@@ -167,8 +138,9 @@ const getEventStatusSx = (statusId: number | undefined) => {
       return { borderColor: '#949cff', color: '#949cff' };
   }
 };
-  const organizerUpcoming = organizedEvents.filter(e => {
+  const upcomingEvents = myEvents.filter(e => {
     if (!e.eventDateTime) return false;
+    if (e.eventStatus?.id === EVENT_STATUS.CANCELLED) return false;
 
     const now = new Date();
     const event = new Date(e.eventDateTime);
@@ -188,9 +160,9 @@ const getEventStatusSx = (statusId: number | undefined) => {
     return eventLocal >= todayLocal;
   });
 
-  const organizerHistory = organizedEvents.filter(e => {
+  const historyEvents = myEvents.filter(e => {
     if (!e.eventDateTime) return false;
-
+    if (e.eventStatus?.id === EVENT_STATUS.CANCELLED) return true;
     const now = new Date();
     const event = new Date(e.eventDateTime);
 
@@ -208,13 +180,6 @@ const getEventStatusSx = (statusId: number | undefined) => {
 
     return eventLocal < todayLocal;
   });
-  const volunteerUpcoming = data.filter(
-    a => a.attendanceStatusId === ATTENDANCE_STATUS.UPCOMING
-  );
-
-  const volunteerHistory = data.filter(
-    a => a.attendanceStatusId !== ATTENDANCE_STATUS.UPCOMING
-  );
 
   const canCancelEvent = (eventDateTime: Date | undefined): boolean => {
     if (!eventDateTime) return false;
@@ -269,7 +234,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
         // Обновляем список мероприятий
         if (user?.user?.id) {
           const events = await eventContext.getEventsByUserId(user.user.id);
-          setOrganizedEvents(events);
+          setMyEvents(events);
         }
       } else {
         showNotification('Ошибка при обновлении статуса мероприятия', 'error');
@@ -292,19 +257,8 @@ const getEventStatusSx = (statusId: number | undefined) => {
   }
 
   const getCurrentList = () => {
-      if (isVolunteer) {
-          if (tab === 0) return volunteerUpcoming;
-          // Реверс для истории волонтера
-          return [...volunteerHistory].reverse();
-      } 
-      
-      if (isOrganizer) {
-          if (tab === 0) return organizerUpcoming;
-          // Реверс для истории организатора
-          return [...organizerHistory].reverse();
-      }
-      
-      return [];
+      if (tab === 0) return upcomingEvents;
+      return [...historyEvents].reverse();
   };
   const currentList = getCurrentList();
 
@@ -327,141 +281,76 @@ const getEventStatusSx = (statusId: number | undefined) => {
 
       {currentList.length === 0 && (
         <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-          {isVolunteer && 'Вы еще не зарегистрированы ни на одно мероприятие'}
-          {isOrganizer && 'У вас пока нет созданных мероприятий'}
+          У вас пока нет созданных мероприятий
         </Typography>
       )}
 
       <Grid container spacing={3}>
-        {isVolunteer && currentList.map((a: EventAttendanceDTO) => {
-        const event = a.volunteerEvent;
-          return (
-            <GridLegacy item xs={12} key={a.id}>
-              <Card>
-                <CardContent
-                sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-            }}>
-                  <Typography variant="h6">
-                    {event?.name || 'Без названия'}
-                  </Typography>
-
-                  <Typography color="text.secondary">
-                    📅{' '}
-                    {event?.eventDateTime
-                      ? new Date(event.eventDateTime).toLocaleString()
-                      : 'Нет даты'}
-                  </Typography>
-
-                  <Typography color="text.secondary">
-                     {event?.address || 'Без адреса'}
-                  </Typography>
-
-                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                    <Chip
-                      icon={getAttendanceStatusIcon(a.attendanceStatusId)}
-                      label={a.attendanceStatus?.name}
-                      variant="outlined"
-                      sx={{
-                        ...getAttendanceStatusSx(a.attendanceStatusId),
-                        '& .MuiChip-icon': {
-                          fontSize: '1rem',
-                        },
-                      }}
-                    />
-                  </Box>
-                </CardContent>
-
-                <CardActions
-                sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    pb: 2,
-                }}
-                >
-                  {tab === 0 && (
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={() => {
-                        setAttendanceToCancel(a);
-                        setCancelAttendanceDialogOpen(true);
-                      }}
-                    >
-                      Отменить участие
-                    </Button>
-                  )}
-                </CardActions>
-              </Card>
-            </GridLegacy>
-          );
-        })}
-        {isOrganizer && currentList.map((orgEvent: VolunteerEventDTO) => (
-          <GridLegacy item xs={12} key={orgEvent.id}>
-            <Card sx={{ 
-              // bgcolor: 'rgba(148, 156, 255, 0.2)',
-            }}>
-              <CardContent >
+        {currentList.map((event: VolunteerEventDTO) => (
+          <GridLegacy item xs={12} key={event.id}>
+            <Card>
+              <CardContent>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, gap: 2 }}>
-                <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
-                  {orgEvent.name || 'Без названия'}
-                </Typography>
-                <Chip
-                  icon={ getEventStatusIcon(orgEvent.eventStatus?.id)}
-                  label={" " + orgEvent.eventStatus?.name || 'Статус неизвестен'}
-                  variant="outlined"
-                  sx={{
-                    ...getEventStatusSx(orgEvent.eventStatus?.id),
-                    flexShrink: 0,
-                    '& .MuiChip-icon': {
-                      fontSize: '1rem',
-                    },
-                  }}
-                />
-              </Box>
+                  <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
+                    {event.name || 'Без названия'}
+                  </Typography>
+                  <Chip
+                    icon={getEventStatusIcon(event.eventStatus?.id)}
+                    label={" " + event.eventStatus?.name || 'Статус неизвестен'}
+                    variant="outlined"
+                    sx={{
+                      ...getEventStatusSx(event.eventStatus?.id),
+                      flexShrink: 0,
+                      '& .MuiChip-icon': {
+                        fontSize: '1rem',
+                      },
+                    }}
+                  />
+                </Box>
                 <Typography color="text.secondary">
-                  📅 {orgEvent.eventDateTime
-                    ? new Date(orgEvent.eventDateTime).toLocaleString()
+                  📅 {event.eventDateTime
+                    ? new Date(event.eventDateTime).toLocaleString()
                     : 'Нет даты'}
                 </Typography>
                 <Typography color="text.secondary">
-                   {orgEvent.address || 'Без адреса'}
+                  📍 {event.address || 'Без адреса'}
                 </Typography>
               </CardContent>
               <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
-                  {(orgEvent.eventStatus?.id === EVENT_STATUS.APPROVED || orgEvent.eventStatus?.id === EVENT_STATUS.ON_MODERATION) && tab === 0 &&
-                  canCancelEvent(orgEvent.eventDateTime) && (
+                {(event.eventStatus?.id === EVENT_STATUS.APPROVED || event.eventStatus?.id === EVENT_STATUS.ON_MODERATION) && tab === 0 &&
+                  canCancelEvent(event.eventDateTime) && (
                     <Button
                       variant="outlined"
                       color="error"
                       onClick={() => {
-                        setEventToCancel(orgEvent);
+                        setEventToCancel(event);
                         setCancelDialogOpen(true);
                       }}
                     >
                       Отменить мероприятие
                     </Button>
                   )}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => {/* Переход на редактирование */}}
-                >
-                  Редактировать
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={() => {
-                      setSelectedEvent(orgEvent);
-                      setParticipantsOpen(true);
-                  }}
-                >
-                  Участники
-                </Button>
+                {isOrganizer && (
+                  <>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => {/* Переход на редактирование */}}
+                    >
+                      Редактировать
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => {
+                          setSelectedEvent(event);
+                          setParticipantsOpen(true);
+                      }}
+                    >
+                      Участники
+                    </Button>
+                  </>
+                )}
               </CardActions>
             </Card>
           </GridLegacy>

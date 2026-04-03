@@ -430,19 +430,6 @@ export const EventsListPage: React.FC = () => {
                     </Grid>
                 ))}
             </Grid>
-
-            {/* Диалог с количеством участников */}
-            <Dialog open={participantsDialogOpen} onClose={() => setParticipantsDialogOpen(false)}>
-                <DialogTitle>Участники события</DialogTitle>
-                <DialogContent>
-                    <Typography variant="body1" sx={{ mt: 2 }}>
-                        Количество зарегистрированных участников: <strong>{participantsCount}</strong>
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setParticipantsDialogOpen(false)}>Закрыть</Button>
-                </DialogActions>
-            </Dialog>
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                 <Pagination
                     count={totalPages}

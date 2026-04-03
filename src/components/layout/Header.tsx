@@ -113,7 +113,7 @@ export const Header = () => {
               color="secondary"
               onClick={() => navigate('/events')}
             >
-              Все мероприятия
+              Мероприятия от организаций
             </Button>
             {(isOrganizer || isVolunteer) && (
             <Button
@@ -123,6 +123,15 @@ export const Header = () => {
             >
               Мои мероприятия
             </Button>
+            )}
+            {isVolunteer && (
+              <Button
+                variant="text"
+                color="secondary"
+                onClick={() => navigate('/events-to-visit')}
+              >
+                Мои посещения
+              </Button>
             )}
             {isOrganizer && (
               <Button
@@ -231,7 +240,15 @@ export const Header = () => {
                   <MenuItem onClick={handleCreateEvent} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
                     <Add sx={{ fontSize: 20, color: '#ffed86' }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      Создать событие
+                      Добавить мероприятие
+                    </Typography>
+                  </MenuItem>
+                )}
+                {isVolunteer && (
+                  <MenuItem onClick={handleCreateEvent} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
+                    <Add sx={{ fontSize: 20, color: '#ffed86' }} />
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      Добавить мероприятие
                     </Typography>
                   </MenuItem>
                 )}

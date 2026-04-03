@@ -19,10 +19,12 @@ import { VolunteerEventContext } from '../context/EventContext';
 import { Autocomplete } from '@mui/material';
 import { MapPicker } from "../components/MapPicker";
 import { useNotification } from '../components/Notification';
+import { useAuth } from '../context/AuthContext';
 
 export const CreateEventPage: React.FC = () => {
+    const { userRole } = useAuth();
+    const mode = userRole === 'organizer' ? 'organization' : 'volunteer';
     const context = useContext(VolunteerEventContext);
-
     const [newEvent, setNewEvent] = useState({
         name: '',
         description: '',
@@ -131,7 +133,7 @@ export const CreateEventPage: React.FC = () => {
             eventDateTime: newEvent.eventDateTime
                 ? new Date(newEvent.eventDateTime)
                 : new Date(),
-            eventPoints: newEvent.eventPoints,
+            eventPoints: mode === "organization" ? newEvent.eventPoints : 0,
             participantsLimit: newEvent.participantsLimit
                 ? Number(newEvent.participantsLimit)
                 : 0,
@@ -156,13 +158,13 @@ export const CreateEventPage: React.FC = () => {
                 participantsLimit: ''
             });
             setImage(undefined);
-            showNotification('Ваща заявка отправлена. Подробности в разделе "Мои мероприятия".', 'info');
+            showNotification('Ваша заявка отправлена на модерацию. Подробности в разделе "Мои мероприятия"', 'info');
         } else {
             setErrorMessage('Ошибка при создании события');
         }
 
         setSubmitting(false);
-        };
+   };
 
         if (success) {
             return <Navigate to="/events" replace />;
@@ -181,8 +183,10 @@ export const CreateEventPage: React.FC = () => {
             </Breadcrumbs>
 
             <Paper sx={{ p: 4 }}>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Создать новое событие
+                <Typography variant="h4">
+                    {mode === "organization"
+                        ? "Добавить мероприятие"
+                        : "Предложить инициативу"}
                 </Typography>
                 
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
@@ -307,13 +311,17 @@ export const CreateEventPage: React.FC = () => {
                             onChange={(e) => setNewEvent({...newEvent, eventDateTime: e.target.value})}
                         />
 
-                        <TextField
-                            label="Баллы"
-                            type="number"
-                            fullWidth
-                            value={newEvent.eventPoints}
-                            onChange={(e) => setNewEvent({...newEvent, eventPoints: Number(e.target.value)})}
-                        />
+                        {mode === "organization" && (
+                            <TextField
+                                label="Баллы"
+                                type="number"
+                                fullWidth
+                                value={newEvent.eventPoints}
+                                onChange={(e) =>
+                                    setNewEvent({ ...newEvent, eventPoints: Number(e.target.value) })
+                                }
+                            />
+                        )}
 
                         <TextField
                             label="Лимит участников (при наличии)"

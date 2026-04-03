@@ -24,6 +24,7 @@ import {
 import React from 'react';
 import { NotificationProvider, useNotification } from './components/Notification';
 import { EventDetailsPage } from './pages/EventDetailsPage';
+import { EventsToVisitPage } from './pages/EventsToVisitPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement, allowedRoles?: string[] }> = ({
   children,
@@ -47,6 +48,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement, allowedRoles?: st
 
   return children;
 };
+
 function App() {
   return (
     <ErrorBoundary>
@@ -84,9 +86,9 @@ function App() {
                 <Route
                   path="/events/add"
                   element={
-                    <ProtectedRoute allowedRoles={['organizer']}>
+                    <ProtectedRoute allowedRoles={['organizer', 'volunteer']}>
                       <VolunteerEventProvider>
-                        <CreateEventPage />
+                        <CreateEventPage/>
                       </VolunteerEventProvider>
                     </ProtectedRoute>
                   }
@@ -99,6 +101,19 @@ function App() {
                       <AttendanceProvider>
                         <VolunteerEventProvider>
                           <MyEventPage />
+                        </VolunteerEventProvider>
+                      </AttendanceProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                
+                <Route
+                  path="/events-to-visit"
+                  element={
+                    <ProtectedRoute>
+                      <AttendanceProvider>
+                        <VolunteerEventProvider>
+                          <EventsToVisitPage />
                         </VolunteerEventProvider>
                       </AttendanceProvider>
                     </ProtectedRoute>
