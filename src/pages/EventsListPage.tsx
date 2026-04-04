@@ -326,7 +326,7 @@ export const EventsListPage: React.FC = () => {
                                 background: 'rgba(148, 156, 255, 0.01)',
                                 }
                             }}
-                            onClick={() => navigate(`/events/${event.id}`)} 
+                            onClick={() => navigate(`/events/${event.id}`, { state: { isCommunity: false } })}
                         >
                             {/*</Card><Card sx={{ bgcolor: 'rgba(148, 156, 255, 0.3)' }}>*/}
                             {event.imagePath && (

@@ -23,7 +23,7 @@ import { useAuth } from '../context/AuthContext';
 
 export const CreateEventPage: React.FC = () => {
     const { userRole } = useAuth();
-    const mode = userRole === 'organizer' ? 'organization' : 'volunteer';
+    const mode = userRole === 'organizer' ? 'organizer' : 'volunteer';
     const context = useContext(VolunteerEventContext);
     const [newEvent, setNewEvent] = useState({
         name: '',
@@ -133,7 +133,7 @@ export const CreateEventPage: React.FC = () => {
             eventDateTime: newEvent.eventDateTime
                 ? new Date(newEvent.eventDateTime)
                 : new Date(),
-            eventPoints: mode === "organization" ? newEvent.eventPoints : 0,
+            eventPoints: mode === "organizer" ? newEvent.eventPoints : 0,
             participantsLimit: newEvent.participantsLimit
                 ? Number(newEvent.participantsLimit)
                 : 0,
@@ -184,7 +184,7 @@ export const CreateEventPage: React.FC = () => {
 
             <Paper sx={{ p: 4 }}>
                 <Typography variant="h4">
-                    {mode === "organization"
+                    {mode === "organizer"
                         ? "Добавить мероприятие"
                         : "Предложить инициативу"}
                 </Typography>
@@ -311,7 +311,7 @@ export const CreateEventPage: React.FC = () => {
                             onChange={(e) => setNewEvent({...newEvent, eventDateTime: e.target.value})}
                         />
 
-                        {mode === "organization" && (
+                        {mode === "organizer" && (
                             <TextField
                                 label="Баллы"
                                 type="number"

@@ -36,8 +36,11 @@ import { useNotification } from '../components/Notification';
 import { useAuth } from "../context/AuthContext";
 import { EventAttendanceDTO } from "../client/apiClient";
 import { MapView } from "../components/MapView";
+import { useLocation } from "react-router-dom";
 
 export const EventDetailsPage: React.FC = () => {
+  const location = useLocation();
+  const isCommunity = location.state?.isCommunity ?? true;
   const { id } = useParams();
   const context = useContext(VolunteerEventContext);
   const attContext = useContext(AttendanceContext);
@@ -54,23 +57,24 @@ export const EventDetailsPage: React.FC = () => {
 //     return <Typography color="error">Ошибка контекста</Typography>;
 //   }
 
-    const { fetchEventById, updateEvent } = context!;
-    const { createAttendance, getParticipantsCount } = attContext!;
+  const { fetchEventById, updateEvent } = context!;
+  const { createAttendance, getParticipantsCount } = attContext!;
 
-    useEffect(() => {
-        const load = async () => {
-        if (!id) return;
-        const data = await fetchEventById(Number(id));
-        console.log('Event data:', data)
-        setEvent(data);
-        setLoading(false);
-        if (data?.id) {
-            const count = await getParticipantsCount(data.id);
-            setParticipantsCount(count);
-        }
-        };
-        load();
-    }, [id]);
+  useEffect(() => {
+      const load = async () => {
+      if (!id) return;
+      const data = await fetchEventById(Number(id));
+      console.log('Event data:', data)
+      
+      setEvent(data);
+      setLoading(false);
+      if (data?.id) {
+          const count = await getParticipantsCount(data.id);
+          setParticipantsCount(count);
+      }
+      };
+      load();
+  }, [id]);
 
 const handleRegister = async (eventId: number) => {
       if (!createAttendance || !user?.user?.id) {
@@ -279,6 +283,7 @@ const handleRegister = async (eventId: number) => {
               </Box>
               
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                {!isCommunity && (
                 <Paper 
                   elevation={0}
                   sx={{ 
@@ -300,6 +305,7 @@ const handleRegister = async (eventId: number) => {
                     баллов
                   </Typography>
                 </Paper>
+                )}
               </Box>
             </Box>
           </Box>
@@ -318,7 +324,10 @@ const handleRegister = async (eventId: number) => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1.5 }}>
               <People sx={{ fontSize: 24, color: '#949cff' }} />
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                Участники: <strong>{participantsCount}</strong> / {event.participantsLimit || '∞'}
+                 {isCommunity
+                    ? `Рекомендуемое количество участников: ${event.participantsLimit || 'не указано'}`
+                    : `Участники: ${participantsCount} / ${event.participantsLimit || '∞'}`
+                  }
               </Typography>
             </Box>
             {event.participantsLimit && (
@@ -384,7 +393,7 @@ const handleRegister = async (eventId: number) => {
           </Box>
 
           {/* ВОЛОНТЕР */}
-          {user?.role === "volunteer" && !isRegistered && (
+          {user?.role === "volunteer" && !isRegistered && !isCommunity &&(
             <Button 
               variant="contained"
               size="large"

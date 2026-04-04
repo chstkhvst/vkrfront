@@ -115,6 +115,13 @@ export const Header = () => {
             >
               Мероприятия от организаций
             </Button>
+            <Button
+              variant="text"
+              color="secondary"
+              onClick={() => navigate('/community-events')}
+            >
+              Инициативы от волонтеров
+            </Button>
             {(isOrganizer || isVolunteer) && (
             <Button
               variant="text"

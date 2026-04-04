@@ -7,6 +7,7 @@ import { VolunteerEventProvider } from './context/EventContext';
 import { AttendanceProvider } from './context/AttendanceContext';
 
 import { EventsListPage } from './pages/EventsListPage';
+import { CommunityEventsPage } from './pages/CommunityEventsPage';
 import { CreateEventPage } from './pages/CreateEventPage';
 import { MyEventPage } from './pages/MyEventsPage';
 
@@ -82,7 +83,14 @@ function App() {
                     </AttendanceProvider>
                   }
                 />
-
+                <Route
+                  path="/community-events"
+                  element={
+                    <VolunteerEventProvider>
+                      <CommunityEventsPage />
+                    </VolunteerEventProvider>
+                  }
+                />
                 <Route
                   path="/events/add"
                   element={
