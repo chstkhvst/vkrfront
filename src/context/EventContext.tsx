@@ -14,6 +14,7 @@ export interface EventFilterParams {
     cityId?: number;
     keyWords?: string;
     dateTime?: Date;
+    statusId?: number;
 }
 type CreateEventData = {
     name: string;
@@ -41,10 +42,12 @@ interface VolunteerEventContextProps {
     isLoading: boolean;
     error: string | null;
     pageNumber: number;
+    communityPageNumber: number;
     pageSize: number;
     totalPages: number;
     communityTotalPages: number;
     setPageNumber: (page: number) => void;
+    setCommunityPageNumber: (page: number) => void;
     // Методы для работы с событиями
     fetchEvents: (filterParams?: EventFilterParams) => Promise<void>;
     fetchEventsForUser: (filterParams?: EventFilterParams) => Promise<void>;
@@ -87,6 +90,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
+    const [communityPageNumber, setCommunityPageNumber] = useState(1);
     const [pageSize, setPageSize] = useState(5);
     const [totalPages, setTotalPages] = useState(1);
     const [communityTotalPages, setCommunityTotalPages] = useState(1);
@@ -94,8 +98,11 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     // Текущие параметры фильтрации
     const [filterParams, setFilterParamsState] = useState<EventFilterParams>({});
     const changePage = (newPage: number) => {
-    setPageNumber(newPage);
-};
+        setPageNumber(newPage);
+    };
+    const changeCommunityPage = (newPage: number) => {
+        setCommunityPageNumber(newPage);
+    };
 
     // Инициализация клиента API
     const apiClient = new Client(process.env.REACT_APP_API_URL || '');
@@ -123,7 +130,8 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
                 params?.catId,
                 params?.cityId,
                 params?.keyWords,
-                params?.dateTime
+                params?.dateTime,
+                params?.statusId,
             );
             console.log(result);
             setEvents(result.items || []);
@@ -167,12 +175,13 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         
         try {
             const result = await apiClient.getPagedCommunityEvents(
-                pageNumber,
+                communityPageNumber,
                 pageSize,
                 params?.catId,
                 params?.cityId,
                 params?.keyWords,
-                params?.dateTime
+                params?.dateTime,
+                params?.statusId
             );
             console.log(result);
             
@@ -360,11 +369,13 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     const setFilterParams = (params: EventFilterParams): void => {
         setFilterParamsState(params);
         setPageNumber(1);
+        setCommunityPageNumber(1);
     };
     // Очистка фильтров
     const clearFilters = (): void => {
         setFilterParamsState({});
         setPageNumber(1);
+        setCommunityPageNumber(1);
     };
 
     // Выбор события
@@ -386,10 +397,12 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             
             // для пагинации
             pageNumber,
+            communityPageNumber,
             pageSize,
             totalPages,
             communityTotalPages,
             setPageNumber: changePage,
+            setCommunityPageNumber: changeCommunityPage,
             // Методы для работы с событиями
             fetchEvents,
             fetchEventById,

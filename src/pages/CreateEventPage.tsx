@@ -280,7 +280,7 @@ export const CreateEventPage: React.FC = () => {
 
                                 const lat = parseFloat(value.lat);
                                 const lng = parseFloat(value.lon);
-
+ console.log("AUTOCOMPLETE SELECT", { lat, lng });
                                 setCoords({ lat, lng });
                                 setSelectedAddress(value);
 

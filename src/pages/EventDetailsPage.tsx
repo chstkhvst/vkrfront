@@ -52,6 +52,7 @@ export const EventDetailsPage: React.FC = () => {
   const [participantsCount, setParticipantsCount] = useState<number>(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState<number | null>(null);
 
 //   if (!context || !attContext) {
 //     return <Typography color="error">Ошибка контекста</Typography>;
@@ -118,6 +119,31 @@ const handleRegister = async (eventId: number) => {
       }
   };
 
+  const handleModeration = async (statusId: number) => {
+  setProcessingStatus(statusId);
+
+  const status = context!.eventStatuses.find(s => s.id === statusId);
+  const actionName = status?.eventStatusName?.toLowerCase() || 'изменено';
+  
+  try {
+    const success = await updateEvent(event.id, {
+      ...event,
+      eventStatusId: statusId,
+    });
+    
+    if (success) {
+      showNotification(`Событие ${actionName}`, 'success');
+      const updatedEvent = await fetchEventById(Number(id));
+      setEvent(updatedEvent);
+    } else {
+      showNotification(`Ошибка при ${actionName} события`, 'error');
+    }
+  } catch (error) {
+    showNotification(`Ошибка при ${actionName} события`, 'error');
+  } finally {
+    setProcessingStatus(null);
+  }
+};
   if (loading) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
       <CircularProgress />
@@ -419,53 +445,63 @@ const handleRegister = async (eventId: number) => {
 
           {/* МОДЕРАТОР */}
           {user?.role === "moderator" && event.eventStatusId === 1 && (
-            <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
-              <Button
-                variant="contained"
-                startIcon={<CheckCircle />}
-                fullWidth
-                onClick={() =>
-                  updateEvent(event.id, {
-                    ...event,
-                    eventStatusId: 2,
-                  })
-                }
-                sx={{
-                  bgcolor: '#4caf50',
-                  '&:hover': {
-                    bgcolor: '#45a049',
-                  },
-                  textTransform: 'none',
-                  py: 1.5,
-                  fontWeight: 600
-                }}
-              >
-                Одобрить
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Cancel />}
-                fullWidth
-                onClick={() =>
-                  updateEvent(event.id, {
-                    ...event,
-                    eventStatusId: 3,
-                  })
-                }
-                sx={{
-                  bgcolor: '#f44336',
-                  '&:hover': {
-                    bgcolor: '#da190b',
-                  },
-                  textTransform: 'none',
-                  py: 1.5,
-                  fontWeight: 600
-                }}
-              >
-                Отклонить
-              </Button>
-            </Box>
-          )}
+          <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+            <Button
+              variant="outlined"
+              color="success"
+              startIcon={processingStatus === 2 ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />}
+              fullWidth
+              onClick={() => handleModeration(2)}
+              disabled={!!processingStatus}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 600,
+                boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)',
+                },
+                '&:active': {
+                  transform: 'translateY(0)',
+                },
+              }}
+            >
+              {processingStatus === 2 ? "Обработка..." : "Одобрить событие"}
+            </Button>
+            
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={processingStatus === 3 ? <CircularProgress size={20} /> : <Cancel />}
+              fullWidth
+              onClick={() => handleModeration(3)}
+              disabled={!!processingStatus}
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 600,
+                borderWidth: 2,
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderWidth: 2,
+                  transform: 'translateY(-2px)',
+                  bgcolor: 'rgba(244, 67, 54, 0.04)',
+                },
+                '&:active': {
+                  transform: 'translateY(0)',
+                },
+              }}
+            >
+              {processingStatus === 3 ? "Обработка..." : "Отклонить событие"}
+            </Button>
+          </Box>
+        )}
         </CardContent>
       </Card>
 

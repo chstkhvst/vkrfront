@@ -5,16 +5,10 @@ import {
     Button, 
     Card, 
     CardContent, 
-    CardActions,
     Box,
     Alert,
     CircularProgress,
     Grid,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Snackbar, //ИСПРАВИТЬ АЛЕРТЫ
     TextField,
     Select, 
     MenuItem,
@@ -25,26 +19,28 @@ import {
     Chip,
     Divider
 } from '@mui/material';
+import {
+  PendingOutlined as PendingIcon,
+  CheckCircleOutline as ApprovedIcon,
+  CancelOutlined as DeclinedIcon,
+  EventBusy as CancelledIcon,
+  EventAvailable as EndedIcon,
+} from '@mui/icons-material';
 import { VolunteerEventContext } from '../context/EventContext';
-import { AttendanceContext } from '../context/AttendanceContext';
 import { useAuth } from '../context/AuthContext';
-import { useNotification } from '../components/Notification';
 import { useNavigate } from 'react-router-dom';
 import { CalendarToday, Category, FilterList, FilterListOff, LocationOn, Search, Star } from '@mui/icons-material';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
     const { user, isLoading: authLoading } = useAuth(); 
-    const { showNotification } = useNotification();
     const navigate = useNavigate();
     
-    // Состояния для диалогов
-    const [participantsDialogOpen, setParticipantsDialogOpen] = useState(false);
-    const [participantsCount, setParticipantsCount] = useState<number>(0);
     const [search, setSearch] = useState('');
     const [categoryId, setCategoryId] = useState<number | ''>('');
     const [cityId, setCityId] = useState<number | ''>('');
     const [citySearch, setCitySearch] = useState('');
+    const [statusId, setStatusId] = useState<number | ''>('');
     const {
         events,
         isLoading,
@@ -68,22 +64,9 @@ export const EventsListPage: React.FC = () => {
         return () => clearTimeout(delay);
     }, [search]);
 
-
-    // useEffect(() => {
-    //     if (!user) return;
-    //     console.log(user)
-    //     if (user?.role === "volunteer") {
-    //         context!.fetchEventsForUser();
-    //     } else {
-    //         context!.fetchEvents();
-    //     }
-    // }, [pageNumber, user?.role]);
-
     useEffect(() => {
         
         if(authLoading) return;
-
-        //if (!user) return;
         console.log(user)
         if (user?.role === "moderator") {
             context!.fetchEvents();
@@ -103,11 +86,11 @@ export const EventsListPage: React.FC = () => {
     });
 
     const handleChangeFilters = (overrideParams?: any) => {
-        console.log("labuba");
         const params = overrideParams ?? {
             keyWords: search || undefined,
             catId: categoryId || undefined,
-            cityId: cityId || undefined
+            cityId: cityId || undefined,
+            statusId: user?.role === "moderator" ? (statusId || undefined) : undefined
         };
 
         context!.setFilterParams(params);
@@ -126,10 +109,49 @@ export const EventsListPage: React.FC = () => {
             </Container>
         );
     }
+    const EVENT_STATUS = {
+        ON_MODERATION: 1,
+        APPROVED: 2,
+        DECLINED: 3,
+        CANCELLED: 4,
+        ENDED: 5,
+    };
+    const getEventStatusIcon = (statusId: number | undefined) => {
+        switch (statusId) {
+        case EVENT_STATUS.ON_MODERATION:
+            return <PendingIcon fontSize="small" />;
+        case EVENT_STATUS.APPROVED:
+            return <ApprovedIcon fontSize="small" />;
+        case EVENT_STATUS.DECLINED:
+            return <DeclinedIcon fontSize="small" />;
+        case EVENT_STATUS.CANCELLED:
+            return <CancelledIcon fontSize="small" />;
+        case EVENT_STATUS.ENDED:
+            return <EndedIcon fontSize="small" />;
+        default:
+            return undefined;
+        }
+    };
+    const getEventStatusSx = (statusId: number | undefined) => {
+      switch (statusId) {
+        case EVENT_STATUS.ON_MODERATION:
+          return { borderColor: '#ff9800', color: '#ff9800' };
+        case EVENT_STATUS.APPROVED:
+          return { borderColor: '#4caf50', color: '#4caf50' };
+        case EVENT_STATUS.DECLINED:
+          return { borderColor: '#f44336', color: '#f44336' };
+        case EVENT_STATUS.CANCELLED:
+          return { borderColor: '#5f6388', color: '#5f6388' };
+        case EVENT_STATUS.ENDED:
+          return { borderColor: '#5f6388', color: '#5f6388' };
+        default:
+          return { borderColor: '#949cff', color: '#949cff' };
+      }
+    };
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-                        <Card 
+            <Card 
                 elevation={0} 
                 sx={{ 
                     mb: 4, 
@@ -139,7 +161,7 @@ export const EventsListPage: React.FC = () => {
                     borderRadius: 3
                 }}
             >
-                <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center',  }}>
                     {/* Поиск */}
                     <TextField
                         label="Поиск"
@@ -150,7 +172,7 @@ export const EventsListPage: React.FC = () => {
                             startAdornment: <Search sx={{ mr: 1, color: '#949cff' }} fontSize="small" />
                         }}
                         sx={{
-                            flex: '1 1 250px',
+                            flex: '1 1 150px',
                             '& .MuiOutlinedInput-root': {
                                 bgcolor: 'white',
                                 '& fieldset': {
@@ -173,7 +195,7 @@ export const EventsListPage: React.FC = () => {
                     />
 
                     {/* Категория */}
-                    <FormControl size="small" sx={{ minWidth: 180, flex: '0 1 auto' }}>
+                    <FormControl size="small" sx={{ minWidth: 150, flex: '0 1 auto' }}>
                         <InputLabel sx={{
                             color: '#5f6388',
                             '&.Mui-focused': {
@@ -242,8 +264,39 @@ export const EventsListPage: React.FC = () => {
                             setCityId(newValue?.id || '');
                         }}
                         isOptionEqualToValue={(option, value) => option.id === value?.id}
-                        sx={{ minWidth: 220, flex: '0 1 auto' }}
+                        sx={{ minWidth: 200, flex: '0 1 auto' }}
                     />
+                    {/* статус ивента */}
+                    {user?.role === "moderator" && (
+                    <FormControl size="small" sx={{ minWidth: 150, flex: '0 1 auto' }}>
+                        <InputLabel sx={{
+                            color: '#5f6388',
+                            '&.Mui-focused': {
+                                color: '#949cff',
+                            },
+                        }}>Статус</InputLabel>
+                        <Select
+                            value={statusId}
+                            label="Категория"
+                            onChange={(e) => setStatusId(e.target.value as number)}
+                            sx={{
+                                bgcolor: 'white',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#949cff',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#7c84f4',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#949cff',
+                                },
+                            }}
+                        >
+                        {context!.eventStatuses.map(status => 
+                            ( <MenuItem key={status.id} value={status.id}> {status.eventStatusName} </MenuItem> ))}   
+                        </Select>
+                    </FormControl>
+                    )}
 
                     {/* Применить */}
                     <Button
@@ -252,7 +305,8 @@ export const EventsListPage: React.FC = () => {
                         onClick={() => handleChangeFilters({
                             keyWords: search || undefined,
                             catId: categoryId || undefined,
-                            cityId: cityId || undefined
+                            cityId: cityId || undefined,
+                            statusId: user?.role === "moderator" ? (statusId || undefined) : undefined
                         })}
                         sx={{
                             bgcolor: '#949cff',
@@ -274,12 +328,14 @@ export const EventsListPage: React.FC = () => {
                             const params = {
                                 keyWords: undefined,
                                 catId: undefined,
-                                cityId: undefined
+                                cityId: undefined,
+                                statusId: undefined
                             };
 
                             setSearch('');
                             setCategoryId('');
                             setCityId('');
+                            setStatusId('');
                             clearFilters();
                             handleChangeFilters(params);
                         }}
@@ -344,34 +400,57 @@ export const EventsListPage: React.FC = () => {
                                     }}
                                 />
                             )}
-                                                            <CardContent sx={{ p: 3 }}>
-                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
-                                        <Typography variant="h5" component="h2" sx={{ 
-                                            fontWeight: 600,
-                                            color: '#1c022c',
-                                            flex: 1
-                                        }}>
+                                <CardContent sx={{ p: 3 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                                        <Typography
+                                            variant="h5"
+                                            component="h2"
+                                            sx={{
+                                                fontWeight: 600,
+                                                color: '#1c022c',
+                                                flex: 1,
+                                                pr: 2
+                                            }}
+                                        >
                                             {event.name}
                                         </Typography>
-                                        {event.eventCategory?.name && (
-                                            <Chip 
-                                                icon={<Category sx={{ fontSize: 18 }} />}
-                                                label={event.eventCategory.name} 
-                                                size="small"
-                                                sx={{ 
-                                                    ml: 2,
-                                                    bgcolor: 'rgba(148, 156, 255, 0.1)',
-                                                    color: '#949cff',
-                                                    fontWeight: 500,
-                                                    border: '1px solid rgba(148, 156, 255, 0.3)'
-                                                }}
-                                            />
-                                        )}
+
+                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                            
+                                            {event.eventCategory?.name && (
+                                                <Chip
+                                                    icon={<Category sx={{ fontSize: 18 }} />}
+                                                    label={event.eventCategory.name}
+                                                    size="small"
+                                                    sx={{
+                                                        bgcolor: 'rgba(148, 156, 255, 0.1)',
+                                                        color: '#949cff',
+                                                        fontWeight: 500,
+                                                        border: '1px solid rgba(148, 156, 255, 0.3)'
+                                                    }}
+                                                />
+                                            )}
+
+                                            {user?.role === "moderator" && event.eventStatus && (
+                                                <Chip
+                                                    icon={getEventStatusIcon(event.eventStatus.id)}
+                                                    label={event.eventStatus.name}
+                                                    size="small"
+                                                    variant="outlined"
+                                                    sx={{
+                                                        fontWeight: 500,
+                                                        ...getEventStatusSx(event.eventStatus.id)
+                                                    }}
+                                                />
+                                            )}
+
+                                        </Box>
                                     </Box>
                                     
                                     <Typography color="text.secondary" sx={{ mb: 3, lineHeight: 1.6 }}>
                                         {event.description || 'Нет описания'}
                                     </Typography>
+ 
 
                                     <Divider sx={{ my: 2, borderColor: 'rgba(148, 156, 255, 0.1)' }} />
 

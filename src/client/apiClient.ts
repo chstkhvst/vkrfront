@@ -1508,9 +1508,10 @@ export class Client {
      * @param cityId (optional) 
      * @param keyWords (optional) 
      * @param dateTime (optional) 
+     * @param statusId (optional) 
      * @return OK
      */
-    getPagedEvents(pageNumber?: number | undefined, pageSize?: number | undefined, catId?: number | undefined, cityId?: number | undefined, keyWords?: string | undefined, dateTime?: Date | undefined): Promise<VolunteerEventDTOPaginatedResponse> {
+    getPagedEvents(pageNumber?: number | undefined, pageSize?: number | undefined, catId?: number | undefined, cityId?: number | undefined, keyWords?: string | undefined, dateTime?: Date | undefined, statusId?: number | undefined): Promise<VolunteerEventDTOPaginatedResponse> {
         let url_ = this.baseUrl + "/api/Event/GetPagedEvents?";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
@@ -1536,6 +1537,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'dateTime' cannot be null.");
         else if (dateTime !== undefined)
             url_ += "dateTime=" + encodeURIComponent(dateTime ? "" + dateTime.toISOString() : "") + "&";
+        if (statusId === null)
+            throw new globalThis.Error("The parameter 'statusId' cannot be null.");
+        else if (statusId !== undefined)
+            url_ += "statusId=" + encodeURIComponent("" + statusId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -1642,9 +1647,10 @@ export class Client {
      * @param cityId (optional) 
      * @param keyWords (optional) 
      * @param dateTime (optional) 
+     * @param statusId (optional) 
      * @return OK
      */
-    getPagedCommunityEvents(pageNumber?: number | undefined, pageSize?: number | undefined, catId?: number | undefined, cityId?: number | undefined, keyWords?: string | undefined, dateTime?: Date | undefined): Promise<VolunteerEventDTOPaginatedResponse> {
+    getPagedCommunityEvents(pageNumber?: number | undefined, pageSize?: number | undefined, catId?: number | undefined, cityId?: number | undefined, keyWords?: string | undefined, dateTime?: Date | undefined, statusId?: number | undefined): Promise<VolunteerEventDTOPaginatedResponse> {
         let url_ = this.baseUrl + "/api/Event/GetPagedCommunityEvents?";
         if (pageNumber === null)
             throw new globalThis.Error("The parameter 'pageNumber' cannot be null.");
@@ -1670,6 +1676,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'dateTime' cannot be null.");
         else if (dateTime !== undefined)
             url_ += "dateTime=" + encodeURIComponent(dateTime ? "" + dateTime.toISOString() : "") + "&";
+        if (statusId === null)
+            throw new globalThis.Error("The parameter 'statusId' cannot be null.");
+        else if (statusId !== undefined)
+            url_ += "statusId=" + encodeURIComponent("" + statusId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

@@ -108,38 +108,57 @@ export const EventsToVisitPage: React.FC = () => {
         return { borderColor: '#5f6388', color: '#5f6388' };
     }
   };
+  const isEventInPast = (event: any) => {
+    if (!event?.eventDateTime) return true;
+    return new Date(event.eventDateTime) <= new Date();
+  };
+  const volunteerUpcoming = data
+    .filter(a => 
+      a.attendanceStatusId === ATTENDANCE_STATUS.UPCOMING && 
+      !isEventInPast(a.volunteerEvent)
+    )
+    .sort((a, b) => 
+      new Date(a.volunteerEvent?.eventDateTime || 0).getTime() - 
+      new Date(b.volunteerEvent?.eventDateTime || 0).getTime()
+    );
+  const volunteerHistory = data
+    .filter(a => 
+      a.attendanceStatusId !== ATTENDANCE_STATUS.UPCOMING || 
+      isEventInPast(a.volunteerEvent)
+    )
+    .sort((a, b) => 
+      new Date(b.volunteerEvent?.eventDateTime || 0).getTime() - 
+      new Date(a.volunteerEvent?.eventDateTime || 0).getTime()
+    );
+  const canCancelAttendance = (event: any) => {
+    if (!event?.eventDateTime) return false;
+    const eventDate = new Date(event.eventDateTime);
+    const now = new Date();
+    return eventDate > now;
+  };
+  const handleConfirmCancelAttendance = async () => {
+      const userId = user?.user?.id;
+      if (!attendanceToCancel?.id || !userId) return;
 
-  const volunteerUpcoming = data.filter(
-    a => a.attendanceStatusId === ATTENDANCE_STATUS.UPCOMING
-  );
+      const updated = new EventAttendanceDTO({
+          ...attendanceToCancel,
+          attendanceStatusId: 2,
+      });
 
-  const volunteerHistory = data.filter(
-    a => a.attendanceStatusId !== ATTENDANCE_STATUS.UPCOMING
-  );
+      const success = await updateAttendance(attendanceToCancel.id, updated);
 
-const handleConfirmCancelAttendance = async () => {
-    const userId = user?.user?.id;
-    if (!attendanceToCancel?.id || !userId) return;
+      if (success) {
+          const attendances = await fetchAttendancesByUserId(userId);
+          setData(attendances);
 
-    const updated = new EventAttendanceDTO({
-        ...attendanceToCancel,
-        attendanceStatusId: 2,
-    });
+          showNotification('Участие отменено', 'success');
+      } else {
+          showNotification('Ошибка при отмене участия', 'error');
+      }
 
-    const success = await updateAttendance(attendanceToCancel.id, updated);
-
-    if (success) {
-        const attendances = await fetchAttendancesByUserId(userId);
-        setData(attendances);
-
-        showNotification('Участие отменено', 'success');
-    } else {
-        showNotification('Ошибка при отмене участия', 'error');
-    }
-
-    setCancelAttendanceDialogOpen(false);
-    setAttendanceToCancel(null);
-};
+      setCancelAttendanceDialogOpen(false);
+      setAttendanceToCancel(null);
+  };
 
   const getCurrentList = () => {
     if (tab === 0) return volunteerUpcoming;
@@ -167,7 +186,7 @@ const handleConfirmCancelAttendance = async () => {
 
       {currentList.length === 0 && (
         <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-          Вы еще не зарегистрированы ни на одно мероприятие
+          В настоящий момент Вы не зарегистрированы ни на одно мероприятие
         </Typography>
       )}
 
@@ -222,7 +241,7 @@ const handleConfirmCancelAttendance = async () => {
                     pb: 2,
                   }}
                 >
-                  {tab === 0 && (
+                  {tab === 0 && canCancelAttendance(event) && (
                     <Button
                       variant="contained"
                       color="secondary"
@@ -233,6 +252,11 @@ const handleConfirmCancelAttendance = async () => {
                     >
                       Отменить участие
                     </Button>
+                  )}
+                  {(tab === 0 && !canCancelAttendance(event))|| (tab === 1 && a.attendanceStatusId === ATTENDANCE_STATUS.UPCOMING)  && (
+                    <Typography variant="caption" color="text.secondary">
+                      Дождитесь обновления статуса от организатора
+                    </Typography>
                   )}
                 </CardActions>
               </Card>

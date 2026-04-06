@@ -25,10 +25,6 @@ import {
   CancelOutlined as DeclinedIcon,
   EventBusy as CancelledIcon,
   EventAvailable as EndedIcon,
-  EventAvailable as UpcomingIcon,
-  Cancel as CancelledAttendanceIcon,
-  CheckCircle as AttendedIcon,
-  DoNotDisturb as NoShowIcon,
 } from '@mui/icons-material';
 import { AttendanceContext } from '../context/AttendanceContext';
 import { VolunteerEventContext } from '../context/EventContext';

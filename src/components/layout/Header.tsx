@@ -25,8 +25,8 @@ export const Header = () => {
   const isAuthenticated = !!user;
   const userName = currentUser?.userName || 'Пользователь';
   const isOrganizer = user?.role === 'organizer';
-    const isVolunteer = user?.role === 'volunteer';
-      const isModer = user?.role === 'moder';
+  const isVolunteer = user?.role === 'volunteer';
+  const isModer = user?.role === 'moderator';
 
   const handleLogin = () => navigate('/login');
   const handleLogout = async () => {
@@ -203,7 +203,9 @@ export const Header = () => {
                     {userName}
                   </Typography>
                   <Typography variant="caption" sx={{ color: alpha('#ffed86', 0.7), fontSize: '0.7rem' }}>
-                    {isOrganizer ? 'Организатор' : 'Волонтер'}
+                      {isOrganizer && 'Организатор'}
+                      {isModer && 'Модератор'}
+                      {isVolunteer && 'Волонтер'}
                   </Typography>
                 </Box>
                 <KeyboardArrowDown sx={{ color: '#ffed86', fontSize: 18 }} />
