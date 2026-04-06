@@ -2,6 +2,7 @@ import './App.css';
 import { CircularProgress } from '@mui/material';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
+import { AdminPanel } from './components/layout/AdminPanel';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { VolunteerEventProvider } from './context/EventContext';
 import { AttendanceProvider } from './context/AttendanceContext';
@@ -135,6 +136,16 @@ function App() {
                         <AttendanceProvider>
                           <EventDetailsPage/>
                         </AttendanceProvider>
+                      </VolunteerEventProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin-panel"
+                  element={
+                    <ProtectedRoute allowedRoles={['moderator']}>
+                      <VolunteerEventProvider>
+                        <AdminPanel/>
                       </VolunteerEventProvider>
                     </ProtectedRoute>
                   }

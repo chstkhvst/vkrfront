@@ -1316,7 +1316,7 @@ export class Client {
     /**
      * @return OK
      */
-    getReportStatus(id: number): Promise<EventStatus> {
+    getReportStatus(id: number): Promise<ReportStatus> {
         let url_ = this.baseUrl + "/api/Catalog/GetReportStatus/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -1335,14 +1335,14 @@ export class Client {
         });
     }
 
-    protected processGetReportStatus(response: Response): Promise<EventStatus> {
+    protected processGetReportStatus(response: Response): Promise<ReportStatus> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = EventStatus.fromJS(resultData200);
+            result200 = ReportStatus.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -1350,13 +1350,13 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<EventStatus>(null as any);
+        return Promise.resolve<ReportStatus>(null as any);
     }
 
     /**
      * @return OK
      */
-    getVolunteerRanks(): Promise<ReportStatus[]> {
+    getVolunteerRanks(): Promise<VolunteerRank[]> {
         let url_ = this.baseUrl + "/api/Catalog/GetVolunteerRanks";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1372,7 +1372,7 @@ export class Client {
         });
     }
 
-    protected processGetVolunteerRanks(response: Response): Promise<ReportStatus[]> {
+    protected processGetVolunteerRanks(response: Response): Promise<VolunteerRank[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -1382,7 +1382,7 @@ export class Client {
             if (Array.isArray(resultData200)) {
                 result200 = [] as any;
                 for (let item of resultData200)
-                    result200!.push(ReportStatus.fromJS(item));
+                    result200!.push(VolunteerRank.fromJS(item));
             }
             else {
                 result200 = null as any;
@@ -1394,13 +1394,13 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<ReportStatus[]>(null as any);
+        return Promise.resolve<VolunteerRank[]>(null as any);
     }
 
     /**
      * @return OK
      */
-    getVolunteerRank(id: number): Promise<EventStatus> {
+    getVolunteerRank(id: number): Promise<VolunteerRank> {
         let url_ = this.baseUrl + "/api/Catalog/GetVolunteerRank/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
@@ -1419,14 +1419,14 @@ export class Client {
         });
     }
 
-    protected processGetVolunteerRank(response: Response): Promise<EventStatus> {
+    protected processGetVolunteerRank(response: Response): Promise<VolunteerRank> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = EventStatus.fromJS(resultData200);
+            result200 = VolunteerRank.fromJS(resultData200);
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -1434,7 +1434,7 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<EventStatus>(null as any);
+        return Promise.resolve<VolunteerRank>(null as any);
     }
 
     /**
@@ -2190,8 +2190,8 @@ export class Client {
     /**
      * @return OK
      */
-    getBySender(senderId: string): Promise<UserReportDTO[]> {
-        let url_ = this.baseUrl + "/api/Report/GetBySender/{senderId}";
+    getReportBySenderId(senderId: string): Promise<UserReportDTO[]> {
+        let url_ = this.baseUrl + "/api/Report/GetReportBySenderId/{senderId}";
         if (senderId === undefined || senderId === null)
             throw new globalThis.Error("The parameter 'senderId' must be defined.");
         url_ = url_.replace("{senderId}", encodeURIComponent("" + senderId));
@@ -2205,11 +2205,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetBySender(_response);
+            return this.processGetReportBySenderId(_response);
         });
     }
 
-    protected processGetBySender(response: Response): Promise<UserReportDTO[]> {
+    protected processGetReportBySenderId(response: Response): Promise<UserReportDTO[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -2237,8 +2237,8 @@ export class Client {
     /**
      * @return OK
      */
-    getByReported(reportedId: string): Promise<UserReportDTO[]> {
-        let url_ = this.baseUrl + "/api/Report/GetByReported/{reportedId}";
+    getReportByReportedId(reportedId: string): Promise<UserReportDTO[]> {
+        let url_ = this.baseUrl + "/api/Report/GetReportByReportedId/{reportedId}";
         if (reportedId === undefined || reportedId === null)
             throw new globalThis.Error("The parameter 'reportedId' must be defined.");
         url_ = url_.replace("{reportedId}", encodeURIComponent("" + reportedId));
@@ -2252,11 +2252,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processGetByReported(_response);
+            return this.processGetReportByReportedId(_response);
         });
     }
 
-    protected processGetByReported(response: Response): Promise<UserReportDTO[]> {
+    protected processGetReportByReportedId(response: Response): Promise<UserReportDTO[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {

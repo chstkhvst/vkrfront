@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { Modal, Box, Typography, TextField, Button, Stack, CircularProgress } from "@mui/material"
 // Импорт компонентов из Material UI для создания пользовательского интерфейса.
 import { useNavigate } from "react-router-dom"
@@ -26,7 +26,7 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   // Получаем функцию login из контекста авторизации.
 
   const navigate = useNavigate()
@@ -41,29 +41,29 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
   // Локальное состояние для управления индикатором загрузки.
 
   const handleSubmit = async (e: React.FormEvent) => {
-    // Функция обработки отправки формы.
-    e.preventDefault() // Предотвращаем стандартное поведение формы.
+    e.preventDefault();
 
-    setError("") // Сбрасываем сообщения об ошибках.
-    setIsLoading(true) // Включаем индикатор загрузки.
+    setError("");
+    setIsLoading(true);
 
     try {
-      await login(
-            new LoginModel({
-                userName,
-                password,
-            })
-            )
-      // Пытаемся выполнить вход с указанными данными.
-
-      onClose() // Закрываем модальное окно после успешного входа.
-      navigate("/") // Перенаправляем пользователя на главную страницу.
+      await login(new LoginModel({ userName, password }));
+      onClose();
     } catch (err) {
-      setError("Вход не выполнен") // Устанавливаем сообщение об ошибке при неудачном входе.
+      setError("Вход не выполнен");
     } finally {
-      setIsLoading(false) // Выключаем индикатор загрузки.
+      setIsLoading(false);
     }
-  }
+  };
+    useEffect(() => {
+    if (user) {
+      navigate(
+        user.role === "moderator"
+          ? "/admin-panel"
+          : "/events"
+      );
+    }
+  }, [user]);
 
   return (
     <Modal open={open} onClose={onClose}>

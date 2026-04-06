@@ -13,7 +13,7 @@ import {
   Stack,
   alpha,
 } from '@mui/material';
-import { Event, Person, Logout, Add, KeyboardArrowDown } from '@mui/icons-material';
+import { Event, Person, Logout, Add, KeyboardArrowDown, Settings } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -108,6 +108,7 @@ export const Header = () => {
 
           {/* НАВИГАЦИЯ*/}
           <Stack direction="row" spacing={1.5} alignItems="center">
+            {(isOrganizer || isVolunteer) && (
             <Button
               variant="text"
               color="secondary"
@@ -115,6 +116,8 @@ export const Header = () => {
             >
               Мероприятия от организаций
             </Button>
+            )}
+            {(isOrganizer || isVolunteer) && (
             <Button
               variant="text"
               color="secondary"
@@ -122,6 +125,7 @@ export const Header = () => {
             >
               Инициативы от волонтеров
             </Button>
+            )}
             {(isOrganizer || isVolunteer) && (
             <Button
               variant="text"
@@ -158,6 +162,15 @@ export const Header = () => {
                 onClick={handleCreateEvent}
               >
                 Предложить мероприятие
+              </Button>
+            )}
+            {isModer && (
+              <Button
+                variant="text"
+                color="secondary"
+                onClick={() => navigate('/admin-panel')}
+              >
+                Панель администратора
               </Button>
             )}
           </Stack>
@@ -258,6 +271,14 @@ export const Header = () => {
                     <Add sx={{ fontSize: 20, color: '#ffed86' }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       Добавить мероприятие
+                    </Typography>
+                  </MenuItem>
+                )}
+                {isModer && (
+                  <MenuItem onClick={() => navigate('/admin-panel')} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
+                    <Settings sx={{ fontSize: 20, color: '#949cff' }} />
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      Панель администратора
                     </Typography>
                   </MenuItem>
                 )}

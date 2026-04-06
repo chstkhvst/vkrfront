@@ -114,10 +114,6 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         fetchCities();
     }, []);
 
-    // useEffect(() => {
-    // fetchEvents(filterParams);
-    // }, [pageNumber, pageSize, filterParams]);
-
     // Получение всех событий с фильтрацией
     const fetchEvents = async (params?: EventFilterParams): Promise<void> => {
         setIsLoading(true);
