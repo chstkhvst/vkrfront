@@ -2104,6 +2104,60 @@ export class Client {
     }
 
     /**
+     * @param statusId (optional) 
+     * @param keywords (optional) 
+     * @return OK
+     */
+    getGroupedReports(statusId?: number | undefined, keywords?: string | undefined): Promise<ReportGroupDTO[]> {
+        let url_ = this.baseUrl + "/api/Report/GetGroupedReports?";
+        if (statusId === null)
+            throw new globalThis.Error("The parameter 'statusId' cannot be null.");
+        else if (statusId !== undefined)
+            url_ += "statusId=" + encodeURIComponent("" + statusId) + "&";
+        if (keywords === null)
+            throw new globalThis.Error("The parameter 'keywords' cannot be null.");
+        else if (keywords !== undefined)
+            url_ += "keywords=" + encodeURIComponent("" + keywords) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetGroupedReports(_response);
+        });
+    }
+
+    protected processGetGroupedReports(response: Response): Promise<ReportGroupDTO[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(ReportGroupDTO.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<ReportGroupDTO[]>(null as any);
+    }
+
+    /**
      * @return OK
      */
     getReports(): Promise<UserReportDTO[]> {
@@ -3388,6 +3442,62 @@ export interface IRegisterModel {
     ogrn?: string | undefined;
 }
 
+export class ReportGroupDTO implements IReportGroupDTO {
+    reportedUserId?: string | undefined;
+    reportedUser?: UserDTO;
+    count?: number;
+    reports?: UserReportDTO[] | undefined;
+
+    constructor(data?: IReportGroupDTO) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.reportedUserId = _data["reportedUserId"];
+            this.reportedUser = _data["reportedUser"] ? UserDTO.fromJS(_data["reportedUser"]) : undefined as any;
+            this.count = _data["count"];
+            if (Array.isArray(_data["reports"])) {
+                this.reports = [] as any;
+                for (let item of _data["reports"])
+                    this.reports!.push(UserReportDTO.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): ReportGroupDTO {
+        data = typeof data === 'object' ? data : {};
+        let result = new ReportGroupDTO();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["reportedUserId"] = this.reportedUserId;
+        data["reportedUser"] = this.reportedUser ? this.reportedUser.toJSON() : undefined as any;
+        data["count"] = this.count;
+        if (Array.isArray(this.reports)) {
+            data["reports"] = [];
+            for (let item of this.reports)
+                data["reports"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IReportGroupDTO {
+    reportedUserId?: string | undefined;
+    reportedUser?: UserDTO;
+    count?: number;
+    reports?: UserReportDTO[] | undefined;
+}
+
 export class ReportStatus implements IReportStatus {
     id?: number;
     reportStatusName!: string;
@@ -3533,6 +3643,7 @@ export class User implements IUser {
     lockoutEnabled?: boolean;
     accessFailedCount?: number;
     fullName?: string | undefined;
+    profileImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfile;
     organizerProfile?: OrganizerProfile;
     isDeleted?: boolean;
@@ -3564,6 +3675,7 @@ export class User implements IUser {
             this.lockoutEnabled = _data["lockoutEnabled"];
             this.accessFailedCount = _data["accessFailedCount"];
             this.fullName = _data["fullName"];
+            this.profileImagePath = _data["profileImagePath"];
             this.volunteerProfile = _data["volunteerProfile"] ? VolunteerProfile.fromJS(_data["volunteerProfile"]) : undefined as any;
             this.organizerProfile = _data["organizerProfile"] ? OrganizerProfile.fromJS(_data["organizerProfile"]) : undefined as any;
             this.isDeleted = _data["isDeleted"];
@@ -3595,6 +3707,7 @@ export class User implements IUser {
         data["lockoutEnabled"] = this.lockoutEnabled;
         data["accessFailedCount"] = this.accessFailedCount;
         data["fullName"] = this.fullName;
+        data["profileImagePath"] = this.profileImagePath;
         data["volunteerProfile"] = this.volunteerProfile ? this.volunteerProfile.toJSON() : undefined as any;
         data["organizerProfile"] = this.organizerProfile ? this.organizerProfile.toJSON() : undefined as any;
         data["isDeleted"] = this.isDeleted;
@@ -3619,6 +3732,7 @@ export interface IUser {
     lockoutEnabled?: boolean;
     accessFailedCount?: number;
     fullName?: string | undefined;
+    profileImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfile;
     organizerProfile?: OrganizerProfile;
     isDeleted?: boolean;
@@ -3685,6 +3799,7 @@ export class UserReportDTO implements IUserReportDTO {
     senderUserId?: string | undefined;
     reportedUserId?: string | undefined;
     reportReason?: string | undefined;
+    moderatedByUserId?: string | undefined;
     reportStatusId?: number;
     isDeleted?: boolean;
     sender?: UserDTO;
@@ -3706,6 +3821,7 @@ export class UserReportDTO implements IUserReportDTO {
             this.senderUserId = _data["senderUserId"];
             this.reportedUserId = _data["reportedUserId"];
             this.reportReason = _data["reportReason"];
+            this.moderatedByUserId = _data["moderatedByUserId"];
             this.reportStatusId = _data["reportStatusId"];
             this.isDeleted = _data["isDeleted"];
             this.sender = _data["sender"] ? UserDTO.fromJS(_data["sender"]) : undefined as any;
@@ -3727,6 +3843,7 @@ export class UserReportDTO implements IUserReportDTO {
         data["senderUserId"] = this.senderUserId;
         data["reportedUserId"] = this.reportedUserId;
         data["reportReason"] = this.reportReason;
+        data["moderatedByUserId"] = this.moderatedByUserId;
         data["reportStatusId"] = this.reportStatusId;
         data["isDeleted"] = this.isDeleted;
         data["sender"] = this.sender ? this.sender.toJSON() : undefined as any;
@@ -3741,6 +3858,7 @@ export interface IUserReportDTO {
     senderUserId?: string | undefined;
     reportedUserId?: string | undefined;
     reportReason?: string | undefined;
+    moderatedByUserId?: string | undefined;
     reportStatusId?: number;
     isDeleted?: boolean;
     sender?: UserDTO;

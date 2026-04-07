@@ -6,11 +6,13 @@ import { AdminPanel } from './components/layout/AdminPanel';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { VolunteerEventProvider } from './context/EventContext';
 import { AttendanceProvider } from './context/AttendanceContext';
+import { ReportProvider } from './context/ReportContext';
 
 import { EventsListPage } from './pages/EventsListPage';
 import { CommunityEventsPage } from './pages/CommunityEventsPage';
 import { CreateEventPage } from './pages/CreateEventPage';
 import { MyEventPage } from './pages/MyEventsPage';
+import {ReportsListPage} from './pages/ReportsListPage';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -147,6 +149,16 @@ function App() {
                       <VolunteerEventProvider>
                         <AdminPanel/>
                       </VolunteerEventProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/reports"
+                  element={
+                    <ProtectedRoute allowedRoles={['moderator']}>
+                      <ReportProvider>
+                        <ReportsListPage/>
+                      </ReportProvider>
                     </ProtectedRoute>
                   }
                 />

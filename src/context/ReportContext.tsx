@@ -4,18 +4,24 @@ import {
   UserReportDTO,
   ReportStatus,
   CreateReportDTO,
+  ReportGroupDTO,
 } from "../client/apiClient";
 
 interface ReportContextProps {
   reports: UserReportDTO[];
+  reportGroups: ReportGroupDTO[];
   selectedReport: UserReportDTO | null;
   reportStatuses: ReportStatus[];
 
   isLoading: boolean;
   error: string | null;
 
+  searchKeywords: string;
+  setSearchKeywords: (value: string) => void;
+
   // Методы
   fetchReports: () => Promise<void>;
+  fetchGroupedReports: (statusId?: number, keywords?: string) => Promise<void>;
   fetchReportById: (id: number) => Promise<UserReportDTO | null>;
   fetchReportsBySender: (senderId: string) => Promise<UserReportDTO[]>;
   fetchReportsByReported: (reportedId: string) => Promise<UserReportDTO[]>;
@@ -33,11 +39,13 @@ export const ReportContext = createContext<ReportContextProps | undefined>(undef
 
 export const ReportProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [reports, setReports] = useState<UserReportDTO[]>([]);
+  const [reportGroups, setReportGroups] = useState<ReportGroupDTO[]>([]);
   const [selectedReport, setSelectedReport] = useState<UserReportDTO | null>(null);
   const [reportStatuses, setReportStatuses] = useState<ReportStatus[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchKeywords, setSearchKeywords] = useState<string>("");
 
   const apiClient = new Client(process.env.REACT_APP_API_URL || "");
 
@@ -52,6 +60,34 @@ export const ReportProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     } catch (err) {
       console.error("Ошибка при загрузке жалоб:", err);
       setError("Не удалось загрузить жалобы");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const fetchGroupedReports = async (
+    statusId?: number,
+    keywords?: string
+  ): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      let data;
+
+      if (statusId !== undefined && keywords) {
+        data = await apiClient.getGroupedReports(statusId, keywords);
+      } else if (statusId !== undefined) {
+        data = await apiClient.getGroupedReports(statusId);
+      } else if (keywords) {
+        data = await apiClient.getGroupedReports(undefined, keywords);
+      } else {
+        data = await apiClient.getGroupedReports();
+      }
+
+      setReportGroups(data || []);
+    } catch (err) {
+      console.error("Ошибка при загрузке сгруппированных жалоб:", err);
+      setError("Ошибка загрузки");
     } finally {
       setIsLoading(false);
     }
@@ -182,12 +218,16 @@ const fetchReportsByStatus = async (statusId: number): Promise<void> => {
     <ReportContext.Provider
       value={{
         reports,
+        reportGroups,
         selectedReport,
         reportStatuses,
         isLoading,
         error,
+        searchKeywords,
+        setSearchKeywords,
 
         fetchReports,
+        fetchGroupedReports,
         fetchReportById,
         fetchReportsBySender,
         fetchReportsByReported,
