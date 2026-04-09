@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { VolunteerEventProvider } from './context/EventContext';
 import { AttendanceProvider } from './context/AttendanceContext';
 import { ReportProvider } from './context/ReportContext';
+import { BanProvider } from './context/BanContext';
 
 import { EventsListPage } from './pages/EventsListPage';
 import { CommunityEventsPage } from './pages/CommunityEventsPage';
@@ -157,7 +158,9 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['moderator']}>
                       <ReportProvider>
-                        <ReportsListPage/>
+                        <BanProvider>
+                          <ReportsListPage/>
+                        </BanProvider>
                       </ReportProvider>
                     </ProtectedRoute>
                   }

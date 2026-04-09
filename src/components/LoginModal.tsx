@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import { Modal, Box, Typography, TextField, Button, Stack, CircularProgress } from "@mui/material"
 // Импорт компонентов из Material UI для создания пользовательского интерфейса.
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
+import { BanContext } from "../context/BanContext"
 import { LoginModel } from "../client/apiClient";
 
 const modalStyle = {
@@ -26,7 +27,8 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
-  const { login, user } = useAuth()
+  const { login, user, logout } = useAuth()
+  const banContext = useContext(BanContext)
   // Получаем функцию login из контекста авторизации.
 
   const navigate = useNavigate()
@@ -49,8 +51,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
     try {
       await login(new LoginModel({ userName, password }));
       onClose();
-    } catch (err) {
-      setError("Вход не выполнен");
+    } catch (err: any) {
+      if (err?.status === 401) {
+        if (err?.response?.includes("banned")) {
+          setError("Доступ запрещен");
+        } else {
+          setError("Неверный логин или пароль");
+        }
+      } else {
+        setError("Ошибка сервера");
+      }
     } finally {
       setIsLoading(false);
     }

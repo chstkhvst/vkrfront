@@ -162,7 +162,7 @@ export const EventsToVisitPage: React.FC = () => {
 
   const getCurrentList = () => {
     if (tab === 0) return volunteerUpcoming;
-    return [...volunteerHistory].reverse();
+    return [...volunteerHistory];
   };
 
   const currentList = getCurrentList();

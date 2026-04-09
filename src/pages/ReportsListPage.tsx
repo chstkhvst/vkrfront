@@ -9,13 +9,10 @@ import {
   Button,
   CircularProgress,
   TextField,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
 } from "@mui/material";
 import { Pending, CheckCircle } from "@mui/icons-material";
 import { ReportContext } from "../context/ReportContext";
+import { BanUserModal } from "../components/BanUserModal";
 import { useNavigate } from "react-router-dom";
 import { ReportGroupDTO, UserReportDTO } from "../client/apiClient";
 import { useNotification } from '../components/Notification';
@@ -27,7 +24,7 @@ export const ReportsListPage: React.FC = () => {
 
 
     const [search, setSearch] = useState("");
-    const [banDialogOpen, setBanDialogOpen] = useState(false);
+    const [banModalOpen, setBanModalOpen] = useState(false);
     const [selectedGroup, setSelectedGroup] = useState<ReportGroupDTO | null>(null);
 
     const {
@@ -35,29 +32,24 @@ export const ReportsListPage: React.FC = () => {
         isLoading,
         error,
         fetchGroupedReports,
+        markReportsClosed
     } = context!;
 
     useEffect(() => {
     fetchGroupedReports(); // грузим все группы
     }, []);
 
-    const handleOpenBanDialog = (group: ReportGroupDTO) => {
+    const handleOpenBanModal = (group: ReportGroupDTO) => {
         setSelectedGroup(group);
-        setBanDialogOpen(true);
+        setBanModalOpen(true);
     };
-    const handleConfirmBan = async () => {
-        if (!selectedGroup) return;
+    const handleCloseBanModal = () => {
+        setBanModalOpen(false);
+        setSelectedGroup(null);
+    };
 
-        try {
-            await handleUpdateReports(selectedGroup);
-            // TODO: создать бан пользователя
-            showNotification("Пользователь заблокирован", "success");
-        } catch (e) {
-            showNotification("Ошибка", "error");
-        } finally {
-            setBanDialogOpen(false);
-            setSelectedGroup(null);
-        }
+    const handleBanSuccess = async () => {
+        await fetchGroupedReports();
     };
     const getStatusChip = (report: UserReportDTO) => {
         const name = report.reportStatus?.name || "Неизвестно";
@@ -81,7 +73,12 @@ export const ReportsListPage: React.FC = () => {
         .includes(search.toLowerCase())
     );
     const handleUpdateReports = async (group: ReportGroupDTO) => {
-        // сделать для всех банов апдейт
+        if (!group.reportedUserId) return;
+        
+        const success = await context!.markReportsClosed(group.reportedUserId);
+        if (success) {
+            showNotification("Жалобы отмечены", "info");
+        }
     };
   return (
     <Box p={4}>
@@ -142,7 +139,7 @@ export const ReportsListPage: React.FC = () => {
 
                     {/* СПИСОК ЖАЛОБ */}
                     <Stack spacing={1}>
-                    {group.reports?.map((report) => (
+                    {group.reports?.map((report: UserReportDTO) => (
                         <Box
                         key={report.id}
                         sx={{
@@ -184,7 +181,7 @@ export const ReportsListPage: React.FC = () => {
                         <Button
                             variant="outlined"
                             color="error"
-                            onClick={() => handleOpenBanDialog(group)}
+                            onClick={() => handleOpenBanModal(group)}
                             >
                             Заблокировать
                         </Button>
@@ -204,49 +201,17 @@ export const ReportsListPage: React.FC = () => {
             </Card>
             ))}
         </Stack>
-
+        <BanUserModal
+            open={banModalOpen}
+            onClose={handleCloseBanModal}
+            selectedGroup={selectedGroup}
+            onBanSuccess={handleBanSuccess}
+        />
       {!isLoading && filteredGroups.length === 0 && (
         <Typography mt={4} textAlign="center" color="text.secondary">
           Ничего не найдено
         </Typography>
       )}
-      <Dialog
-            open={banDialogOpen}
-            onClose={() => setBanDialogOpen(false)}
-            >
-            <DialogTitle sx={{ color: '#f44336' }}>
-                Блокировка пользователя
-            </DialogTitle>
-
-            <DialogContent>
-                <Typography>
-                    Вы уверены, что хотите заблокировать пользователя{" "}
-                    <b>{selectedGroup?.reportedUser?.userName}</b>?
-                </Typography>
-
-                <Typography
-                    color="text.secondary"
-                    sx={{ mt: 1, fontSize: '0.875rem' }}
-                    >
-                    Примечание: при блокировке пользователя все жалобы на него будут отмечены как рассмотренные.
-                </Typography>
-            </DialogContent>
-
-            <DialogActions>
-                <Button onClick={() => setBanDialogOpen(false)}>
-                Нет
-                </Button>
-
-                <Button
-                    onClick={handleConfirmBan}
-                    variant="outlined"
-                    color="error"
-                    autoFocus
-                >
-                    Да, заблокировать
-                </Button>
-            </DialogActions>
-        </Dialog>
     </Box>
   );
 };

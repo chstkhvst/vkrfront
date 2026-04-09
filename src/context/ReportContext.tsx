@@ -33,6 +33,8 @@ interface ReportContextProps {
   fetchReportStatuses: () => Promise<void>;
 
   selectReport: (report: UserReportDTO | null) => void;
+
+  markReportsClosed: (userId: string) => Promise<boolean>;
 }
 
 export const ReportContext = createContext<ReportContextProps | undefined>(undefined);
@@ -159,6 +161,24 @@ const fetchReportsByStatus = async (statusId: number): Promise<void> => {
     setIsLoading(false);
   }
 };
+  // Пометка всех жалоб пользователя как закрытых
+  const markReportsClosed = async (userId: string): Promise<boolean> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await apiClient.markReportsClosed(userId);
+      // Обновляем список групп после изменения статусов
+      await fetchGroupedReports();
+      return true;
+    } catch (err) {
+      console.error("Ошибка при закрытии жалоб:", err);
+      setError("Не удалось закрыть жалобы");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Создание
   const createReport = async (data: CreateReportDTO): Promise<UserReportDTO | null> => {
@@ -239,6 +259,7 @@ const fetchReportsByStatus = async (statusId: number): Promise<void> => {
         fetchReportStatuses,
 
         selectReport,
+        markReportsClosed,
       }}
     >
       {children}

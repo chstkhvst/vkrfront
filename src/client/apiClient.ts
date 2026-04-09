@@ -697,6 +697,47 @@ export class Client {
     /**
      * @return OK
      */
+    isUserBanned(userId: string): Promise<boolean> {
+        let url_ = this.baseUrl + "/api/Ban/IsUserBanned/{userId}";
+        if (userId === undefined || userId === null)
+            throw new globalThis.Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processIsUserBanned(_response);
+        });
+    }
+
+    protected processIsUserBanned(response: Response): Promise<boolean> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<boolean>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     getBans(): Promise<BanDTO[]> {
         let url_ = this.baseUrl + "/api/Ban/GetBans";
         url_ = url_.replace(/[?&]$/, "");
@@ -2425,6 +2466,42 @@ export class Client {
     }
 
     /**
+     * @return OK
+     */
+    markReportsClosed(userId: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Report/MarkReportsClosed/{userId}";
+        if (userId === undefined || userId === null)
+            throw new globalThis.Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMarkReportsClosed(_response);
+        });
+    }
+
+    protected processMarkReportsClosed(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param body (optional) 
      * @return OK
      */
@@ -2673,6 +2750,7 @@ export interface IAuthResponse {
 export class BanDTO implements IBanDTO {
     id?: number;
     bannedUserId?: string | undefined;
+    banReason?: string | undefined;
     moderId?: string | undefined;
     isActive?: boolean;
     isDeleted?: boolean;
@@ -2692,6 +2770,7 @@ export class BanDTO implements IBanDTO {
         if (_data) {
             this.id = _data["id"];
             this.bannedUserId = _data["bannedUserId"];
+            this.banReason = _data["banReason"];
             this.moderId = _data["moderId"];
             this.isActive = _data["isActive"];
             this.isDeleted = _data["isDeleted"];
@@ -2711,6 +2790,7 @@ export class BanDTO implements IBanDTO {
         data = typeof data === 'object' ? data : {};
         data["id"] = this.id;
         data["bannedUserId"] = this.bannedUserId;
+        data["banReason"] = this.banReason;
         data["moderId"] = this.moderId;
         data["isActive"] = this.isActive;
         data["isDeleted"] = this.isDeleted;
@@ -2723,6 +2803,7 @@ export class BanDTO implements IBanDTO {
 export interface IBanDTO {
     id?: number;
     bannedUserId?: string | undefined;
+    banReason?: string | undefined;
     moderId?: string | undefined;
     isActive?: boolean;
     isDeleted?: boolean;
@@ -2836,6 +2917,7 @@ export interface ICityDTO {
 
 export class CreateBanDTO implements ICreateBanDTO {
     bannedUserId?: string | undefined;
+    banReason?: string | undefined;
     moderId?: string | undefined;
     isActive?: boolean;
     isDeleted?: boolean;
@@ -2852,6 +2934,7 @@ export class CreateBanDTO implements ICreateBanDTO {
     init(_data?: any) {
         if (_data) {
             this.bannedUserId = _data["bannedUserId"];
+            this.banReason = _data["banReason"];
             this.moderId = _data["moderId"];
             this.isActive = _data["isActive"];
             this.isDeleted = _data["isDeleted"];
@@ -2868,6 +2951,7 @@ export class CreateBanDTO implements ICreateBanDTO {
     toJSON(data?: any) {
         data = typeof data === 'object' ? data : {};
         data["bannedUserId"] = this.bannedUserId;
+        data["banReason"] = this.banReason;
         data["moderId"] = this.moderId;
         data["isActive"] = this.isActive;
         data["isDeleted"] = this.isDeleted;
@@ -2877,6 +2961,7 @@ export class CreateBanDTO implements ICreateBanDTO {
 
 export interface ICreateBanDTO {
     bannedUserId?: string | undefined;
+    banReason?: string | undefined;
     moderId?: string | undefined;
     isActive?: boolean;
     isDeleted?: boolean;
