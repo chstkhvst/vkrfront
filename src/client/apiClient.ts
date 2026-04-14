@@ -553,6 +553,42 @@ export class Client {
     /**
      * @return OK
      */
+    markAttendance(attendanceId: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Attendance/MarkAttendance/{attendanceId}";
+        if (attendanceId === undefined || attendanceId === null)
+            throw new globalThis.Error("The parameter 'attendanceId' must be defined.");
+        url_ = url_.replace("{attendanceId}", encodeURIComponent("" + attendanceId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMarkAttendance(_response);
+        });
+    }
+
+    protected processMarkAttendance(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     markNoShow(eventId: number): Promise<void> {
         let url_ = this.baseUrl + "/api/Attendance/MarkNoShow/{eventId}";
         if (eventId === undefined || eventId === null)
@@ -3015,8 +3051,6 @@ export class CreateReportDTO implements ICreateReportDTO {
     senderUserId?: string | undefined;
     reportedUserId?: string | undefined;
     reportReason?: string | undefined;
-    reportStatusId?: number;
-    isDeleted?: boolean;
 
     constructor(data?: ICreateReportDTO) {
         if (data) {
@@ -3032,8 +3066,6 @@ export class CreateReportDTO implements ICreateReportDTO {
             this.senderUserId = _data["senderUserId"];
             this.reportedUserId = _data["reportedUserId"];
             this.reportReason = _data["reportReason"];
-            this.reportStatusId = _data["reportStatusId"];
-            this.isDeleted = _data["isDeleted"];
         }
     }
 
@@ -3049,8 +3081,6 @@ export class CreateReportDTO implements ICreateReportDTO {
         data["senderUserId"] = this.senderUserId;
         data["reportedUserId"] = this.reportedUserId;
         data["reportReason"] = this.reportReason;
-        data["reportStatusId"] = this.reportStatusId;
-        data["isDeleted"] = this.isDeleted;
         return data;
     }
 }
@@ -3059,8 +3089,6 @@ export interface ICreateReportDTO {
     senderUserId?: string | undefined;
     reportedUserId?: string | undefined;
     reportReason?: string | undefined;
-    reportStatusId?: number;
-    isDeleted?: boolean;
 }
 
 export class EventAttendanceDTO implements IEventAttendanceDTO {

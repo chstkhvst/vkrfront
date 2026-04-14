@@ -25,11 +25,10 @@ interface AttendanceContextProps {
     getParticipantsCount: (eventId: number) => Promise<number>;
     createAttendance: (attendanceData: CreateEventAttendanceDTO) => Promise<boolean>;
     updateAttendance: (id: number, attendanceData: EventAttendanceDTO) => Promise<boolean>;
-    deleteAttendance: (id: number) => Promise<boolean>;
-    softDeleteAttendance: (id: number) => Promise<boolean>;
     selectAttendance: (attendance: EventAttendanceDTO | null) => void;
     markNoShow: (eventId: number) => Promise<boolean>;
     markCancelled: (eventId: number) => Promise<boolean>;
+    markAttendance: (attendanceId: number) => Promise<boolean>;
 }
 
 // Создание контекста
@@ -199,6 +198,35 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
             setIsLoading(false);
         }
     };
+    const markAttendance = async (attendanceId: number): Promise<boolean> => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            await apiClient.markAttendance(attendanceId);
+
+            // обновляем конкретную запись локально
+            const updated = await apiClient.getAttendanceById(attendanceId);
+
+            if (updated) {
+                setAttendances(prev =>
+                    prev.map(a => a.id === attendanceId ? updated : a)
+                );
+
+                if (selectedAttendance?.id === attendanceId) {
+                    setSelectedAttendance(updated);
+                }
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`Ошибка при отметке посещения ${attendanceId}:`, error);
+            setError("Не удалось отметить посещение");
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
     // Обновление записи о посещаемости
     const updateAttendance = async (id: number, attendanceData: EventAttendanceDTO): Promise<boolean> => {
         setIsLoading(true);
@@ -219,52 +247,6 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
         } catch (error) {
             console.error(`Ошибка при обновлении записи с ID ${id}:`, error);
             setError("Не удалось обновить статус участия");
-            return false;
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Полное удаление записи
-    const deleteAttendance = async (id: number): Promise<boolean> => {
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            await apiClient.delete(id);
-            await fetchAllAttendances();
-            
-            if (selectedAttendance?.id === id) {
-                setSelectedAttendance(null);
-            }
-            
-            return true;
-        } catch (error) {
-            console.error(`Ошибка при удалении записи с ID ${id}:`, error);
-            setError("Не удалось удалить запись");
-            return false;
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Мягкое удаление записи
-    const softDeleteAttendance = async (id: number): Promise<boolean> => {
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            await apiClient.softDelete(id);
-            await fetchAllAttendances();
-            
-            if (selectedAttendance?.id === id) {
-                setSelectedAttendance(null);
-            }
-            
-            return true;
-        } catch (error) {
-            console.error(`Ошибка при отмене регистрации ${id}:`, error);
-            setError("Не удалось отменить регистрацию");
             return false;
         } finally {
             setIsLoading(false);
@@ -295,10 +277,9 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
             getParticipantsCount,
             createAttendance,
             updateAttendance,
-            deleteAttendance,
-            softDeleteAttendance,
             markNoShow,
             markCancelled,
+            markAttendance,
             
             // Метод для выбора
             selectAttendance

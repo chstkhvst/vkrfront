@@ -27,7 +27,8 @@ import {
   CheckCircle,
   Cancel,
   HowToReg,
-  Map
+  Map,
+  Flag 
 } from '@mui/icons-material';
 import { useParams } from "react-router-dom";
 import { VolunteerEventContext } from "../context/EventContext";
@@ -36,6 +37,7 @@ import { useNotification } from '../components/Notification';
 import { useAuth } from "../context/AuthContext";
 import { EventAttendanceDTO } from "../client/apiClient";
 import { MapView } from "../components/MapView";
+import { ReportUserModal } from "../components/ReportUserModal";
 import { useLocation } from "react-router-dom";
 
 export const EventDetailsPage: React.FC = () => {
@@ -53,10 +55,7 @@ export const EventDetailsPage: React.FC = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<number | null>(null);
-
-//   if (!context || !attContext) {
-//     return <Typography color="error">Ошибка контекста</Typography>;
-//   }
+  const [reportModalOpen, setReportModalOpen] = useState(false);
 
   const { fetchEventById, updateEvent } = context!;
   const { createAttendance, getParticipantsCount } = attContext!;
@@ -264,7 +263,42 @@ const handleRegister = async (eventId: number) => {
           >
             {event.description}
           </Typography>
-
+          {/* Организатор */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <People sx={{ fontSize: 24, color: '#949cff' }} />
+              <Typography variant="body1" color="text.secondary">
+                {isCommunity ? (
+                  event.user?.userName ? (
+                    event.user.fullName 
+                      ? `Инициатива предложена: ${event.user.userName} (${event.user.fullName})`
+                      : `Инициатива предложена: ${event.user.userName}`
+                  ) : ' '
+                ) : ( 
+                  event.user?.organizerProfile?.organizationName 
+                    ? `Организатор: ${event.user?.organizerProfile.organizationName}`
+                    : ' '
+                )}
+              </Typography>
+            </Box>
+            {user?.user?.id && event.user?.id && user.user.id !== event.user.id && (
+              <Button
+                size="small"
+                color="error"
+                startIcon={<Flag sx={{ fontSize: 18 }} />}
+                onClick={() => setReportModalOpen(true)}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: 2,
+                  '&:hover': {
+                    bgcolor: 'rgba(211, 47, 47, 0.04)',
+                  }
+                }}
+              >
+                Пожаловаться
+              </Button>
+            )}
+          </Box>
           <Divider sx={{ my: 3, borderColor: 'rgba(148, 156, 255, 0.1)' }} />
 
           {/* Основная информация */}
@@ -547,6 +581,25 @@ const handleRegister = async (eventId: number) => {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Модальное окно жалобы */}
+      <ReportUserModal
+        open={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        reportedUserId={event.user?.id || ''}
+        reportedUserName={
+          !isCommunity 
+            ? (event.user?.organizerProfile?.organizationName || event.user?.userName )
+            : (event.user?.userName)
+        }
+        contextInfo={{
+          name: event.name,
+          id: event.id
+        }}
+        onReportSuccess={() => {
+          setReportModalOpen(false);
+          showNotification('Жалоба отправлена, спасибо за обратную связь', 'info');
+        }}
+      />
     </Container>
   );
 };

@@ -125,7 +125,9 @@ function App() {
                     <ProtectedRoute>
                       <AttendanceProvider>
                         <VolunteerEventProvider>
-                          <EventsToVisitPage />
+                          <ReportProvider>
+                            <EventsToVisitPage />
+                          </ReportProvider>
                         </VolunteerEventProvider>
                       </AttendanceProvider>
                     </ProtectedRoute>
@@ -137,7 +139,9 @@ function App() {
                     <ProtectedRoute >
                       <VolunteerEventProvider>
                         <AttendanceProvider>
-                          <EventDetailsPage/>
+                          <ReportProvider>
+                            <EventDetailsPage/>
+                          </ReportProvider>
                         </AttendanceProvider>
                       </VolunteerEventProvider>
                     </ProtectedRoute>

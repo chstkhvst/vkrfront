@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Typography,
@@ -9,7 +10,6 @@ import {
   CardContent,
   CardActions,
   Button,
-  CircularProgress,
   Alert,
   Grid,
   Chip,
@@ -17,30 +17,36 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
 } from '@mui/material';
 import {
   EventAvailable as UpcomingIcon,
   Cancel as CancelledAttendanceIcon,
   CheckCircle as AttendedIcon,
   DoNotDisturb as NoShowIcon,
+  Flag
 } from '@mui/icons-material';
+import IconButton from '@mui/material/IconButton';
 import { AttendanceContext } from '../context/AttendanceContext';
 import { VolunteerEventContext } from '../context/EventContext';
 import { useAuth } from '../context/AuthContext';
 import { EventAttendanceDTO } from '../client/apiClient';
 import { useNotification } from '../components/Notification';
+import { ReportUserModal } from '../components/ReportUserModal';
 
 export const EventsToVisitPage: React.FC = () => {
   const context = useContext(AttendanceContext);
   const eventContext = useContext(VolunteerEventContext);
   const { user } = useAuth();
   const { showNotification } = useNotification();
+  const navigate = useNavigate();
 
   const [tab, setTab] = useState(0);
   const [data, setData] = useState<EventAttendanceDTO[]>([]);
   const [cancelAttendanceDialogOpen, setCancelAttendanceDialogOpen] = useState(false);
   const [attendanceToCancel, setAttendanceToCancel] = useState<EventAttendanceDTO | null>(null);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [selectedReportEvent, setSelectedReportEvent] = useState<any>(null);
 
   const {
     fetchAttendancesByUserId,
@@ -159,7 +165,6 @@ export const EventsToVisitPage: React.FC = () => {
       setCancelAttendanceDialogOpen(false);
       setAttendanceToCancel(null);
   };
-
   const getCurrentList = () => {
     if (tab === 0) return volunteerUpcoming;
     return [...volunteerHistory];
@@ -195,7 +200,21 @@ export const EventsToVisitPage: React.FC = () => {
           const event = a.volunteerEvent;
           return (
             <GridLegacy item xs={12} key={a.id}>
-              <Card>
+              <Card 
+                sx={{ 
+                  cursor: tab === 0 ? 'pointer' : 'default',
+                  transition: tab === 0 ? 'transform 0.2s ease, box-shadow 0.2s ease' : 'none',
+                  '&:hover': tab === 0 ? {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
+                  } : {}
+                }}
+                onClick={() => {
+                  if (tab === 0 && event?.id) {
+                    navigate(`/events/${event.id}`, { state: { isCommunity: false } });
+                  }
+                }}
+              >
                 <CardContent
                   sx={{
                     display: 'flex',
@@ -233,7 +252,26 @@ export const EventsToVisitPage: React.FC = () => {
                     />
                   </Box>
                 </CardContent>
-
+                {tab === 1 && event?.userId && (
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, pt: 1 }}>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedReportEvent(event);
+                        setReportModalOpen(true);
+                      }}
+                      sx={{
+                        '&:hover': {
+                          bgcolor: 'rgba(211, 47, 47, 0.04)',
+                        }
+                      }}
+                    >
+                      <Flag sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  </Box>
+                )}
                 <CardActions
                   sx={{
                     display: 'flex',
@@ -245,7 +283,8 @@ export const EventsToVisitPage: React.FC = () => {
                     <Button
                       variant="contained"
                       color="secondary"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setAttendanceToCancel(a);
                         setCancelAttendanceDialogOpen(true);
                       }}
@@ -295,6 +334,29 @@ export const EventsToVisitPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* Модальное окно жалобы */}
+      <ReportUserModal
+        open={reportModalOpen}
+        onClose={() => {
+          setReportModalOpen(false);
+          setSelectedReportEvent(null);
+        }}
+        reportedUserId={selectedReportEvent?.userId || ''}
+        reportedUserName={
+          selectedReportEvent?.user?.organizerProfile?.organizationName || 
+          selectedReportEvent?.user?.userName || 
+          ''
+        }
+        contextInfo={{
+          name: selectedReportEvent?.name,
+          id: selectedReportEvent?.id
+        }}
+        onReportSuccess={() => {
+          setReportModalOpen(false);
+          setSelectedReportEvent(null);
+          showNotification('Жалоба отправлена, спасибо за обратную связь', 'info');
+        }}
+      />
     </Container>
   );
 };

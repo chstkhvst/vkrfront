@@ -43,7 +43,8 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
     const {
         fetchAttendancesByEventId,
         updateAttendance,
-        markNoShow
+        markNoShow,
+        markAttendance
     } = context!;
 
     const loadParticipants = async () => {
@@ -117,29 +118,32 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
         }
     }, [eventId, markNoShow, loadParticipants]);
     
-    const updateStatus = useCallback(async (attendance: EventAttendanceDTO, statusId: number) => {
+   const handleMarkAttendance = async (attendance: EventAttendanceDTO) => {
+        if (!attendance.id) return;
+
+        try {
+            await markAttendance(attendance.id);
+            await loadParticipants();
+        } catch {
+            showNotification("Ошибка при отметке посещения", "error");
+        }
+    };
+
+    const handleMarkNoShowSingle = async (attendance: EventAttendanceDTO) => {
         if (!attendance.id) return;
 
         const updated = new EventAttendanceDTO({
             ...attendance,
-            attendanceStatusId: statusId,
+            attendanceStatusId: STATUS.NO_SHOW,
         });
-        
-        setParticipants(prev =>
-            prev.map(p => (p.id === attendance.id ? updated : p))
-        );
 
         try {
             await updateAttendance(attendance.id, updated);
+            await loadParticipants();
         } catch {
-            if (isMounted.current) {
-                setParticipants(prev =>
-                    prev.map(p => (p.id === attendance.id ? attendance : p))
-                );
-                showNotification("Ошибка при обновлении статуса", "error");
-            }
+            showNotification("Ошибка при отметке неявки", "error");
         }
-    }, [updateAttendance]);
+    };
 
     const getStatusLabel = useCallback((statusId?: number) => {
         switch (statusId) {
@@ -261,7 +265,7 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
                         <Button
                             variant="outlined"
                             color="primary"
-                            onClick={() => updateStatus(p, STATUS.ATTENDED)}
+                            onClick={() => handleMarkAttendance(p)}
                         >
                             Присутствовал
                         </Button>
@@ -269,7 +273,7 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
                         <Button
                             variant="outlined"
                             color="error"
-                            onClick={() => updateStatus(p, STATUS.NO_SHOW)}
+                            onClick={() => handleMarkNoShowSingle(p)}
                         >
                             Неявка
                         </Button>
