@@ -510,12 +510,14 @@ export const EventsListPage: React.FC = () => {
                 ))}
             </Grid>
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <Pagination
-                    count={totalPages}
-                    page={pageNumber}
-                    onChange={(_, value) => setPageNumber(value)}
-                    color="primary"
-                />
+            <Pagination
+                count={totalPages}
+                page={pageNumber}
+                onChange={(_, value) => setPageNumber(value)}
+                color="primary"
+                siblingCount={0}
+                boundaryCount={1}
+            />
             </Box>
         </Container>
     );

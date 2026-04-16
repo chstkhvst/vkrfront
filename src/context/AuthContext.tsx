@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Client, LoginModel, RegisterModel, AuthResponse, UserDTO } from "../client/apiClient"
+import { Client, LoginModel, RegisterModel, AuthResponse, UserDTO, FileParameter } from "../client/apiClient"
 const TOKEN_KEY = "jwtToken";
 
 const client = new Client("", {
@@ -27,6 +27,13 @@ interface AuthContextType {
   logout: () => Promise<void>;
   fetchCurrentUser: () => Promise<void>;
   getUserRole: () => string | null;
+  updateProfile: (data: {
+    userName?: string;
+    fullName?: string;
+    organizationName?: string;
+    ogrn?: string;
+    image?: File;
+  }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -113,7 +120,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserRole(null);
 
   }
+  const updateProfile = async (data: {
+    userName?: string;
+    fullName?: string;
+    organizationName?: string;
+    ogrn?: string;
+    image?: File;
+  }) => {
+    if (!currentUser) return;
 
+    const imageParam: FileParameter = data.image
+      ? { data: data.image, fileName: data.image.name }
+      : { data: new Blob(), fileName: "" }; 
+
+    await client.profilePUT(
+      data.fullName ?? currentUser.fullname ?? "",
+      data.userName ?? currentUser.userName ?? "",
+      currentUser.profileImagePath ?? "",
+      data.organizationName ?? currentUser.organizerProfile?.organizationName ?? "",
+      data.ogrn ?? currentUser.organizerProfile?.ogrn ?? "",
+      imageParam
+    );
+
+    await fetchCurrentUser();
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -126,6 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout,
         fetchCurrentUser,
         getUserRole,
+        updateProfile,
       }}
     >
       {children}

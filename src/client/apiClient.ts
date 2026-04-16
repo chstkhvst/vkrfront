@@ -172,20 +172,48 @@ export class Client {
     }
 
     /**
-     * @param body (optional) 
+     * @param fullName (optional) 
+     * @param userName (optional) 
+     * @param profileImagePath (optional) 
+     * @param organizationName (optional) 
+     * @param ogrn (optional) 
+     * @param image (optional) 
      * @return OK
      */
-    profilePUT(body?: UpdateProfileModel | undefined): Promise<void> {
+    profilePUT(fullName?: string | undefined, userName?: string | undefined, profileImagePath?: string | undefined, organizationName?: string | undefined, ogrn?: string | undefined, image?: FileParameter | undefined): Promise<void> {
         let url_ = this.baseUrl + "/api/Account/profile";
         url_ = url_.replace(/[?&]$/, "");
 
-        const content_ = JSON.stringify(body);
+        const content_ = new FormData();
+        if (fullName === null || fullName === undefined)
+            throw new globalThis.Error("The parameter 'fullName' cannot be null.");
+        else
+            content_.append("FullName", fullName.toString());
+        if (userName === null || userName === undefined)
+            throw new globalThis.Error("The parameter 'userName' cannot be null.");
+        else
+            content_.append("UserName", userName.toString());
+        if (profileImagePath === null || profileImagePath === undefined)
+            throw new globalThis.Error("The parameter 'profileImagePath' cannot be null.");
+        else
+            content_.append("ProfileImagePath", profileImagePath.toString());
+        if (organizationName === null || organizationName === undefined)
+            throw new globalThis.Error("The parameter 'organizationName' cannot be null.");
+        else
+            content_.append("OrganizationName", organizationName.toString());
+        if (ogrn === null || ogrn === undefined)
+            throw new globalThis.Error("The parameter 'ogrn' cannot be null.");
+        else
+            content_.append("Ogrn", ogrn.toString());
+        if (image === null || image === undefined)
+            throw new globalThis.Error("The parameter 'image' cannot be null.");
+        else
+            content_.append("Image", image.data, image.fileName ? image.fileName : "Image");
 
         let options_: RequestInit = {
             body: content_,
             method: "PUT",
             headers: {
-                "Content-Type": "application/json",
             }
         };
 
@@ -3695,50 +3723,6 @@ export interface IReportStatusDTO {
     name?: string | undefined;
 }
 
-export class UpdateProfileModel implements IUpdateProfileModel {
-    fullName?: string | undefined;
-    organizationName?: string | undefined;
-    ogrn?: string | undefined;
-
-    constructor(data?: IUpdateProfileModel) {
-        if (data) {
-            for (var property in data) {
-                if (data.hasOwnProperty(property))
-                    (this as any)[property] = (data as any)[property];
-            }
-        }
-    }
-
-    init(_data?: any) {
-        if (_data) {
-            this.fullName = _data["fullName"];
-            this.organizationName = _data["organizationName"];
-            this.ogrn = _data["ogrn"];
-        }
-    }
-
-    static fromJS(data: any): UpdateProfileModel {
-        data = typeof data === 'object' ? data : {};
-        let result = new UpdateProfileModel();
-        result.init(data);
-        return result;
-    }
-
-    toJSON(data?: any) {
-        data = typeof data === 'object' ? data : {};
-        data["fullName"] = this.fullName;
-        data["organizationName"] = this.organizationName;
-        data["ogrn"] = this.ogrn;
-        return data;
-    }
-}
-
-export interface IUpdateProfileModel {
-    fullName?: string | undefined;
-    organizationName?: string | undefined;
-    ogrn?: string | undefined;
-}
-
 export class User implements IUser {
     id?: string | undefined;
     userName?: string | undefined;
@@ -3855,6 +3839,7 @@ export class UserDTO implements IUserDTO {
     id?: string | undefined;
     userName?: string | undefined;
     fullname?: string | undefined;
+    email?: string | undefined;
     profileImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
@@ -3873,6 +3858,7 @@ export class UserDTO implements IUserDTO {
             this.id = _data["id"];
             this.userName = _data["userName"];
             this.fullname = _data["fullname"];
+            this.email = _data["email"];
             this.profileImagePath = _data["profileImagePath"];
             this.volunteerProfile = _data["volunteerProfile"] ? VolunteerProfileDTO.fromJS(_data["volunteerProfile"]) : undefined as any;
             this.organizerProfile = _data["organizerProfile"] ? OrganizerProfileDTO.fromJS(_data["organizerProfile"]) : undefined as any;
@@ -3891,6 +3877,7 @@ export class UserDTO implements IUserDTO {
         data["id"] = this.id;
         data["userName"] = this.userName;
         data["fullname"] = this.fullname;
+        data["email"] = this.email;
         data["profileImagePath"] = this.profileImagePath;
         data["volunteerProfile"] = this.volunteerProfile ? this.volunteerProfile.toJSON() : undefined as any;
         data["organizerProfile"] = this.organizerProfile ? this.organizerProfile.toJSON() : undefined as any;
@@ -3902,6 +3889,7 @@ export interface IUserDTO {
     id?: string | undefined;
     userName?: string | undefined;
     fullname?: string | undefined;
+    email?: string | undefined;
     profileImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;

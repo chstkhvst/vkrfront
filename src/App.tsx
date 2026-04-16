@@ -14,6 +14,7 @@ import { CommunityEventsPage } from './pages/CommunityEventsPage';
 import { CreateEventPage } from './pages/CreateEventPage';
 import { MyEventPage } from './pages/MyEventsPage';
 import {ReportsListPage} from './pages/ReportsListPage';
+import {ProfilePage} from './pages/ProfilePage';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -164,6 +165,20 @@ function App() {
                       <ReportProvider>
                         <BanProvider>
                           <ReportsListPage/>
+                        </BanProvider>
+                      </ReportProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route //FIX PROVIDERS
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <ReportProvider>
+                        <BanProvider>
+                          <AuthProvider>
+                            <ProfilePage/>
+                          </AuthProvider>
                         </BanProvider>
                       </ReportProvider>
                     </ProtectedRoute>
