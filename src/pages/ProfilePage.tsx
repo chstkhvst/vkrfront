@@ -37,6 +37,7 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (currentUser) {
+      console.log(currentUser)
       setFormData({
         userName: currentUser.userName || "",
         fullName: currentUser.fullname || "",
@@ -161,14 +162,22 @@ export const ProfilePage: React.FC = () => {
                         {currentUser?.email}
                     </Typography>
                     </Box>
-
                     {currentUser?.volunteerProfile && (
-                    <Chip
-                        label={`Баллы: ${currentUser.volunteerProfile.totalPoints || 0}`}
-                        color="primary"
-                    />
+                      <Stack direction="row" spacing={1}>
+                        <Chip
+                          label={`Баллы: ${currentUser.volunteerProfile.totalPoints || 0}`}
+                          color="primary"
+                        />
+
+                        {currentUser.volunteerProfile.rank && (
+                          <Chip
+                            label={currentUser.volunteerProfile.rank.name}
+                            color="secondary"
+                          />
+                        )}
+                      </Stack>
                     )}
-                </Box>
+                  </Box>
                 <Stack direction="row" spacing={2}>
                     <Button
                     variant="contained"

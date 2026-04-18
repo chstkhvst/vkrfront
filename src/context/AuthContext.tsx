@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Client, LoginModel, RegisterModel, AuthResponse, UserDTO, FileParameter } from "../client/apiClient"
+import { Client, LoginModel, RegisterModel, AuthResponse, UserDTO, FileParameter, UserForModerDTO, UserDTOPaginatedResponse } from "../client/apiClient"
 const TOKEN_KEY = "jwtToken";
 
 const client = new Client("", {
@@ -34,6 +34,8 @@ interface AuthContextType {
     ogrn?: string;
     image?: File;
   }) => Promise<void>;
+  getUserById: (id: string) => Promise<UserForModerDTO>;
+  getAllUsers: (page?: number, pageSize?: number, search?: string) => Promise<UserDTOPaginatedResponse>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -144,6 +146,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     await fetchCurrentUser();
   };
+  const getUserById = async (id: string): Promise<UserForModerDTO> => {
+    return await client.account(id);
+  };
+
+  const getAllUsers = async (
+    page: number = 1,
+    pageSize: number = 10,
+    search?: string
+  ): Promise<UserDTOPaginatedResponse> => {
+    return await client.all(page, pageSize, search);
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -157,6 +170,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchCurrentUser,
         getUserRole,
         updateProfile,
+        getUserById,
+        getAllUsers,
       }}
     >
       {children}

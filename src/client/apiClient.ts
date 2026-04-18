@@ -240,6 +240,98 @@ export class Client {
     /**
      * @return OK
      */
+    account(id: string): Promise<UserForModerDTO> {
+        let url_ = this.baseUrl + "/api/Account/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAccount(_response);
+        });
+    }
+
+    protected processAccount(response: Response): Promise<UserForModerDTO> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserForModerDTO.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserForModerDTO>(null as any);
+    }
+
+    /**
+     * @param page (optional) 
+     * @param pageSize (optional) 
+     * @param search (optional) 
+     * @return OK
+     */
+    all(page?: number | undefined, pageSize?: number | undefined, search?: string | undefined): Promise<UserDTOPaginatedResponse> {
+        let url_ = this.baseUrl + "/api/Account/all?";
+        if (page === null)
+            throw new globalThis.Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined)
+            url_ += "page=" + encodeURIComponent("" + page) + "&";
+        if (pageSize === null)
+            throw new globalThis.Error("The parameter 'pageSize' cannot be null.");
+        else if (pageSize !== undefined)
+            url_ += "pageSize=" + encodeURIComponent("" + pageSize) + "&";
+        if (search === null)
+            throw new globalThis.Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processAll(_response);
+        });
+    }
+
+    protected processAll(response: Response): Promise<UserDTOPaginatedResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserDTOPaginatedResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserDTOPaginatedResponse>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
     getAttendanceAll(): Promise<EventAttendanceDTO[]> {
         let url_ = this.baseUrl + "/api/Attendance/GetAttendanceAll";
         url_ = url_.replace(/[?&]$/, "");
@@ -3895,6 +3987,150 @@ export interface IUserDTO {
     organizerProfile?: OrganizerProfileDTO;
 }
 
+export class UserDTOPaginatedResponse implements IUserDTOPaginatedResponse {
+    items?: UserDTO[] | undefined;
+    totalCount?: number;
+    pageSize?: number;
+    currentPage?: number;
+    totalPages?: number;
+
+    constructor(data?: IUserDTOPaginatedResponse) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            if (Array.isArray(_data["items"])) {
+                this.items = [] as any;
+                for (let item of _data["items"])
+                    this.items!.push(UserDTO.fromJS(item));
+            }
+            this.totalCount = _data["totalCount"];
+            this.pageSize = _data["pageSize"];
+            this.currentPage = _data["currentPage"];
+            this.totalPages = _data["totalPages"];
+        }
+    }
+
+    static fromJS(data: any): UserDTOPaginatedResponse {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserDTOPaginatedResponse();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        if (Array.isArray(this.items)) {
+            data["items"] = [];
+            for (let item of this.items)
+                data["items"].push(item ? item.toJSON() : undefined as any);
+        }
+        data["totalCount"] = this.totalCount;
+        data["pageSize"] = this.pageSize;
+        data["currentPage"] = this.currentPage;
+        data["totalPages"] = this.totalPages;
+        return data;
+    }
+}
+
+export interface IUserDTOPaginatedResponse {
+    items?: UserDTO[] | undefined;
+    totalCount?: number;
+    pageSize?: number;
+    currentPage?: number;
+    totalPages?: number;
+}
+
+export class UserForModerDTO implements IUserForModerDTO {
+    id?: string | undefined;
+    userName?: string | undefined;
+    fullname?: string | undefined;
+    email?: string | undefined;
+    profileImagePath?: string | undefined;
+    volunteerProfile?: VolunteerProfileDTO;
+    organizerProfile?: OrganizerProfileDTO;
+    bans?: BanDTO[] | undefined;
+    userReports?: UserReportDTO[] | undefined;
+
+    constructor(data?: IUserForModerDTO) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.userName = _data["userName"];
+            this.fullname = _data["fullname"];
+            this.email = _data["email"];
+            this.profileImagePath = _data["profileImagePath"];
+            this.volunteerProfile = _data["volunteerProfile"] ? VolunteerProfileDTO.fromJS(_data["volunteerProfile"]) : undefined as any;
+            this.organizerProfile = _data["organizerProfile"] ? OrganizerProfileDTO.fromJS(_data["organizerProfile"]) : undefined as any;
+            if (Array.isArray(_data["bans"])) {
+                this.bans = [] as any;
+                for (let item of _data["bans"])
+                    this.bans!.push(BanDTO.fromJS(item));
+            }
+            if (Array.isArray(_data["userReports"])) {
+                this.userReports = [] as any;
+                for (let item of _data["userReports"])
+                    this.userReports!.push(UserReportDTO.fromJS(item));
+            }
+        }
+    }
+
+    static fromJS(data: any): UserForModerDTO {
+        data = typeof data === 'object' ? data : {};
+        let result = new UserForModerDTO();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["userName"] = this.userName;
+        data["fullname"] = this.fullname;
+        data["email"] = this.email;
+        data["profileImagePath"] = this.profileImagePath;
+        data["volunteerProfile"] = this.volunteerProfile ? this.volunteerProfile.toJSON() : undefined as any;
+        data["organizerProfile"] = this.organizerProfile ? this.organizerProfile.toJSON() : undefined as any;
+        if (Array.isArray(this.bans)) {
+            data["bans"] = [];
+            for (let item of this.bans)
+                data["bans"].push(item ? item.toJSON() : undefined as any);
+        }
+        if (Array.isArray(this.userReports)) {
+            data["userReports"] = [];
+            for (let item of this.userReports)
+                data["userReports"].push(item ? item.toJSON() : undefined as any);
+        }
+        return data;
+    }
+}
+
+export interface IUserForModerDTO {
+    id?: string | undefined;
+    userName?: string | undefined;
+    fullname?: string | undefined;
+    email?: string | undefined;
+    profileImagePath?: string | undefined;
+    volunteerProfile?: VolunteerProfileDTO;
+    organizerProfile?: OrganizerProfileDTO;
+    bans?: BanDTO[] | undefined;
+    userReports?: UserReportDTO[] | undefined;
+}
+
 export class UserReportDTO implements IUserReportDTO {
     id?: number;
     senderUserId?: string | undefined;
@@ -4326,6 +4562,7 @@ export interface IVolunteerProfile {
 export class VolunteerProfileDTO implements IVolunteerProfileDTO {
     userId?: string | undefined;
     totalPoints?: number;
+    rank?: VolunteerRankDTO;
 
     constructor(data?: IVolunteerProfileDTO) {
         if (data) {
@@ -4340,6 +4577,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
         if (_data) {
             this.userId = _data["userId"];
             this.totalPoints = _data["totalPoints"];
+            this.rank = _data["rank"] ? VolunteerRankDTO.fromJS(_data["rank"]) : undefined as any;
         }
     }
 
@@ -4354,6 +4592,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
         data = typeof data === 'object' ? data : {};
         data["userId"] = this.userId;
         data["totalPoints"] = this.totalPoints;
+        data["rank"] = this.rank ? this.rank.toJSON() : undefined as any;
         return data;
     }
 }
@@ -4361,6 +4600,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
 export interface IVolunteerProfileDTO {
     userId?: string | undefined;
     totalPoints?: number;
+    rank?: VolunteerRankDTO;
 }
 
 export class VolunteerRank implements IVolunteerRank {
@@ -4409,6 +4649,50 @@ export interface IVolunteerRank {
     rankName: string;
     pointsRequired?: number;
     isDeleted?: boolean;
+}
+
+export class VolunteerRankDTO implements IVolunteerRankDTO {
+    id?: number;
+    name?: string | undefined;
+    points?: number;
+
+    constructor(data?: IVolunteerRankDTO) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+            this.points = _data["points"];
+        }
+    }
+
+    static fromJS(data: any): VolunteerRankDTO {
+        data = typeof data === 'object' ? data : {};
+        let result = new VolunteerRankDTO();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        data["points"] = this.points;
+        return data;
+    }
+}
+
+export interface IVolunteerRankDTO {
+    id?: number;
+    name?: string | undefined;
+    points?: number;
 }
 
 export interface FileParameter {

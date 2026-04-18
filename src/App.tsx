@@ -15,6 +15,7 @@ import { CreateEventPage } from './pages/CreateEventPage';
 import { MyEventPage } from './pages/MyEventsPage';
 import {ReportsListPage} from './pages/ReportsListPage';
 import {ProfilePage} from './pages/ProfilePage';
+import {UsersListPage} from './pages/UsersListPage';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -181,6 +182,18 @@ function App() {
                           </AuthProvider>
                         </BanProvider>
                       </ReportProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/users"
+                  element={
+                    <ProtectedRoute>
+                        <BanProvider>
+                          <AuthProvider>
+                            <UsersListPage/>
+                          </AuthProvider>
+                        </BanProvider>
                     </ProtectedRoute>
                   }
                 />
