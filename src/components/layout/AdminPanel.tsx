@@ -9,7 +9,7 @@ import {
   alpha,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Report, EventNote, People } from '@mui/icons-material';
+import { Report, EventNote, People, Gavel } from '@mui/icons-material';
 
 export const AdminPanel = () => {
   const navigate = useNavigate();
@@ -122,6 +122,25 @@ export const AdminPanel = () => {
                 }}
             >
                 Пользователи
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Gavel  />}
+              onClick={() => navigate('/bans')}
+              sx={{
+                justifyContent: 'flex-start',
+                py: 1.5,
+                borderRadius: '12px',
+                borderColor: alpha('#949cff', 0.3),
+                color: '#949cff',
+                '&:hover': {
+                  borderColor: '#949cff',
+                  background: alpha('#949cff', 0.05),
+                },
+              }}
+            >
+              Баны
             </Button>
         </Stack>
       </Paper>

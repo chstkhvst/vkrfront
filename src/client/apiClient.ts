@@ -892,10 +892,15 @@ export class Client {
     }
 
     /**
+     * @param search (optional) 
      * @return OK
      */
-    getBans(): Promise<BanDTO[]> {
-        let url_ = this.baseUrl + "/api/Ban/GetBans";
+    getBans(search?: string | undefined): Promise<BanDTO[]> {
+        let url_ = this.baseUrl + "/api/Ban/GetBans?";
+        if (search === null)
+            throw new globalThis.Error("The parameter 'search' cannot be null.");
+        else if (search !== undefined)
+            url_ += "search=" + encodeURIComponent("" + search) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {

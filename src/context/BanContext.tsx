@@ -4,7 +4,7 @@ import {
   BanDTO,
   CreateBanDTO,
 } from "../client/apiClient";
-
+import { useEffect } from "react";
 interface BanContextProps {
   bans: BanDTO[];
   selectedBan: BanDTO | null;
@@ -12,11 +12,8 @@ interface BanContextProps {
   isLoading: boolean;
   error: string | null;
   
-  searchKeywords: string;
-  setSearchKeywords: (value: string) => void;
-  
   // Методы
-  fetchBans: () => Promise<void>;
+  fetchBans: (search?: string) => Promise<void>;
   fetchBanById: (id: number) => Promise<BanDTO | null>;
   isUserBanned: (userId: string) => Promise<boolean>;
   createBan: (data: CreateBanDTO) => Promise<BanDTO | null>;
@@ -33,17 +30,16 @@ export const BanProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [searchKeywords, setSearchKeywords] = useState<string>("");
   
   const apiClient = new Client(process.env.REACT_APP_API_URL || "");
   
   // Получить все баны
-  const fetchBans = async (): Promise<void> => {
+  const fetchBans = async (search?: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      const data = await apiClient.getBans();
+      const data = await apiClient.getBans(search); 
       setBans(data || []);
     } catch (err) {
       console.error("Ошибка при загрузке банов:", err);
@@ -99,14 +95,21 @@ export const BanProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
   
-  // Обновить бан
   const updateBan = async (id: number, data: BanDTO): Promise<boolean> => {
     setIsLoading(true);
     setError(null);
-    
     try {
-      await apiClient.updateBan(id, data);
-      await fetchBans(); // Обновляем список
+      const payload = new BanDTO({
+        id: data.id,
+        bannedUserId: data.bannedUserId,
+        moderId: data.moderId,
+        banReason: data.banReason,
+        isActive: data.isActive,
+        isDeleted: data.isDeleted,
+      });
+
+      await apiClient.updateBan(id, payload);
+      await fetchBans();
       return true;
     } catch (err) {
       console.error("Ошибка при обновлении бана:", err);
@@ -129,8 +132,6 @@ export const BanProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         selectedBan,
         isLoading,
         error,
-        searchKeywords,
-        setSearchKeywords,
         
         fetchBans,
         fetchBanById,

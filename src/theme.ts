@@ -21,7 +21,7 @@ export const customTheme = createTheme({
     primary: PRIMARY,
     secondary: SECONDARY,
     error: {
-      main: '#f436696f',
+      main: '#f70e4480',
     },
 
     background: {

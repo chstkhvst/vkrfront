@@ -16,6 +16,7 @@ import { MyEventPage } from './pages/MyEventsPage';
 import {ReportsListPage} from './pages/ReportsListPage';
 import {ProfilePage} from './pages/ProfilePage';
 import {UsersListPage} from './pages/UsersListPage';
+import {BanHistoryPage} from './pages/BanHistoryPage';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -168,6 +169,16 @@ function App() {
                           <ReportsListPage/>
                         </BanProvider>
                       </ReportProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/bans"
+                  element={
+                    <ProtectedRoute allowedRoles={['moderator']}>
+                        <BanProvider>
+                          <BanHistoryPage/>
+                        </BanProvider>
                     </ProtectedRoute>
                   }
                 />
