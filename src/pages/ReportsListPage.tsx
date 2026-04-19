@@ -170,9 +170,7 @@ export const ReportsListPage: React.FC = () => {
                     >
                     <Button
                         variant="text"
-                        onClick={() => {
-                        // TODO: перейти в профиль
-                        }}
+                        onClick={() => navigate(`/user-for-moder/${group.reportedUserId}`)}
                     >
                         Перейти в профиль пользователя
                     </Button>

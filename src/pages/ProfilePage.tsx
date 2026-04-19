@@ -179,13 +179,14 @@ export const ProfilePage: React.FC = () => {
                     )}
                   </Box>
                 <Stack direction="row" spacing={2}>
+                  {(currentUser?.volunteerProfile || currentUser?.organizerProfile) && (
                     <Button
                     variant="contained"
                     onClick={() => navigate("/myevents")}
                     >
                     Мои мероприятия
                     </Button>
-
+                  )}
                     {currentUser?.volunteerProfile && (
                     <Button
                         variant="contained"

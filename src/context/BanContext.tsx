@@ -103,6 +103,7 @@ export const BanProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         id: data.id,
         bannedUserId: data.bannedUserId,
         moderId: data.moderId,
+        createdAt: data.createdAt,
         banReason: data.banReason,
         isActive: data.isActive,
         isDeleted: data.isDeleted,

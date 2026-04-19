@@ -17,6 +17,7 @@ import {ReportsListPage} from './pages/ReportsListPage';
 import {ProfilePage} from './pages/ProfilePage';
 import {UsersListPage} from './pages/UsersListPage';
 import {BanHistoryPage} from './pages/BanHistoryPage';
+import { UserForModer } from './pages/UserForModer';
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -203,6 +204,18 @@ function App() {
                         <BanProvider>
                           <AuthProvider>
                             <UsersListPage/>
+                          </AuthProvider>
+                        </BanProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/user-for-moder/:id"
+                  element={
+                    <ProtectedRoute>
+                        <BanProvider>
+                          <AuthProvider>
+                            <UserForModer/>
                           </AuthProvider>
                         </BanProvider>
                     </ProtectedRoute>

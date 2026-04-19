@@ -2912,6 +2912,7 @@ export class BanDTO implements IBanDTO {
     id?: number;
     bannedUserId?: string | undefined;
     banReason?: string | undefined;
+    createdAt?: Date;
     moderId?: string | undefined;
     isActive?: boolean;
     isDeleted?: boolean;
@@ -2932,6 +2933,7 @@ export class BanDTO implements IBanDTO {
             this.id = _data["id"];
             this.bannedUserId = _data["bannedUserId"];
             this.banReason = _data["banReason"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : undefined as any;
             this.moderId = _data["moderId"];
             this.isActive = _data["isActive"];
             this.isDeleted = _data["isDeleted"];
@@ -2952,6 +2954,7 @@ export class BanDTO implements IBanDTO {
         data["id"] = this.id;
         data["bannedUserId"] = this.bannedUserId;
         data["banReason"] = this.banReason;
+        data["createdAt"] = this.createdAt ? formatDate(this.createdAt) : undefined as any;
         data["moderId"] = this.moderId;
         data["isActive"] = this.isActive;
         data["isDeleted"] = this.isDeleted;
@@ -2965,6 +2968,7 @@ export interface IBanDTO {
     id?: number;
     bannedUserId?: string | undefined;
     banReason?: string | undefined;
+    createdAt?: Date;
     moderId?: string | undefined;
     isActive?: boolean;
     isDeleted?: boolean;
@@ -4698,6 +4702,12 @@ export interface IVolunteerRankDTO {
     id?: number;
     name?: string | undefined;
     points?: number;
+}
+
+function formatDate(d: Date) {
+    return d.getFullYear() + '-' + 
+        (d.getMonth() < 9 ? ('0' + (d.getMonth()+1)) : (d.getMonth()+1)) + '-' +
+        (d.getDate() < 10 ? ('0' + d.getDate()) : d.getDate());
 }
 
 export interface FileParameter {
