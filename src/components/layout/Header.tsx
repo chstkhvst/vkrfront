@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -42,7 +42,6 @@ export const Header = () => {
 
   const handleRegister = () => navigate('/register');
   const handleCreateEvent = () => navigate('/events/add');  
-  const handleCreateEventForUser = () => navigate('/events/add');
 
   return (
     <AppBar

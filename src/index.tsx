@@ -19,12 +19,12 @@ import '@fontsource/inter/700.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  // <React.StrictMode>
       <ThemeProvider theme={customTheme}>
         <CssBaseline />
         <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ru}>
           <App />
         </LocalizationProvider>
       </ThemeProvider>
-  </React.StrictMode>
+  //</React.StrictMode>
 );

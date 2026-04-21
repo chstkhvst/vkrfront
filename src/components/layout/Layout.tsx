@@ -8,7 +8,6 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const theme = useTheme();
 
   return (
     <Box
@@ -20,7 +19,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       }}
     >
       <Header
-
       />
       <Box component="main" sx={{ flex: 1, py: 4 }}>
         <Container maxWidth="xl">

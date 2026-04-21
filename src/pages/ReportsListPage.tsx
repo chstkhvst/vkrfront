@@ -75,10 +75,13 @@ export const ReportsListPage: React.FC = () => {
     const handleUpdateReports = async (group: ReportGroupDTO) => {
         if (!group.reportedUserId) return;
         
-        const success = await context!.markReportsClosed(group.reportedUserId);
+        const success = await markReportsClosed(group.reportedUserId);
         if (success) {
             showNotification("Жалобы отмечены", "info");
         }
+    };
+    const hasPendingReports = (group: ReportGroupDTO) => {
+        return group.reports?.some(r => r.reportStatusId === 1);
     };
   return (
     <Box p={4}>
@@ -176,23 +179,27 @@ export const ReportsListPage: React.FC = () => {
                     </Button>
 
                     <Stack direction="row" spacing={1}>
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleOpenBanModal(group)}
-                            >
-                            Заблокировать
-                        </Button>
+                        {hasPendingReports(group) && (
+                            <>
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    onClick={() => handleOpenBanModal(group)}
+                                >
+                                    Заблокировать
+                                </Button>
 
-                        <Button
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => handleUpdateReports(group)}
-                            >
-                            Отклонить жалобы
-                        </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={() => handleUpdateReports(group)}
+                                >
+                                    Отклонить жалобы
+                                </Button>
+                            </>
+                        )}
                     </Stack>
-                    </Stack>
+                </Stack>
 
                 </Stack>
                 </CardContent>

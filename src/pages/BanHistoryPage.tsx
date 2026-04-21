@@ -165,7 +165,7 @@ export const BanHistoryPage: React.FC = () => {
 
                       <Chip
                         icon={ban.isActive ? <BlockIcon /> : <CheckCircleIcon />}
-                        label={ban.isActive ? "Активен" : "Разбанен"}
+                        label={ban.isActive ? "Заблокирован" : "Разбанен"}
                         color={ban.isActive ? "error" : "success"}
                         size="small"
                         sx={{ fontWeight: 500 }}
@@ -195,37 +195,36 @@ export const BanHistoryPage: React.FC = () => {
                       </Typography>
                     </Box>
                     <Divider />
-                    <Box display="flex" justifyContent="flex-end">
+                    <Box display="flex" justifyContent="flex-end" gap={2}>
                       <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<PersonIcon />}
-                      onClick={() => navigate(`/user-for-moder/${ban.bannedUserId}`)}
-                      sx={{
-                        borderRadius: 2,
-                        textTransform: "none",
-                        fontSize: "0.75rem",
-                        px: 1.5,
-                        py: 0.5,
-                      }}
-                    >
-                      Профиль
-                    </Button>
-                    {ban.isActive && (
-                      <Button
-                        variant="contained"
-                        color="success"
-                        onClick={() => handleUnban(ban)}
+                        variant="outlined"
+                        size="small"
+                        startIcon={<PersonIcon />}
+                        onClick={() => navigate(`/user-for-moder/${ban.bannedUserId}`)}
                         sx={{
                           borderRadius: 2,
                           textTransform: "none",
-                          fontWeight: 600,
-                          px: 3,
+                          minWidth: 120,
                         }}
                       >
-                        Разбанить
+                        Профиль
                       </Button>
-                    )}
+                      {ban.isActive && (
+                        <Button
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          onClick={() => handleUnban(ban)}
+                          sx={{
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontWeight: 600,
+                            minWidth: 120,
+                          }}
+                        >
+                          Разбанить
+                        </Button>
+                      )}
                     </Box>
                   </Stack>
                 </CardContent>

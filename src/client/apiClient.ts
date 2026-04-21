@@ -178,9 +178,10 @@ export class Client {
      * @param organizationName (optional) 
      * @param ogrn (optional) 
      * @param image (optional) 
+     * @param backgroundImage (optional) 
      * @return OK
      */
-    profilePUT(fullName?: string | undefined, userName?: string | undefined, profileImagePath?: string | undefined, organizationName?: string | undefined, ogrn?: string | undefined, image?: FileParameter | undefined): Promise<void> {
+    profilePUT(fullName?: string | undefined, userName?: string | undefined, profileImagePath?: string | undefined, organizationName?: string | undefined, ogrn?: string | undefined, image?: FileParameter | undefined, backgroundImage?: FileParameter | undefined): Promise<void> {
         let url_ = this.baseUrl + "/api/Account/profile";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -209,6 +210,10 @@ export class Client {
             throw new globalThis.Error("The parameter 'image' cannot be null.");
         else
             content_.append("Image", image.data, image.fileName ? image.fileName : "Image");
+        if (backgroundImage === null || backgroundImage === undefined)
+            throw new globalThis.Error("The parameter 'backgroundImage' cannot be null.");
+        else
+            content_.append("BackgroundImage", backgroundImage.data, backgroundImage.fileName ? backgroundImage.fileName : "BackgroundImage");
 
         let options_: RequestInit = {
             body: content_,
@@ -312,6 +317,43 @@ export class Client {
     }
 
     protected processAll(response: Response): Promise<UserDTOPaginatedResponse> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            result200 = UserDTOPaginatedResponse.fromJS(resultData200);
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserDTOPaginatedResponse>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    rating(): Promise<UserDTOPaginatedResponse> {
+        let url_ = this.baseUrl + "/api/Account/rating";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRating(_response);
+        });
+    }
+
+    protected processRating(response: Response): Promise<UserDTOPaginatedResponse> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -3842,6 +3884,7 @@ export class User implements IUser {
     accessFailedCount?: number;
     fullName?: string | undefined;
     profileImagePath?: string | undefined;
+    backgroundImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfile;
     organizerProfile?: OrganizerProfile;
     isDeleted?: boolean;
@@ -3874,6 +3917,7 @@ export class User implements IUser {
             this.accessFailedCount = _data["accessFailedCount"];
             this.fullName = _data["fullName"];
             this.profileImagePath = _data["profileImagePath"];
+            this.backgroundImagePath = _data["backgroundImagePath"];
             this.volunteerProfile = _data["volunteerProfile"] ? VolunteerProfile.fromJS(_data["volunteerProfile"]) : undefined as any;
             this.organizerProfile = _data["organizerProfile"] ? OrganizerProfile.fromJS(_data["organizerProfile"]) : undefined as any;
             this.isDeleted = _data["isDeleted"];
@@ -3906,6 +3950,7 @@ export class User implements IUser {
         data["accessFailedCount"] = this.accessFailedCount;
         data["fullName"] = this.fullName;
         data["profileImagePath"] = this.profileImagePath;
+        data["backgroundImagePath"] = this.backgroundImagePath;
         data["volunteerProfile"] = this.volunteerProfile ? this.volunteerProfile.toJSON() : undefined as any;
         data["organizerProfile"] = this.organizerProfile ? this.organizerProfile.toJSON() : undefined as any;
         data["isDeleted"] = this.isDeleted;
@@ -3931,6 +3976,7 @@ export interface IUser {
     accessFailedCount?: number;
     fullName?: string | undefined;
     profileImagePath?: string | undefined;
+    backgroundImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfile;
     organizerProfile?: OrganizerProfile;
     isDeleted?: boolean;
@@ -3942,6 +3988,7 @@ export class UserDTO implements IUserDTO {
     fullname?: string | undefined;
     email?: string | undefined;
     profileImagePath?: string | undefined;
+    backgroundImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
 
@@ -3961,6 +4008,7 @@ export class UserDTO implements IUserDTO {
             this.fullname = _data["fullname"];
             this.email = _data["email"];
             this.profileImagePath = _data["profileImagePath"];
+            this.backgroundImagePath = _data["backgroundImagePath"];
             this.volunteerProfile = _data["volunteerProfile"] ? VolunteerProfileDTO.fromJS(_data["volunteerProfile"]) : undefined as any;
             this.organizerProfile = _data["organizerProfile"] ? OrganizerProfileDTO.fromJS(_data["organizerProfile"]) : undefined as any;
         }
@@ -3980,6 +4028,7 @@ export class UserDTO implements IUserDTO {
         data["fullname"] = this.fullname;
         data["email"] = this.email;
         data["profileImagePath"] = this.profileImagePath;
+        data["backgroundImagePath"] = this.backgroundImagePath;
         data["volunteerProfile"] = this.volunteerProfile ? this.volunteerProfile.toJSON() : undefined as any;
         data["organizerProfile"] = this.organizerProfile ? this.organizerProfile.toJSON() : undefined as any;
         return data;
@@ -3992,6 +4041,7 @@ export interface IUserDTO {
     fullname?: string | undefined;
     email?: string | undefined;
     profileImagePath?: string | undefined;
+    backgroundImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
 }
@@ -4521,6 +4571,7 @@ export class VolunteerProfile implements IVolunteerProfile {
     user?: User;
     rankId?: number;
     points?: number;
+    coins?: number;
     rank?: VolunteerRank;
 
     constructor(data?: IVolunteerProfile) {
@@ -4538,6 +4589,7 @@ export class VolunteerProfile implements IVolunteerProfile {
             this.user = _data["user"] ? User.fromJS(_data["user"]) : undefined as any;
             this.rankId = _data["rankId"];
             this.points = _data["points"];
+            this.coins = _data["coins"];
             this.rank = _data["rank"] ? VolunteerRank.fromJS(_data["rank"]) : undefined as any;
         }
     }
@@ -4555,6 +4607,7 @@ export class VolunteerProfile implements IVolunteerProfile {
         data["user"] = this.user ? this.user.toJSON() : undefined as any;
         data["rankId"] = this.rankId;
         data["points"] = this.points;
+        data["coins"] = this.coins;
         data["rank"] = this.rank ? this.rank.toJSON() : undefined as any;
         return data;
     }
@@ -4565,12 +4618,14 @@ export interface IVolunteerProfile {
     user?: User;
     rankId?: number;
     points?: number;
+    coins?: number;
     rank?: VolunteerRank;
 }
 
 export class VolunteerProfileDTO implements IVolunteerProfileDTO {
     userId?: string | undefined;
     totalPoints?: number;
+    coins?: number;
     rank?: VolunteerRankDTO;
 
     constructor(data?: IVolunteerProfileDTO) {
@@ -4586,6 +4641,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
         if (_data) {
             this.userId = _data["userId"];
             this.totalPoints = _data["totalPoints"];
+            this.coins = _data["coins"];
             this.rank = _data["rank"] ? VolunteerRankDTO.fromJS(_data["rank"]) : undefined as any;
         }
     }
@@ -4601,6 +4657,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
         data = typeof data === 'object' ? data : {};
         data["userId"] = this.userId;
         data["totalPoints"] = this.totalPoints;
+        data["coins"] = this.coins;
         data["rank"] = this.rank ? this.rank.toJSON() : undefined as any;
         return data;
     }
@@ -4609,6 +4666,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
 export interface IVolunteerProfileDTO {
     userId?: string | undefined;
     totalPoints?: number;
+    coins?: number;
     rank?: VolunteerRankDTO;
 }
 

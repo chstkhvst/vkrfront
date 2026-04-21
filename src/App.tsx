@@ -189,9 +189,7 @@ function App() {
                     <ProtectedRoute>
                       <ReportProvider>
                         <BanProvider>
-                          <AuthProvider>
                             <ProfilePage/>
-                          </AuthProvider>
                         </BanProvider>
                       </ReportProvider>
                     </ProtectedRoute>
@@ -202,9 +200,7 @@ function App() {
                   element={
                     <ProtectedRoute>
                         <BanProvider>
-                          <AuthProvider>
                             <UsersListPage/>
-                          </AuthProvider>
                         </BanProvider>
                     </ProtectedRoute>
                   }
@@ -214,9 +210,7 @@ function App() {
                   element={
                     <ProtectedRoute>
                         <BanProvider>
-                          <AuthProvider>
                             <UserForModer/>
-                          </AuthProvider>
                         </BanProvider>
                     </ProtectedRoute>
                   }

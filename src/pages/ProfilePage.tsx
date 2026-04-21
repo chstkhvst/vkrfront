@@ -13,6 +13,7 @@ import {
   Grid,
   Chip,
   IconButton,
+  Paper,
 } from "@mui/material";
 import { Edit, Save, Cancel, PhotoCamera } from "@mui/icons-material";
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +26,7 @@ export const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
 
   const [image, setImage] = useState<File | undefined>();
+  const [backgroundImage, setBackgroundImage] = useState<File | undefined>();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -63,11 +65,13 @@ export const ProfilePage: React.FC = () => {
         organizationName: formData.organizationName,
         ogrn: formData.ogrn,
         image,
+        backgroundImage
       });
 
       showNotification("Профиль обновлен", "success");
       setIsEditing(false);
       setImage(undefined);
+      setBackgroundImage(undefined);
     } catch {
       showNotification("Ошибка обновления", "error");
     } finally {
@@ -86,6 +90,7 @@ export const ProfilePage: React.FC = () => {
     }
     setImage(undefined);
     setIsEditing(false);
+    setBackgroundImage(undefined);
   };
 
   if (authLoading) {
@@ -96,14 +101,79 @@ export const ProfilePage: React.FC = () => {
     );
   }
 
+  // Проверка наличия фона
+  const hasBackground = backgroundImage || currentUser?.backgroundImagePath;
+
   return (
     <Box p={3}>
       <Stack spacing={3}>
         {/* HEADER */}
-        <Card>
-          <CardContent>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box display="flex" alignItems="center" gap={3}>
+        <Card
+          sx={{
+            position: "relative",
+            backgroundImage: backgroundImage
+              ? `url(${URL.createObjectURL(backgroundImage)})`
+              : currentUser?.backgroundImagePath
+              ? `url(${currentUser.backgroundImagePath})`
+              : "none",  
+            backgroundColor: !backgroundImage && !currentUser?.backgroundImagePath 
+              ? "rgba(255,255,255, 0.5)"  
+              : "transparent",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            minHeight: 240,
+          }}
+        >
+          {/* Градиентный оверлей */}
+          {hasBackground && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "linear-gradient(to top, rgba(103, 58, 183, 0.7) 0%, rgba(103, 58, 183, 0.3) 50%, transparent 100%)",
+                zIndex: 1,
+              }}
+            />
+          )}
+
+          {/* Кнопка загрузки фона */}
+          {isEditing && (
+            <>
+              <input
+                hidden
+                id="background-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setBackgroundImage(file);
+                }}
+              />
+              <label htmlFor="background-upload">
+                <IconButton
+                  component="span"
+                  sx={{
+                    position: "absolute",
+                    top: 16,
+                    left: 16,
+                    zIndex: 3,
+                    backgroundColor: "rgba(255,255,255,0.9)",
+                    "&:hover": { backgroundColor: "white" },
+                    boxShadow: 2,
+                  }}
+                >
+                  <PhotoCamera />
+                </IconButton>
+              </label>
+            </>
+          )}
+
+          <CardContent sx={{ position: "relative", zIndex: 2, py: 4 }}>
+            <Box display="flex" alignItems="flex-end" justifyContent="space-between">
+                <Box display="flex" alignItems="flex-end" gap={3}>
                     <Box position="relative">
                     <Avatar
                         src={
@@ -111,7 +181,12 @@ export const ProfilePage: React.FC = () => {
                             ? URL.createObjectURL(image)
                             : currentUser?.profileImagePath
                         }
-                        sx={{ width: 100, height: 100 }}
+                        sx={{
+                          width: 120,
+                          height: 120,
+                          border: "4px solid white",
+                          boxShadow: 3,
+                        }}
                     />
 
                     {isEditing && (
@@ -134,6 +209,8 @@ export const ProfilePage: React.FC = () => {
                                 bottom: 0,
                                 right: 0,
                                 backgroundColor: "white",
+                                boxShadow: 2,
+                                "&:hover": { backgroundColor: "#f5f5f5" },
                             }}
                             >
                             <PhotoCamera />
@@ -143,61 +220,84 @@ export const ProfilePage: React.FC = () => {
                     )}
                     </Box>
 
-                    <Box>
-                    {isEditing ? (
-                        <TextField
-                        label="Логин"
-                        name="userName"
-                        value={formData.userName}
-                        onChange={handleChange}
-                        size="small"
-                        />
-                    ) : (
-                        <Typography variant="h5">
-                        {currentUser?.userName}
-                        </Typography>
-                    )}
+                    <Box pb={1}>
+                      <Box
+                        sx={{
+                          backdropFilter: hasBackground ? "blur(12px)" : "none",
+                          backgroundColor: hasBackground ? "rgba(255, 255, 255, 0.25)" : "transparent",
+                          border: hasBackground ? "1px solid rgba(255, 255, 255, 0.3)" : "none",
+                          borderRadius: 2,
+                          p: 2,
+                          display: "inline-block",
+                        }}
+                      >
+                        <Box>
+                          {isEditing ? (
+                            <TextField
+                              label="Логин"
+                              name="userName"
+                              value={formData.userName}
+                              onChange={handleChange}
+                              size="small"
+                              sx={{
+                                backgroundColor: "white",
+                                borderRadius: 1,
+                              }}
+                            />
+                          ) : (
+                            <Typography
+                              variant="h5"
+                              sx={{
+                                color: hasBackground ? "white" : "text.primary",
+                                fontWeight: 600,
+                                textShadow: hasBackground ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
+                              }}
+                            >
+                              {currentUser?.userName}
+                            </Typography>
+                          )}
 
-                    <Typography variant="body2" color="text.secondary">
-                        {currentUser?.email}
-                    </Typography>
-                    </Box>
-                    {currentUser?.volunteerProfile && (
-                      <Stack direction="row" spacing={1}>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              color: hasBackground ? "rgba(255,255,255,0.95)" : "text.secondary",
+                              textShadow: hasBackground ? "0 1px 2px rgba(0,0,0,0.2)" : "none",
+                            }}
+                          >
+                            {currentUser?.email}
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      {currentUser?.volunteerProfile && (
+                        <Stack direction="row" spacing={1} mt={2}>
                         <Chip
                           label={`Баллы: ${currentUser.volunteerProfile.totalPoints || 0}`}
                           color="primary"
+                          sx={{
+                            color: "secondary.main",
+                            fontWeight: 600,
+                            boxShadow: 1,
+                          }}
                         />
 
-                        {currentUser.volunteerProfile.rank && (
-                          <Chip
-                            label={currentUser.volunteerProfile.rank.name}
-                            color="secondary"
-                          />
-                        )}
-                      </Stack>
-                    )}
+                          {currentUser.volunteerProfile.rank && (
+                            <Chip
+                              label={currentUser.volunteerProfile.rank.name}
+                          color="primary"
+                          sx={{
+                            color: "secondary.main",
+                            fontWeight: 600,
+                            boxShadow: 1,
+                          }}
+                            />
+                          )}
+                        </Stack>
+                      )}
+                    </Box>
                   </Box>
-                <Stack direction="row" spacing={2}>
-                  {(currentUser?.volunteerProfile || currentUser?.organizerProfile) && (
-                    <Button
-                    variant="contained"
-                    onClick={() => navigate("/myevents")}
-                    >
-                    Мои мероприятия
-                    </Button>
-                  )}
-                    {currentUser?.volunteerProfile && (
-                    <Button
-                        variant="contained"
-                        onClick={() => navigate("/events-to-visit")}
-                    >
-                        Мои посещения
-                    </Button>
-                    )}
-                </Stack>
-                </Box>
-          </CardContent>
+              </Box>
+            </CardContent>
         </Card>
 
         {/* FORM */}
@@ -206,7 +306,7 @@ export const ProfilePage: React.FC = () => {
             <Grid container spacing={3}>
               <Grid size={12}>
                 <TextField
-                  label="Полное имя"
+                  label="ФИО"
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleChange}
@@ -247,33 +347,56 @@ export const ProfilePage: React.FC = () => {
             <Divider sx={{ my: 3 }} />
 
             {/* ACTIONS */}
-            {!isEditing ? (
-              <Button
-                variant="contained"
-                startIcon={<Edit />}
-                onClick={() => setIsEditing(true)}
-              >
-                Редактировать
-              </Button>
-            ) : (
-              <Stack direction="row" spacing={2} justifyContent="flex-end">
-                <Button
-                  variant="outlined"
-                  startIcon={<Cancel />}
-                  onClick={handleCancel}
-                >
-                  Отмена
-                </Button>
-                <Button
-                  variant="contained"
-                  startIcon={<Save />}
-                  onClick={handleSave}
-                  disabled={isSaving}
-                >
-                  {isSaving ? <CircularProgress size={20} /> : "Сохранить"}
-                </Button>
-              </Stack>
-            )}
+            <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+              <Box>
+                {!isEditing ? (
+                  <Button
+                    variant="contained"
+                    startIcon={<Edit />}
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Редактировать
+                  </Button>
+                ) : (
+                  <Stack direction="row" spacing={2}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<Cancel />}
+                      onClick={handleCancel}
+                    >
+                      Отмена
+                    </Button>
+                    <Button
+                      variant="contained"
+                      startIcon={<Save />}
+                      onClick={handleSave}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? <CircularProgress size={20} /> : "Сохранить"}
+                    </Button>
+                  </Stack>
+                )}
+              </Box>
+
+              {(currentUser?.volunteerProfile || currentUser?.organizerProfile) && (
+                <Stack direction="row" spacing={2}>
+                  <Button
+                    variant="contained"
+                    onClick={() => navigate("/myevents")}
+                  >
+                    Мои мероприятия
+                  </Button>
+                  {currentUser?.volunteerProfile && (
+                    <Button
+                      variant="contained"
+                      onClick={() => navigate("/events-to-visit")}
+                    >
+                      Мои посещения
+                    </Button>
+                  )}
+                </Stack>
+              )}
+            </Stack>
           </CardContent>
         </Card>
       </Stack>

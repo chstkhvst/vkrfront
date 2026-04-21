@@ -33,6 +33,7 @@ interface AuthContextType {
     organizationName?: string;
     ogrn?: string;
     image?: File;
+    backgroundImage?: File;
   }) => Promise<void>;
   getUserById: (id: string) => Promise<UserForModerDTO>;
   getAllUsers: (page?: number, pageSize?: number, search?: string) => Promise<UserDTOPaginatedResponse>;
@@ -68,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(null);
     }
   };
-
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
 
@@ -128,12 +128,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     organizationName?: string;
     ogrn?: string;
     image?: File;
+    backgroundImage?: File;
   }) => {
     if (!currentUser) return;
 
     const imageParam: FileParameter = data.image
       ? { data: data.image, fileName: data.image.name }
       : { data: new Blob(), fileName: "" }; 
+    const backgroundParam: FileParameter = data.backgroundImage
+    ? { data: data.backgroundImage, fileName: data.backgroundImage.name }
+    : { data: new Blob(), fileName: "" };
 
     await client.profilePUT(
       data.fullName ?? currentUser.fullname ?? "",
@@ -141,7 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       currentUser.profileImagePath ?? "",
       data.organizationName ?? currentUser.organizerProfile?.organizationName ?? "",
       data.ogrn ?? currentUser.organizerProfile?.ogrn ?? "",
-      imageParam
+      imageParam,
+      backgroundParam
     );
 
     await fetchCurrentUser();
