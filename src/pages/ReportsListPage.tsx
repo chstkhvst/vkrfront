@@ -209,7 +209,8 @@ export const ReportsListPage: React.FC = () => {
         <BanUserModal
             open={banModalOpen}
             onClose={handleCloseBanModal}
-            selectedGroup={selectedGroup}
+            userId={selectedGroup?.reportedUserId || ""}
+            userName={selectedGroup?.reportedUser?.userName}
             onBanSuccess={handleBanSuccess}
         />
       {!isLoading && filteredGroups.length === 0 && (

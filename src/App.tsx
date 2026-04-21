@@ -210,7 +210,9 @@ function App() {
                   element={
                     <ProtectedRoute>
                         <BanProvider>
+                          <VolunteerEventProvider>
                             <UserForModer/>
+                          </VolunteerEventProvider>
                         </BanProvider>
                     </ProtectedRoute>
                   }

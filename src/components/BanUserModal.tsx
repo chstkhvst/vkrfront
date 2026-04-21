@@ -12,20 +12,24 @@ import {
   Alert,
 } from "@mui/material";
 import { BanContext } from "../context/BanContext";
-import { ReportGroupDTO } from "../client/apiClient";
 import { useNotification } from "./Notification";
 
 interface BanUserModalProps {
   open: boolean;
   onClose: () => void;
-  selectedGroup: ReportGroupDTO | null;
+  // selectedGroup: ReportGroupDTO | null;
+  userId: string | null;
+  userName?: string;
   onBanSuccess: () => Promise<void>;
 }
 
 export const BanUserModal: React.FC<BanUserModalProps> = ({
   open,
   onClose,
-  selectedGroup,
+  userId,
+  userName,
+  // selectedGroup,
+  
   onBanSuccess,
 }) => {
   const banContext = useContext(BanContext);
@@ -46,7 +50,7 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
       return;
     }
 
-    if (!selectedGroup?.reportedUserId) {
+    if (!userId) {
       showNotification("Ошибка: пользователь не найден", "error");
       return;
     }
@@ -57,7 +61,7 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
     try {
       //бан 
         const createBanDTO = {
-        bannedUserId: selectedGroup.reportedUserId,
+        bannedUserId: userId,
         banReason: banReason.trim(),
         };
 
@@ -69,7 +73,7 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
         await onBanSuccess();
 
         showNotification(
-            `Пользователь ${selectedGroup.reportedUser?.userName} успешно заблокирован`,
+            `Пользователь ${userName} успешно заблокирован`,
             "success"
         );
         
@@ -104,7 +108,7 @@ export const BanUserModal: React.FC<BanUserModalProps> = ({
       <DialogContent>
         <Typography variant="body1" gutterBottom>
           Вы уверены, что хотите заблокировать пользователя{" "}
-          <strong>{selectedGroup?.reportedUser?.userName}</strong>?
+          <strong>{userName}</strong>?
         </Typography>
 
         <Typography
