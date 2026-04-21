@@ -63,6 +63,8 @@ export const UserForModer: React.FC = () => {
   }
 
   const hasActiveBan = user.bans?.some((b: any) => b.isActive);
+  // Проверка наличия фона
+  const hasBackground = user?.backgroundImagePath;
 
   return (
     <Box sx={{ maxWidth: 1400, mx: "auto", px: 3, py: 4 }}>
@@ -71,25 +73,83 @@ export const UserForModer: React.FC = () => {
         <Card
           elevation={0}
           sx={{
+            position: "relative",
+            backgroundImage: user?.backgroundImagePath
+              ? `url(${user.backgroundImagePath})`
+              : "none",
+            backgroundColor: !user?.backgroundImagePath
+              ? "rgba(255,255,255, 0.5)"
+              : "transparent",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            minHeight: hasBackground ? 240 : "auto",
             border: 1,
             borderColor: hasActiveBan ? "error.main" : "divider",
             borderRadius: 2,
+            overflow: "hidden",
           }}
         >
-          <CardContent>
+          {/* Градиентный оверлей */}
+          {hasBackground && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: "linear-gradient(to top, rgba(103, 58, 183, 0.7) 0%, rgba(103, 58, 183, 0.3) 50%, transparent 100%)",
+                zIndex: 1,
+              }}
+            />
+          )}
+
+          <CardContent sx={{ position: "relative", zIndex: 2, py: 4 }}>
             <Stack direction="row" spacing={3} alignItems="center">
               <Avatar
                 src={user.profileImagePath || ""}
-                sx={{ width: 80, height: 80 }}
+                sx={{ 
+                  width: 120, 
+                  height: 120, 
+                  border: "4px solid white",
+                  boxShadow: 3,
+                }}
               />
-              <Box>
-                <Typography variant="h5" fontWeight={700}>
+              
+              <Box
+                sx={{
+                  backdropFilter: hasBackground ? "blur(12px)" : "none",
+                  backgroundColor: hasBackground ? "rgba(255, 255, 255, 0.25)" : "transparent",
+                  border: hasBackground ? "1px solid rgba(255, 255, 255, 0.3)" : "none",
+                  borderRadius: 2,
+                  p: 2,
+                  display: "inline-block",
+                }}
+              >
+                <Typography
+                  variant="h5"
+                  fontWeight={700}
+                  sx={{
+                    color: hasBackground ? "white" : "text.primary",
+                    textShadow: hasBackground ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
+                  }}
+                >
                   {user.fullname || "Без имени"}
                 </Typography>
-                <Typography color="text.secondary">
+                <Typography
+                  sx={{
+                    color: hasBackground ? "rgba(255,255,255,0.95)" : "text.secondary",
+                    textShadow: hasBackground ? "0 1px 2px rgba(0,0,0,0.2)" : "none",
+                  }}
+                >
                   @{user.userName}
                 </Typography>
-                <Typography color="text.secondary">
+                <Typography
+                  sx={{
+                    color: hasBackground ? "rgba(255,255,255,0.95)" : "text.secondary",
+                    textShadow: hasBackground ? "0 1px 2px rgba(0,0,0,0.2)" : "none",
+                  }}
+                >
                   {user.email}
                 </Typography>
               </Box>

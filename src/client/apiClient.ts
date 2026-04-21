@@ -4112,6 +4112,7 @@ export class UserForModerDTO implements IUserForModerDTO {
     fullname?: string | undefined;
     email?: string | undefined;
     profileImagePath?: string | undefined;
+    backgroundImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
     bans?: BanDTO[] | undefined;
@@ -4133,6 +4134,7 @@ export class UserForModerDTO implements IUserForModerDTO {
             this.fullname = _data["fullname"];
             this.email = _data["email"];
             this.profileImagePath = _data["profileImagePath"];
+            this.backgroundImagePath = _data["backgroundImagePath"];
             this.volunteerProfile = _data["volunteerProfile"] ? VolunteerProfileDTO.fromJS(_data["volunteerProfile"]) : undefined as any;
             this.organizerProfile = _data["organizerProfile"] ? OrganizerProfileDTO.fromJS(_data["organizerProfile"]) : undefined as any;
             if (Array.isArray(_data["bans"])) {
@@ -4162,6 +4164,7 @@ export class UserForModerDTO implements IUserForModerDTO {
         data["fullname"] = this.fullname;
         data["email"] = this.email;
         data["profileImagePath"] = this.profileImagePath;
+        data["backgroundImagePath"] = this.backgroundImagePath;
         data["volunteerProfile"] = this.volunteerProfile ? this.volunteerProfile.toJSON() : undefined as any;
         data["organizerProfile"] = this.organizerProfile ? this.organizerProfile.toJSON() : undefined as any;
         if (Array.isArray(this.bans)) {
@@ -4184,6 +4187,7 @@ export interface IUserForModerDTO {
     fullname?: string | undefined;
     email?: string | undefined;
     profileImagePath?: string | undefined;
+    backgroundImagePath?: string | undefined;
     volunteerProfile?: VolunteerProfileDTO;
     organizerProfile?: OrganizerProfileDTO;
     bans?: BanDTO[] | undefined;

@@ -121,7 +121,7 @@ export const ProfilePage: React.FC = () => {
               : "transparent",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            minHeight: 240,
+            minHeight: hasBackground ? 240 : "auto",
           }}
         >
           {/* Градиентный оверлей */}
