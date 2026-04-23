@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -12,15 +12,34 @@ import {
   Divider,
   Stack,
   alpha,
+  useTheme,
 } from '@mui/material';
-import { Event, Person, Logout, Add, KeyboardArrowDown, Settings } from '@mui/icons-material';
+import { 
+  Event, 
+  Person, 
+  Logout, 
+  Add, 
+  KeyboardArrowDown, 
+  Settings,
+  EmojiEvents,
+  Group,
+  CalendarToday,
+  History,
+  ListAlt,
+  Dashboard
+} from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export const Header = () => {
+  const theme = useTheme();
   const navigate = useNavigate();
   const { user, currentUser, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  
+  // Состояния для выпадающих меню
+  const [catalogAnchorEl, setCatalogAnchorEl] = useState<null | HTMLElement>(null);
+  const [myEventsAnchorEl, setMyEventsAnchorEl] = useState<null | HTMLElement>(null);
 
   const isAuthenticated = !!user;
   const userName = currentUser?.userName || 'Пользователь';
@@ -41,16 +60,16 @@ export const Header = () => {
   };
 
   const handleRegister = () => navigate('/register');
-  const handleCreateEvent = () => navigate('/events/add');  
+  const handleCreateEvent = () => navigate('/events/add');
 
   return (
     <AppBar
       position="sticky"
       elevation={0}
       sx={{
-        background: '#949cff',
+        background: theme.palette.primary.main,
         borderBottom: '1px solid',
-        borderBottomColor: alpha('#ffed86', 0.2),
+        borderBottomColor: alpha(theme.palette.secondary.main, 0.2),
       }}
     >
       <Container maxWidth="xl">
@@ -69,7 +88,7 @@ export const Header = () => {
           >
             <Box
               sx={{
-                background: '#ffed86',
+                background: theme.palette.secondary.main,
                 borderRadius: '14px',
                 padding: '8px',
                 display: 'flex',
@@ -78,14 +97,14 @@ export const Header = () => {
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
               }}
             >
-              <Event sx={{ color: '#949cff', fontSize: '28px' }} />
+              <Event sx={{ color: theme.palette.primary.main, fontSize: '28px' }} />
             </Box>
             <Box>
               <Typography
                 variant="h6"
                 sx={{
                   fontWeight: 800,
-                  color: '#ffed86',
+                  color: theme.palette.secondary.main,
                   letterSpacing: '-0.02em',
                   lineHeight: 1.2,
                 }}
@@ -95,7 +114,7 @@ export const Header = () => {
               <Typography
                 variant="caption"
                 sx={{
-                  color: alpha('#ffed86', 0.8),
+                  color: alpha(theme.palette.secondary.main, 0.8),
                   fontSize: '10px',
                   display: { xs: 'none', sm: 'block' },
                 }}
@@ -105,74 +124,244 @@ export const Header = () => {
             </Box>
           </Box>
 
-          {/* НАВИГАЦИЯ*/}
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            {(isOrganizer || isVolunteer) && (
-            <Button
-              variant="text"
-              color="secondary"
-              onClick={() => navigate('/events')}
-            >
-              Мероприятия от организаций
-            </Button>
-            )}
-            {(isOrganizer || isVolunteer) && (
-            <Button
-              variant="text"
-              color="secondary"
-              onClick={() => navigate('/community-events')}
-            >
-              Инициативы от волонтеров
-            </Button>
-            )}
-            {(isOrganizer || isVolunteer) && (
-            <Button
-              variant="text"
-              color="secondary"
-              onClick={() => navigate('/myevents')}
-            >
-              Мои мероприятия
-            </Button>
-            )}
-            {isVolunteer && (
-              <Button
-                variant="text"
-                color="secondary"
-                onClick={() => navigate('/events-to-visit')}
-              >
-                Мои посещения
-              </Button>
-            )}
-            {isOrganizer && (
-              <Button
-                variant="text"
-                color="secondary"
-                startIcon={<Add sx={{ fontSize: 20 }} />}
-                onClick={handleCreateEvent}
-              >
-                Создать мероприятие
-              </Button>
-            )}
-            {isVolunteer && (
-              <Button
-                variant="text"
-                color="secondary"
-                startIcon={<Add sx={{ fontSize: 20 }} />}
-                onClick={handleCreateEvent}
-              >
-                Предложить мероприятие
-              </Button>
-            )}
-            {isModer && (
-              <Button
-                variant="text"
-                color="secondary"
-                onClick={() => navigate('/admin-panel')}
-              >
-                Панель администратора
-              </Button>
-            )}
-          </Stack>
+          {/* НАВИГАЦИЯ */}
+          {isAuthenticated && (
+            <Stack direction="row" spacing={2} alignItems="center">
+              
+              {/* КАТАЛОГ МЕРОПРИЯТИЙ (для волонтеров и организаторов) */}
+              {(isVolunteer || isOrganizer) && (
+                <>
+                  <Button
+                    color="secondary"
+                    endIcon={<KeyboardArrowDown />}
+                    onClick={(e) => setCatalogAnchorEl(e.currentTarget)}
+                    sx={{ fontWeight: 500 }}
+                  >
+                    Каталог мероприятий
+                  </Button>
+                  
+                  <Menu
+                    anchorEl={catalogAnchorEl}
+                    open={Boolean(catalogAnchorEl)}
+                    onClose={() => setCatalogAnchorEl(null)}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'left',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'left',
+                    }}
+                    PaperProps={{
+                      sx: {
+                        mt: 1,
+                        borderRadius: '16px',
+                        minWidth: 260,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        border: '1px solid',
+                        borderColor: alpha(theme.palette.primary.main, 0.2),
+                      }
+                    }}
+                  >
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/events');
+                        setCatalogAnchorEl(null);
+                      }}
+                      sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+                    >
+                      <Event sx={{ fontSize: 20, color: theme.palette.primary.main }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Мероприятия организаций
+                      </Typography>
+                    </MenuItem>
+                    
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/community-events');
+                        setCatalogAnchorEl(null);
+                      }}
+                      sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+                    >
+                      <Group sx={{ fontSize: 20, color: theme.palette.primary.main }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Инициативы волонтеров
+                      </Typography>
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
+
+              {/* МОИ МЕРОПРИЯТИЯ (для волонтеров) */}
+              {isVolunteer && (
+                <>
+                  <Button
+                    color="secondary"
+                    endIcon={<KeyboardArrowDown />}
+                    onClick={(e) => setMyEventsAnchorEl(e.currentTarget)}
+                    sx={{ fontWeight: 500 }}
+                  >
+                    Мои мероприятия
+                  </Button>
+                  
+                  <Menu
+                    anchorEl={myEventsAnchorEl}
+                    open={Boolean(myEventsAnchorEl)}
+                    onClose={() => setMyEventsAnchorEl(null)}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'left',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'left',
+                    }}
+                    PaperProps={{
+                      sx: {
+                        mt: 1,
+                        borderRadius: '16px',
+                        minWidth: 260,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        border: '1px solid',
+                        borderColor: alpha(theme.palette.primary.main, 0.2),
+                      }
+                    }}
+                  >
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/myevents');
+                        setMyEventsAnchorEl(null);
+                      }}
+                      sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+                    >
+                      <ListAlt sx={{ fontSize: 20, color: theme.palette.primary.main }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Предложенные мной
+                      </Typography>
+                    </MenuItem>
+                    
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/events-to-visit');
+                        setMyEventsAnchorEl(null);
+                      }}
+                      sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+                    >
+                      <History sx={{ fontSize: 20, color: theme.palette.primary.main }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Мои посещения
+                      </Typography>
+                    </MenuItem>
+                    
+                    <Divider sx={{ my: 1 }} />
+                    
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/events/add');
+                        setMyEventsAnchorEl(null);
+                      }}
+                      sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+                    >
+                      <Add sx={{ fontSize: 20, color: theme.palette.secondary.main }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Предложить мероприятие
+                      </Typography>
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
+
+              {/* МОИ МЕРОПРИЯТИЯ (для организаторов) */}
+              {isOrganizer && (
+                <>
+                  <Button
+                    color="secondary"
+                    endIcon={<KeyboardArrowDown />}
+                    onClick={(e) => setMyEventsAnchorEl(e.currentTarget)}
+                    sx={{ fontWeight: 500 }}
+                  >
+                    Мои мероприятия
+                  </Button>
+                  
+                  <Menu
+                    anchorEl={myEventsAnchorEl}
+                    open={Boolean(myEventsAnchorEl)}
+                    onClose={() => setMyEventsAnchorEl(null)}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'left',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'left',
+                    }}
+                    PaperProps={{
+                      sx: {
+                        mt: 1,
+                        borderRadius: '16px',
+                        minWidth: 260,
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                        border: '1px solid',
+                        borderColor: alpha(theme.palette.primary.main, 0.2),
+                      }
+                    }}
+                  >
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/myevents');
+                        setMyEventsAnchorEl(null);
+                      }}
+                      sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+                    >
+                      <ListAlt sx={{ fontSize: 20, color: theme.palette.primary.main }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Мои мероприятия
+                      </Typography>
+                    </MenuItem>
+                    
+                    <Divider sx={{ my: 1 }} />
+                    
+                    <MenuItem 
+                      onClick={() => {
+                        navigate('/events/add');
+                        setMyEventsAnchorEl(null);
+                      }}
+                      sx={{ py: 1.5, px: 2.5, gap: 1.5 }}
+                    >
+                      <Add sx={{ fontSize: 20, color: theme.palette.secondary.main }} />
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                        Создать мероприятие
+                      </Typography>
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
+
+              {/* РЕЙТИНГ (для волонтеров и организаторов) */}
+              {(isVolunteer || isOrganizer) && (
+                <Button
+                  color="secondary"
+                  startIcon={<EmojiEvents sx={{ fontSize: 20 }} />}
+                  onClick={() => navigate('/rating')}
+                  sx={{ fontWeight: 500 }}
+                >
+                  Рейтинг
+                </Button>
+              )}
+
+              {/* ПАНЕЛЬ АДМИНИСТРАТОРА (для модера) */}
+              {isModer && (
+                <Button
+                  color="secondary"
+                  startIcon={<Dashboard sx={{ fontSize: 20 }} />}
+                  onClick={() => navigate('/admin-panel')}
+                  sx={{ fontWeight: 500 }}
+                >
+                  Панель администратора
+                </Button>
+              )}
+            </Stack>
+          )}
 
           {/* ПРАВАЯ ЧАСТЬ */}
           {isAuthenticated ? (
@@ -187,13 +376,13 @@ export const Header = () => {
                   px: 2,
                   py: 0.8,
                   borderRadius: '40px',
-                  background: alpha('#ffed86', 0.08),
+                  background: alpha(theme.palette.secondary.main, 0.08),
                   border: '1px solid',
-                  borderColor: alpha('#ffed86', 0.3),
+                  borderColor: alpha(theme.palette.secondary.main, 0.3),
                   transition: 'all 0.2s ease',
                   '&:hover': {
-                    background: alpha('#ffed86', 0.15),
-                    borderColor: alpha('#ffed86', 0.5),
+                    background: alpha(theme.palette.secondary.main, 0.15),
+                    borderColor: alpha(theme.palette.secondary.main, 0.5),
                     transform: 'translateY(-1px)',
                   },
                 }}
@@ -202,8 +391,8 @@ export const Header = () => {
                   sx={{
                     width: 38,
                     height: 38,
-                    bgcolor: '#ffed86',
-                    color: '#949cff',
+                    bgcolor: theme.palette.secondary.main,
+                    color: theme.palette.primary.main,
                     fontWeight: 700,
                     fontSize: '1rem',
                   }}
@@ -211,16 +400,16 @@ export const Header = () => {
                   {userName[0].toUpperCase()}
                 </Avatar>
                 <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#ffed86', lineHeight: 1.3 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.secondary.main, lineHeight: 1.3 }}>
                     {userName}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: alpha('#ffed86', 0.7), fontSize: '0.7rem' }}>
-                      {isOrganizer && 'Организатор'}
-                      {isModer && 'Модератор'}
-                      {isVolunteer && 'Волонтер'}
+                  <Typography variant="caption" sx={{ color: alpha(theme.palette.secondary.main, 0.7), fontSize: '0.7rem' }}>
+                    {isOrganizer && 'Организатор'}
+                    {isModer && 'Модератор'}
+                    {isVolunteer && 'Волонтер'}
                   </Typography>
                 </Box>
-                <KeyboardArrowDown sx={{ color: '#ffed86', fontSize: 18 }} />
+                <KeyboardArrowDown sx={{ color: theme.palette.secondary.main, fontSize: 18 }} />
               </Box>
               
               <Menu
@@ -242,40 +431,34 @@ export const Header = () => {
                     minWidth: 240,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
                     border: '1px solid',
-                    borderColor: alpha('#949cff', 0.2),
+                    borderColor: alpha(theme.palette.primary.main, 0.2),
                   }
                 }}
               >
-                <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid', borderBottomColor: alpha('#949cff', 0.1) }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#949cff' }}>
+                <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid', borderBottomColor: alpha(theme.palette.primary.main, 0.1) }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
                     {userName}
                   </Typography>
                 </Box>
                 <MenuItem onClick={handleProfileClick} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                  <Person sx={{ fontSize: 20, color: '#949cff' }} />
+                  <Person sx={{ fontSize: 20, color: theme.palette.primary.main }} />
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     Профиль
                   </Typography>
                 </MenuItem>
-                {isOrganizer && (
+                
+                {(isOrganizer || isVolunteer) && (
                   <MenuItem onClick={handleCreateEvent} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                    <Add sx={{ fontSize: 20, color: '#ffed86' }} />
+                    <Add sx={{ fontSize: 20, color: theme.palette.secondary.main }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      Добавить мероприятие
+                      {isOrganizer ? 'Создать мероприятие' : 'Предложить мероприятие'}
                     </Typography>
                   </MenuItem>
                 )}
-                {isVolunteer && (
-                  <MenuItem onClick={handleCreateEvent} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                    <Add sx={{ fontSize: 20, color: '#ffed86' }} />
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      Добавить мероприятие
-                    </Typography>
-                  </MenuItem>
-                )}
+                
                 {isModer && (
                   <MenuItem onClick={() => navigate('/admin-panel')} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                    <Settings sx={{ fontSize: 20, color: '#949cff' }} />
+                    <Settings sx={{ fontSize: 20, color: theme.palette.primary.main }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       Панель администратора
                     </Typography>
@@ -283,7 +466,7 @@ export const Header = () => {
                 )}
                 <Divider sx={{ my: 1 }} />
                 <MenuItem onClick={handleLogout} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                  <Logout sx={{ fontSize: 20, color: '#f44336' }} />
+                  <Logout sx={{ fontSize: 20, color: theme.palette.error.main }} />
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
                     Выйти
                   </Typography>

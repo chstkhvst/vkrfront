@@ -187,42 +187,26 @@ const getEventStatusSx = (statusId: number | undefined) => {
     return diffMs >= 24 * 60 * 60 * 1000; 
   };
 
-  const handleConfirmCancelAttendance = async () => {
-    if (!attendanceToCancel?.id) return;
-    
-    const updated = new EventAttendanceDTO({
-      ...attendanceToCancel,
-      attendanceStatusId: ATTENDANCE_STATUS.CANCELLED,
-    });
-
-    const success = await updateAttendance(attendanceToCancel.id, updated);
-
-    if (success) {
-      setData(prev =>
-        prev.map(a => (a.id === attendanceToCancel.id ? updated : a))
-      );
-      showNotification('Участие отменено', 'success');
-    } else {
-      showNotification('Ошибка при отмене участия', 'error');
-    }
-    
-    setCancelAttendanceDialogOpen(false);
-    setAttendanceToCancel(null);
-  };
-
-    const handleCancelEvent = async () => {
-    if (!eventToCancel?.id) return;
-    
-    //Отменяем все заявки участников
-    const success = await context.markCancelled(eventToCancel.id);
-    
-    if (success) {
+  const handleCancelEvent = async () => { 
+      if (!eventToCancel?.id) return;
+      
+      // Отменяем все заявки 
+      if (isOrganizer) {
+        const success = await context.markCancelled(eventToCancel.id);
+        
+        if (!success) {
+          showNotification('Ошибка при отмене заявок участников', 'error');
+          setCancelDialogOpen(false);
+          setEventToCancel(null);
+          return;
+        }
+      }    
+      // Обновляем статус 
       const updatedEvent = new VolunteerEventDTO({
         ...eventToCancel,
         eventStatusId: 4, 
       });
       
-      // статус мероприятия
       const updateSuccess = await eventContext.updateEvent(eventToCancel.id, updatedEvent);
       
       if (updateSuccess) {
@@ -235,12 +219,9 @@ const getEventStatusSx = (statusId: number | undefined) => {
       } else {
         showNotification('Ошибка при обновлении статуса мероприятия', 'error');
       }
-    } else {
-      showNotification('Ошибка при отмене заявок участников', 'error');
-    }
-    
-    setCancelDialogOpen(false);
-    setEventToCancel(null);
+      
+      setCancelDialogOpen(false);
+      setEventToCancel(null);
   };
 
 
@@ -331,7 +312,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => {/* Переход на редактирование */}}
+                      onClick={() => {/*АПДЕЙТ? */}}
                     >
                       Редактировать
                     </Button>
@@ -388,7 +369,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
             Вы уверены, что хотите отменить мероприятие?
           </Typography>
           <Typography color="text.secondary" sx={{ mt: 1, fontSize: '0.875rem' }}>
-            Это действие нельзя отменить. Все заявки участников будут отменены.
+            Это действие нельзя отменить. Если на мероприятие есть зарегистрированные участники, их заявки будут отменены.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -402,35 +383,6 @@ const getEventStatusSx = (statusId: number | undefined) => {
             autoFocus
           >
             Да, отменить
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={cancelAttendanceDialogOpen}
-        onClose={() => setCancelAttendanceDialogOpen(false)}
-      >
-        <DialogTitle sx={{ color: '#f44336' }}>
-          Отмена участия
-        </DialogTitle>
-        <DialogContent>
-          <Typography>
-            Вы уверены, что хотите отменить участие в мероприятии?
-          </Typography>
-          <Typography color="text.secondary" sx={{ mt: 1, fontSize: '0.875rem' }}>
-            Это действие нельзя отменить.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCancelAttendanceDialogOpen(false)}>
-            Нет
-          </Button>
-          <Button 
-            onClick={handleConfirmCancelAttendance} 
-            variant="contained" 
-            color="error"
-            autoFocus
-          >
-            Да
           </Button>
         </DialogActions>
       </Dialog>

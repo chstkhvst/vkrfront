@@ -337,7 +337,51 @@ export class Client {
     /**
      * @return OK
      */
-    rating(): Promise<UserDTOPaginatedResponse> {
+    ratingmonthly(): Promise<UserDTO[]> {
+        let url_ = this.baseUrl + "/api/Account/ratingmonthly";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processRatingmonthly(_response);
+        });
+    }
+
+    protected processRatingmonthly(response: Response): Promise<UserDTO[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserDTO.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<UserDTO[]>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    rating(): Promise<UserDTO[]> {
         let url_ = this.baseUrl + "/api/Account/rating";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -353,14 +397,21 @@ export class Client {
         });
     }
 
-    protected processRating(response: Response): Promise<UserDTOPaginatedResponse> {
+    protected processRating(response: Response): Promise<UserDTO[]> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
             return response.text().then((_responseText) => {
             let result200: any = null;
             let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
-            result200 = UserDTOPaginatedResponse.fromJS(resultData200);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(UserDTO.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
             return result200;
             });
         } else if (status !== 200 && status !== 204) {
@@ -368,7 +419,7 @@ export class Client {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
             });
         }
-        return Promise.resolve<UserDTOPaginatedResponse>(null as any);
+        return Promise.resolve<UserDTO[]>(null as any);
     }
 
     /**
@@ -2348,6 +2399,248 @@ export class Client {
     }
 
     /**
+     * @return OK
+     */
+    getByRecipientId(recipientId: string): Promise<NotificationDTO[]> {
+        let url_ = this.baseUrl + "/api/Notification/GetByRecipientId/{recipientId}";
+        if (recipientId === undefined || recipientId === null)
+            throw new globalThis.Error("The parameter 'recipientId' must be defined.");
+        url_ = url_.replace("{recipientId}", encodeURIComponent("" + recipientId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetByRecipientId(_response);
+        });
+    }
+
+    protected processGetByRecipientId(response: Response): Promise<NotificationDTO[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(NotificationDTO.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<NotificationDTO[]>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    getUnreadByRecipientId(recipientId: string): Promise<NotificationDTO[]> {
+        let url_ = this.baseUrl + "/api/Notification/GetUnreadByRecipientId/{recipientId}";
+        if (recipientId === undefined || recipientId === null)
+            throw new globalThis.Error("The parameter 'recipientId' must be defined.");
+        url_ = url_.replace("{recipientId}", encodeURIComponent("" + recipientId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processGetUnreadByRecipientId(_response);
+        });
+    }
+
+    protected processGetUnreadByRecipientId(response: Response): Promise<NotificationDTO[]> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+            if (Array.isArray(resultData200)) {
+                result200 = [] as any;
+                for (let item of resultData200)
+                    result200!.push(NotificationDTO.fromJS(item));
+            }
+            else {
+                result200 = null as any;
+            }
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<NotificationDTO[]>(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    create2(body?: CreateNotificationDTO | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/Notification/Create";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreate2(_response);
+        });
+    }
+
+    protected processCreate2(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    createForEvent(body?: CreateNotificationDTO | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/Notification/CreateForEvent";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processCreateForEvent(_response);
+        });
+    }
+
+    protected processCreateForEvent(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    markAsRead(notificationId: number): Promise<void> {
+        let url_ = this.baseUrl + "/api/Notification/MarkAsRead/{notificationId}";
+        if (notificationId === undefined || notificationId === null)
+            throw new globalThis.Error("The parameter 'notificationId' must be defined.");
+        url_ = url_.replace("{notificationId}", encodeURIComponent("" + notificationId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMarkAsRead(_response);
+        });
+    }
+
+    protected processMarkAsRead(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @return OK
+     */
+    markAllAsRead(recipientId: string): Promise<void> {
+        let url_ = this.baseUrl + "/api/Notification/MarkAllAsRead/{recipientId}";
+        if (recipientId === undefined || recipientId === null)
+            throw new globalThis.Error("The parameter 'recipientId' must be defined.");
+        url_ = url_.replace("{recipientId}", encodeURIComponent("" + recipientId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "PUT",
+            headers: {
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processMarkAllAsRead(_response);
+        });
+    }
+
+    protected processMarkAllAsRead(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
      * @param statusId (optional) 
      * @param keywords (optional) 
      * @return OK
@@ -3218,6 +3511,54 @@ export interface ICreateEventAttendanceDTO {
     attendanceStatusId?: number;
 }
 
+export class CreateNotificationDTO implements ICreateNotificationDTO {
+    recipientId?: string | undefined;
+    message?: string | undefined;
+    typeId?: number;
+    eventId?: number;
+
+    constructor(data?: ICreateNotificationDTO) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.recipientId = _data["recipientId"];
+            this.message = _data["message"];
+            this.typeId = _data["typeId"];
+            this.eventId = _data["eventId"];
+        }
+    }
+
+    static fromJS(data: any): CreateNotificationDTO {
+        data = typeof data === 'object' ? data : {};
+        let result = new CreateNotificationDTO();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["recipientId"] = this.recipientId;
+        data["message"] = this.message;
+        data["typeId"] = this.typeId;
+        data["eventId"] = this.eventId;
+        return data;
+    }
+}
+
+export interface ICreateNotificationDTO {
+    recipientId?: string | undefined;
+    message?: string | undefined;
+    typeId?: number;
+    eventId?: number;
+}
+
 export class CreateReportDTO implements ICreateReportDTO {
     senderUserId?: string | undefined;
     reportedUserId?: string | undefined;
@@ -3576,6 +3917,114 @@ export class LoginModel implements ILoginModel {
 export interface ILoginModel {
     userName?: string | undefined;
     password?: string | undefined;
+}
+
+export class NotificationDTO implements INotificationDTO {
+    id?: number;
+    recipientId?: string | undefined;
+    message?: string | undefined;
+    typeId?: number;
+    isRead?: boolean;
+    createdAt?: Date;
+    eventId?: number | undefined;
+    recipient?: UserDTO;
+    notificationType?: NotificationTypeDTO;
+
+    constructor(data?: INotificationDTO) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.recipientId = _data["recipientId"];
+            this.message = _data["message"];
+            this.typeId = _data["typeId"];
+            this.isRead = _data["isRead"];
+            this.createdAt = _data["createdAt"] ? new Date(_data["createdAt"].toString()) : undefined as any;
+            this.eventId = _data["eventId"];
+            this.recipient = _data["recipient"] ? UserDTO.fromJS(_data["recipient"]) : undefined as any;
+            this.notificationType = _data["notificationType"] ? NotificationTypeDTO.fromJS(_data["notificationType"]) : undefined as any;
+        }
+    }
+
+    static fromJS(data: any): NotificationDTO {
+        data = typeof data === 'object' ? data : {};
+        let result = new NotificationDTO();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["recipientId"] = this.recipientId;
+        data["message"] = this.message;
+        data["typeId"] = this.typeId;
+        data["isRead"] = this.isRead;
+        data["createdAt"] = this.createdAt ? this.createdAt.toISOString() : undefined as any;
+        data["eventId"] = this.eventId;
+        data["recipient"] = this.recipient ? this.recipient.toJSON() : undefined as any;
+        data["notificationType"] = this.notificationType ? this.notificationType.toJSON() : undefined as any;
+        return data;
+    }
+}
+
+export interface INotificationDTO {
+    id?: number;
+    recipientId?: string | undefined;
+    message?: string | undefined;
+    typeId?: number;
+    isRead?: boolean;
+    createdAt?: Date;
+    eventId?: number | undefined;
+    recipient?: UserDTO;
+    notificationType?: NotificationTypeDTO;
+}
+
+export class NotificationTypeDTO implements INotificationTypeDTO {
+    id?: number;
+    name?: string | undefined;
+
+    constructor(data?: INotificationTypeDTO) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.name = _data["name"];
+        }
+    }
+
+    static fromJS(data: any): NotificationTypeDTO {
+        data = typeof data === 'object' ? data : {};
+        let result = new NotificationTypeDTO();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["name"] = this.name;
+        return data;
+    }
+}
+
+export interface INotificationTypeDTO {
+    id?: number;
+    name?: string | undefined;
 }
 
 export class OrganizerProfile implements IOrganizerProfile {
@@ -4575,7 +5024,6 @@ export class VolunteerProfile implements IVolunteerProfile {
     user?: User;
     rankId?: number;
     points?: number;
-    coins?: number;
     rank?: VolunteerRank;
 
     constructor(data?: IVolunteerProfile) {
@@ -4593,7 +5041,6 @@ export class VolunteerProfile implements IVolunteerProfile {
             this.user = _data["user"] ? User.fromJS(_data["user"]) : undefined as any;
             this.rankId = _data["rankId"];
             this.points = _data["points"];
-            this.coins = _data["coins"];
             this.rank = _data["rank"] ? VolunteerRank.fromJS(_data["rank"]) : undefined as any;
         }
     }
@@ -4611,7 +5058,6 @@ export class VolunteerProfile implements IVolunteerProfile {
         data["user"] = this.user ? this.user.toJSON() : undefined as any;
         data["rankId"] = this.rankId;
         data["points"] = this.points;
-        data["coins"] = this.coins;
         data["rank"] = this.rank ? this.rank.toJSON() : undefined as any;
         return data;
     }
@@ -4622,14 +5068,13 @@ export interface IVolunteerProfile {
     user?: User;
     rankId?: number;
     points?: number;
-    coins?: number;
     rank?: VolunteerRank;
 }
 
 export class VolunteerProfileDTO implements IVolunteerProfileDTO {
     userId?: string | undefined;
     totalPoints?: number;
-    coins?: number;
+    monthlyPoints?: number | undefined;
     rank?: VolunteerRankDTO;
 
     constructor(data?: IVolunteerProfileDTO) {
@@ -4645,7 +5090,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
         if (_data) {
             this.userId = _data["userId"];
             this.totalPoints = _data["totalPoints"];
-            this.coins = _data["coins"];
+            this.monthlyPoints = _data["monthlyPoints"];
             this.rank = _data["rank"] ? VolunteerRankDTO.fromJS(_data["rank"]) : undefined as any;
         }
     }
@@ -4661,7 +5106,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
         data = typeof data === 'object' ? data : {};
         data["userId"] = this.userId;
         data["totalPoints"] = this.totalPoints;
-        data["coins"] = this.coins;
+        data["monthlyPoints"] = this.monthlyPoints;
         data["rank"] = this.rank ? this.rank.toJSON() : undefined as any;
         return data;
     }
@@ -4670,7 +5115,7 @@ export class VolunteerProfileDTO implements IVolunteerProfileDTO {
 export interface IVolunteerProfileDTO {
     userId?: string | undefined;
     totalPoints?: number;
-    coins?: number;
+    monthlyPoints?: number | undefined;
     rank?: VolunteerRankDTO;
 }
 

@@ -34,6 +34,7 @@ import React from 'react';
 import { NotificationProvider, useNotification } from './components/Notification';
 import { EventDetailsPage } from './pages/EventDetailsPage';
 import { EventsToVisitPage } from './pages/EventsToVisitPage';
+import { RatingPage } from './pages/RatingPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement, allowedRoles?: string[] }> = ({
   children,
@@ -214,6 +215,14 @@ function App() {
                             <UserForModer/>
                           </VolunteerEventProvider>
                         </BanProvider>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/rating"
+                  element={
+                    <ProtectedRoute>
+                      <RatingPage/>
                     </ProtectedRoute>
                   }
                 />

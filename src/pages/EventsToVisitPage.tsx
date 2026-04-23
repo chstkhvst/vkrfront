@@ -172,7 +172,7 @@ export const EventsToVisitPage: React.FC = () => {
 
   const currentList = getCurrentList();
 
-  return (
+return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" sx={{ mb: 3 }}>
         События для посещения
@@ -199,9 +199,10 @@ export const EventsToVisitPage: React.FC = () => {
         {currentList.map((a: EventAttendanceDTO) => {
           const event = a.volunteerEvent;
           return (
-            <GridLegacy item xs={12} key={a.id}>
+            <Grid size={12} key={a.id}>
               <Card 
                 sx={{ 
+                  position: 'relative',
                   cursor: tab === 0 ? 'pointer' : 'default',
                   transition: tab === 0 ? 'transform 0.2s ease, box-shadow 0.2s ease' : 'none',
                   '&:hover': tab === 0 ? {
@@ -215,6 +216,30 @@ export const EventsToVisitPage: React.FC = () => {
                   }
                 }}
               >
+                {/* Кнопка жалобы в правом верхнем углу */}
+                {tab === 1 && event?.userId && (
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedReportEvent(event);
+                      setReportModalOpen(true);
+                    }}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      zIndex: 1,
+                      '&:hover': {
+                        bgcolor: 'rgba(211, 47, 47, 0.04)',
+                      }
+                    }}
+                  >
+                    <Flag sx={{ fontSize: 20 }} />
+                  </IconButton>
+                )}
+
                 <CardContent
                   sx={{
                     display: 'flex',
@@ -223,7 +248,7 @@ export const EventsToVisitPage: React.FC = () => {
                     textAlign: 'center',
                   }}
                 >
-                  <Typography variant="h6">
+                  <Typography variant="h6" sx={{ mb: 1 }}>
                     {event?.name || 'Без названия'}
                   </Typography>
 
@@ -252,26 +277,7 @@ export const EventsToVisitPage: React.FC = () => {
                     />
                   </Box>
                 </CardContent>
-                {tab === 1 && event?.userId && (
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, pt: 1 }}>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedReportEvent(event);
-                        setReportModalOpen(true);
-                      }}
-                      sx={{
-                        '&:hover': {
-                          bgcolor: 'rgba(211, 47, 47, 0.04)',
-                        }
-                      }}
-                    >
-                      <Flag sx={{ fontSize: 20 }} />
-                    </IconButton>
-                  </Box>
-                )}
+                
                 <CardActions
                   sx={{
                     display: 'flex',
@@ -292,14 +298,14 @@ export const EventsToVisitPage: React.FC = () => {
                       Отменить участие
                     </Button>
                   )}
-                  {(tab === 0 && !canCancelAttendance(event))|| (tab === 1 && a.attendanceStatusId === ATTENDANCE_STATUS.UPCOMING)  && (
+                  {(tab === 0 && !canCancelAttendance(event)) || (tab === 1 && a.attendanceStatusId === ATTENDANCE_STATUS.UPCOMING) && (
                     <Typography variant="caption" color="text.secondary">
                       Дождитесь обновления статуса от организатора
                     </Typography>
                   )}
                 </CardActions>
               </Card>
-            </GridLegacy>
+            </Grid>
           );
         })}
       </Grid>

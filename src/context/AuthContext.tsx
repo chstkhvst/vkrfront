@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Client, LoginModel, RegisterModel, AuthResponse, UserDTO, FileParameter, UserForModerDTO, UserDTOPaginatedResponse } from "../client/apiClient"
+import { 
+  Client, 
+  LoginModel, 
+  RegisterModel, 
+  AuthResponse, 
+  UserDTO, FileParameter, UserForModerDTO, UserDTOPaginatedResponse } from "../client/apiClient"
 const TOKEN_KEY = "jwtToken";
 
 const client = new Client("", {
@@ -37,6 +42,8 @@ interface AuthContextType {
   }) => Promise<void>;
   getUserById: (id: string) => Promise<UserForModerDTO>;
   getAllUsers: (page?: number, pageSize?: number, search?: string) => Promise<UserDTOPaginatedResponse>;
+  getRatingMonthly: () => Promise<UserDTO[]>;
+  getRatingAll: () => Promise<UserDTO[]>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -162,6 +169,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<UserDTOPaginatedResponse> => {
     return await client.all(page, pageSize, search);
   };
+  const getRatingMonthly = async (): Promise<UserDTO[]> => {
+    return await client.ratingmonthly();
+  };
+  const getRatingAll = async (): Promise<UserDTO[]> => {
+    return await client.rating();
+  };
   return (
     <AuthContext.Provider
       value={{
@@ -177,6 +190,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateProfile,
         getUserById,
         getAllUsers,
+        getRatingMonthly,
+        getRatingAll,
       }}
     >
       {children}
