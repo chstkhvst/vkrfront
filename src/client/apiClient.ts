@@ -2493,11 +2493,52 @@ export class Client {
     }
 
     /**
+     * @return OK
+     */
+    unreadCount(recipientId: string): Promise<number> {
+        let url_ = this.baseUrl + "/api/Notification/unread-count/{recipientId}";
+        if (recipientId === undefined || recipientId === null)
+            throw new globalThis.Error("The parameter 'recipientId' must be defined.");
+        url_ = url_.replace("{recipientId}", encodeURIComponent("" + recipientId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: RequestInit = {
+            method: "GET",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUnreadCount(_response);
+        });
+    }
+
+    protected processUnreadCount(response: Response): Promise<number> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            let result200: any = null;
+            let resultData200 = _responseText === "" ? null : JSON.parse(_responseText, this.jsonParseReviver);
+                result200 = resultData200 !== undefined ? resultData200 : null as any;
+    
+            return result200;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<number>(null as any);
+    }
+
+    /**
      * @param body (optional) 
      * @return OK
      */
-    create2(body?: CreateNotificationDTO | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/api/Notification/Create";
+    createNotification(body?: CreateNotificationDTO | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/Notification/CreateNotification";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -2511,11 +2552,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processCreate2(_response);
+            return this.processCreateNotification(_response);
         });
     }
 
-    protected processCreate2(response: Response): Promise<void> {
+    protected processCreateNotification(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {

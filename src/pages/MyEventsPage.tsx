@@ -28,14 +28,16 @@ import {
 } from '@mui/icons-material';
 import { AttendanceContext } from '../context/AttendanceContext';
 import { VolunteerEventContext } from '../context/EventContext';
+import { NotificationForUserContext } from '../context/NotificationForUserContext';
 import { useAuth } from '../context/AuthContext';
 import { ParticipantsList } from "../components/ParticipantsList";
-import { EventAttendanceDTO, VolunteerEventDTO } from '../client/apiClient';
+import { CreateNotificationDTO, EventAttendanceDTO, VolunteerEventDTO } from '../client/apiClient';
 import { useNotification } from '../components/Notification';
 
 export const MyEventPage: React.FC = () => {
   const context = useContext(AttendanceContext);
   const eventContext = useContext(VolunteerEventContext);
+  const notificationContext = useContext(NotificationForUserContext);
   const { user } = useAuth();
   const { showNotification } = useNotification();
 
@@ -46,12 +48,10 @@ export const MyEventPage: React.FC = () => {
   const [myEvents, setMyEvents] = useState<VolunteerEventDTO[]>([]);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [eventToCancel, setEventToCancel] = useState<VolunteerEventDTO | null>(null);
-  const [cancelAttendanceDialogOpen, setCancelAttendanceDialogOpen] = useState(false);
-  const [attendanceToCancel, setAttendanceToCancel] = useState<EventAttendanceDTO | null>(null);
+  
   const {
     fetchAttendancesByUserId,
     fetchAttendanceStatuses,
-    updateAttendance,
     isLoading,
     error,
   } = context!;
@@ -74,7 +74,7 @@ export const MyEventPage: React.FC = () => {
     load();
     }, []);
     
-  if (!context || !eventContext) {
+  if (!context || !eventContext || !notificationContext) {
     console.log(context);
     console.log(eventContext);
     return (
@@ -84,15 +84,7 @@ export const MyEventPage: React.FC = () => {
     );
   }
   
-  const isVolunteer = user?.role === 'volunteer';
   const isOrganizer = user?.role === 'organizer';
-
-  const ATTENDANCE_STATUS = {
-    UPCOMING: 1,
-    CANCELLED: 2,
-    ATTENDED: 3,
-    NO_SHOW: 4,
-  };
 
   const EVENT_STATUS = {
     ON_MODERATION: 1,
@@ -189,14 +181,13 @@ const getEventStatusSx = (statusId: number | undefined) => {
 
   const handleCancelEvent = async () => { 
       if (!eventToCancel?.id) return;
-      
+      setCancelDialogOpen(false);
       // Отменяем все заявки 
       if (isOrganizer) {
         const success = await context.markCancelled(eventToCancel.id);
         
         if (!success) {
           showNotification('Ошибка при отмене заявок участников', 'error');
-          setCancelDialogOpen(false);
           setEventToCancel(null);
           return;
         }
@@ -211,6 +202,15 @@ const getEventStatusSx = (statusId: number | undefined) => {
       
       if (updateSuccess) {
         showNotification('Мероприятие успешно отменено', 'success');
+        // рассылка уведов
+        await notificationContext.createForEvent(
+          new CreateNotificationDTO({
+            recipientId: undefined,
+            eventId: eventToCancel.id,
+            message: `Мероприятие "${eventToCancel.name}" было отменено`,
+            typeId: 1,
+          })
+        );
         // Обновляем список мероприятий
         if (user?.user?.id) {
           const events = await eventContext.getEventsByUserId(user.user.id);

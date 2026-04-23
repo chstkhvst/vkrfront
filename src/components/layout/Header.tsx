@@ -23,13 +23,13 @@ import {
   Settings,
   EmojiEvents,
   Group,
-  CalendarToday,
   History,
   ListAlt,
   Dashboard
 } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from '../NotificationBell';
 
 export const Header = () => {
   const theme = useTheme();
@@ -55,6 +55,7 @@ export const Header = () => {
   };
 
   const handleProfileClick = () => {
+    //console.log(currentUser!.id!)
     setAnchorEl(null);
     navigate('/profile');
   };
@@ -192,7 +193,7 @@ export const Header = () => {
                 </>
               )}
 
-              {/* МОИ МЕРОПРИЯТИЯ (для волонтеров) */}
+              {/* МОИ МЕРОПРИЯТИЯ */}
               {isVolunteer && (
                 <>
                   <Button
@@ -271,7 +272,7 @@ export const Header = () => {
                 </>
               )}
 
-              {/* МОИ МЕРОПРИЯТИЯ (для организаторов) */}
+              {/* МОИ МЕРОПРИЯТИЯ */}
               {isOrganizer && (
                 <>
                   <Button
@@ -366,8 +367,10 @@ export const Header = () => {
           {/* ПРАВАЯ ЧАСТЬ */}
           {isAuthenticated ? (
             <>
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <NotificationBell userId={user!.user!.id!} />
               <Box
-                onClick={(e) => setAnchorEl(e.currentTarget)}
+                onClick={(e) => setAnchorEl(e.currentTarget) }
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -411,68 +414,69 @@ export const Header = () => {
                 </Box>
                 <KeyboardArrowDown sx={{ color: theme.palette.secondary.main, fontSize: 18 }} />
               </Box>
+            </Stack>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={() => setAnchorEl(null)}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              PaperProps={{
+                sx: {
+                  mt: 1.5,
+                  borderRadius: '16px',
+                  minWidth: 240,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.primary.main, 0.2),
+                }
+              }}
+            >
+              <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid', borderBottomColor: alpha(theme.palette.primary.main, 0.1) }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
+                  {userName}
+                </Typography>
+              </Box>
+              <MenuItem onClick={handleProfileClick} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
+                <Person sx={{ fontSize: 20, color: theme.palette.primary.main }} />
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Профиль
+                </Typography>
+              </MenuItem>
               
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={() => setAnchorEl(null)}
-                anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'right',
-                }}
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                PaperProps={{
-                  sx: {
-                    mt: 1.5,
-                    borderRadius: '16px',
-                    minWidth: 240,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                    border: '1px solid',
-                    borderColor: alpha(theme.palette.primary.main, 0.2),
-                  }
-                }}
-              >
-                <Box sx={{ px: 2.5, py: 2, borderBottom: '1px solid', borderBottomColor: alpha(theme.palette.primary.main, 0.1) }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
-                    {userName}
-                  </Typography>
-                </Box>
-                <MenuItem onClick={handleProfileClick} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                  <Person sx={{ fontSize: 20, color: theme.palette.primary.main }} />
+              {(isOrganizer || isVolunteer) && (
+                <MenuItem onClick={handleCreateEvent} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
+                  <Add sx={{ fontSize: 20, color: theme.palette.secondary.main }} />
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    Профиль
+                    {isOrganizer ? 'Создать мероприятие' : 'Предложить мероприятие'}
                   </Typography>
                 </MenuItem>
-                
-                {(isOrganizer || isVolunteer) && (
-                  <MenuItem onClick={handleCreateEvent} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                    <Add sx={{ fontSize: 20, color: theme.palette.secondary.main }} />
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {isOrganizer ? 'Создать мероприятие' : 'Предложить мероприятие'}
-                    </Typography>
-                  </MenuItem>
-                )}
-                
-                {isModer && (
-                  <MenuItem onClick={() => navigate('/admin-panel')} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                    <Settings sx={{ fontSize: 20, color: theme.palette.primary.main }} />
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      Панель администратора
-                    </Typography>
-                  </MenuItem>
-                )}
-                <Divider sx={{ my: 1 }} />
-                <MenuItem onClick={handleLogout} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
-                  <Logout sx={{ fontSize: 20, color: theme.palette.error.main }} />
+              )}
+              
+              {isModer && (
+                <MenuItem onClick={() => navigate('/admin-panel')} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
+                  <Settings sx={{ fontSize: 20, color: theme.palette.primary.main }} />
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    Выйти
+                    Панель администратора
                   </Typography>
                 </MenuItem>
-              </Menu>
-            </>
+              )}
+              <Divider sx={{ my: 1 }} />
+              <MenuItem onClick={handleLogout} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
+                <Logout sx={{ fontSize: 20, color: theme.palette.error.main }} />
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  Выйти
+                </Typography>
+              </MenuItem>
+            </Menu>
+          </>
           ) : (
             <Stack direction="row" spacing={2}>
               <Button

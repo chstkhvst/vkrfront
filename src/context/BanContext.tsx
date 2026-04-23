@@ -4,7 +4,6 @@ import {
   BanDTO,
   CreateBanDTO,
 } from "../client/apiClient";
-import { useEffect } from "react";
 interface BanContextProps {
   bans: BanDTO[];
   selectedBan: BanDTO | null;
