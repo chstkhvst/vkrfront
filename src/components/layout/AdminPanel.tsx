@@ -9,7 +9,7 @@ import {
   alpha,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { Report, EventNote, People, Gavel } from '@mui/icons-material';
+import { Report, EventNote, People, Gavel, Pending } from '@mui/icons-material';
 
 export const AdminPanel = () => {
   const navigate = useNavigate();
@@ -83,6 +83,25 @@ export const AdminPanel = () => {
                 }}
             >
                 Инициативы от волонтеров
+            </Button>
+            <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<Pending />}
+                onClick={() => navigate('/pending-organizers')}
+                sx={{
+                justifyContent: 'flex-start',
+                py: 1.5,
+                borderRadius: '12px',
+                borderColor: alpha('#949cff', 0.3),
+                color: '#949cff',
+                '&:hover': {
+                    borderColor: '#949cff',
+                    background: alpha('#949cff', 0.05),
+                },
+                }}
+            >
+                Заявки на регистрацию организаций
             </Button>
             <Button
                 fullWidth

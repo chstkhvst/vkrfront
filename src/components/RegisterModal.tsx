@@ -26,9 +26,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose  }) => {
   const navigate = useNavigate()
 
   const [userName, setUserName] = useState("")
+  const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+
+  const [isOrganizer, setIsOrganizer] = useState(false)
+  const [organizationName, setOrganizationName] = useState("")
+  const [ogrn, setOgrn] = useState("")
+
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
@@ -50,12 +56,15 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose  }) => {
         new RegisterModel({
           userName,
           password,
-          email
+          fullName,
+          email,
+          organizationName,
+          ogrn
         })
       )
 
       onClose()
-      navigate("/")
+      navigate("/login")
     } catch (err) {
       setError("Регистрация не выполнена")
     } finally {
@@ -76,6 +85,13 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose  }) => {
               label="Имя пользователя"
               value={userName}
               onChange={(e) => setUserName(e.target.value)}
+              required
+              fullWidth
+            />
+            <TextField
+              label="ФИО"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               required
               fullWidth
             />
@@ -110,6 +126,35 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose  }) => {
             {error && <Typography color="error">{error}</Typography>}
 
             <Button
+              variant={isOrganizer ? "contained" : "outlined"}
+              onClick={() => setIsOrganizer(prev => !prev)}
+            >
+              Я - организатор
+            </Button>
+            {isOrganizer && (
+              <>
+                <TextField
+                  label="Название организации"
+                  value={organizationName}
+                  onChange={(e) => setOrganizationName(e.target.value)}
+                  required
+                  fullWidth
+                />
+
+                <TextField
+                  label="ОГРН"
+                  value={ogrn}
+                  onChange={(e) => setOgrn(e.target.value)}
+                  required
+                  fullWidth
+                />
+
+                <Typography color="text.secondary" fontSize={14}>
+                  Профиль будет отправлен на рассмотрение модератору
+                </Typography>
+              </>
+            )}
+            <Button
               type="submit"
               variant="contained"
               disabled={
@@ -117,7 +162,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ open, onClose  }) => {
                 userName.length === 0 || 
                 !email.length || 
                 !password.length || 
-                !confirmPassword.length
+                !confirmPassword.length ||
+                (isOrganizer && (!organizationName || !ogrn))
               }
               endIcon={isLoading ? <CircularProgress size={20} /> : null}
               fullWidth

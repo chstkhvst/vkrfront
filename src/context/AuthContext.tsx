@@ -44,6 +44,8 @@ interface AuthContextType {
   getAllUsers: (page?: number, pageSize?: number, search?: string) => Promise<UserDTOPaginatedResponse>;
   getRatingMonthly: () => Promise<UserDTO[]>;
   getRatingAll: () => Promise<UserDTO[]>;
+  approveOrganizer: (userId: string) => Promise<void>;
+  getPendingOrganizers: () => Promise<UserForModerDTO[]>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -108,12 +110,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (data: RegisterModel) => {
     const response = await client.register(data);
 
-    localStorage.setItem(TOKEN_KEY, response.token!);
-    localStorage.setItem("user", JSON.stringify(response));
+    // localStorage.setItem(TOKEN_KEY, response.token!);
+    // localStorage.setItem("user", JSON.stringify(response));
 
-    setUser(response);
-    setUserRole(response.role || null);
-    await fetchCurrentUser();
+    // setUser(response);
+    // setUserRole(response.role || null);
+    // await fetchCurrentUser();
   };
 
   const logout = async () => {
@@ -175,6 +177,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getRatingAll = async (): Promise<UserDTO[]> => {
     return await client.rating();
   };
+  const approveOrganizer = async (userId: string) => {
+    await client.approveOrganizer(userId);
+  };
+  const getPendingOrganizers = async (): Promise<UserForModerDTO[]> => {
+    return await client.pending();
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -192,6 +201,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         getAllUsers,
         getRatingMonthly,
         getRatingAll,
+        approveOrganizer,
+        getPendingOrganizers,
       }}
     >
       {children}

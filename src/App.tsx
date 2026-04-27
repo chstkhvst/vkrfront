@@ -38,6 +38,7 @@ import { NotificationProvider, useNotification } from './components/Notification
 import { EventDetailsPage } from './pages/EventDetailsPage';
 import { EventsToVisitPage } from './pages/EventsToVisitPage';
 import { RatingPage } from './pages/RatingPage';
+import { PendingOrganizersPage } from './pages/PendingOrganizersPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement, allowedRoles?: string[] }> = ({
   children,
@@ -227,6 +228,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <RatingPage/>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/pending-organizers"
+                    element={
+                      <ProtectedRoute allowedRoles={['moderator']}>
+                          <PendingOrganizersPage/>
                       </ProtectedRoute>
                     }
                   />

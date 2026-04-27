@@ -13,7 +13,7 @@ const RegisterPage: React.FC = () => {
         open={open}
         onClose={() => {
           setOpen(false);
-          navigate("/events");
+          navigate("/login");
         }}
       />
     </Box>

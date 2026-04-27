@@ -55,6 +55,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
       if (err?.status === 401) {
         if (err?.response?.includes("banned")) {
           setError("Доступ запрещен");
+        } else if (err?.response?.includes("approved")) { 
+          setError("Профиль не одобрен модератором");
         } else {
           setError("Неверный логин или пароль");
         }
