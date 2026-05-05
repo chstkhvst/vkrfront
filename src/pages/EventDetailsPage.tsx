@@ -465,7 +465,7 @@ const handleRegister = async (eventId: number) => {
                 py: 1.5,
                 bgcolor: '#949cff',
                 '&:hover': {
-                  bgcolor: '#7c84f4',
+                  bgcolor: '#949cff',
                 },
                 textTransform: 'none',
                 fontSize: '1.1rem',

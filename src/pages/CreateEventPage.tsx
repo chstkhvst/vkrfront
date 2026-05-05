@@ -107,25 +107,40 @@ export const CreateEventPage: React.FC = () => {
             setSuggestions(data);
         }, 600);
     };
-
     const handleMapLocationSelect = async (lat: number, lng: number) => {
-        console.log("CLICK", lat, lng);
+        try {
+            console.log("CLICK", lat, lng);
 
-        const result = await reverseGeocode(lat, lng);
-        console.log("REVERSE RESULT", result);
-        if (!result) return;
-        const option = {
-            lat: result.lat,
-            lon: result.lon,
-            display_name: result.display_name
-        };
+            const result = await reverseGeocode(lat, lng);
 
-        setSelectedAddress(option);
+            if (!result) return;
 
-        setNewEvent(prev => ({
-            ...prev,
-            address: result.display_name || ""
-        }));
+            const option = {
+                lat: result.lat,
+                lon: result.lon,
+                display_name: result.display_name
+            };
+
+            setSelectedAddress(option);
+
+            setNewEvent(prev => ({
+                ...prev,
+                address: result.display_name || ""
+            }));
+
+        } catch (err: any) {
+            console.error("REVERSE ERROR", err);
+
+            if (err?.status === 400) {
+                if (err?.response?.includes("Location must be within Russia")) {
+                    showNotification("Можно выбирать только локации в пределах РФ", "error");
+                } else {
+                    showNotification("Некорректная локация", "error");
+                }
+            } else {
+                showNotification("Ошибка сервера", "error");
+            }
+        }
     };
 
     // Функции валидации

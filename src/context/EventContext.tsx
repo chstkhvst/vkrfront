@@ -239,7 +239,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             return data || null;
         } catch (error) {
             console.error("Ошибка reverse geocode:", error);
-            return null;
+            throw error; 
         }
     };
 

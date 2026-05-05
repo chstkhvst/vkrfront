@@ -28,7 +28,6 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
   const { login, user, logout } = useAuth()
-  const banContext = useContext(BanContext)
   // Получаем функцию login из контекста авторизации.
 
   const navigate = useNavigate()

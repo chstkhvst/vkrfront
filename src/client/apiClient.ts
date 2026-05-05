@@ -3236,6 +3236,42 @@ export class Client {
     }
 }
 
+export class Address implements IAddress {
+    country_code?: string | undefined;
+
+    constructor(data?: IAddress) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.country_code = _data["country_code"];
+        }
+    }
+
+    static fromJS(data: any): Address {
+        data = typeof data === 'object' ? data : {};
+        let result = new Address();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["country_code"] = this.country_code;
+        return data;
+    }
+}
+
+export interface IAddress {
+    country_code?: string | undefined;
+}
+
 export class AttendanceStatus implements IAttendanceStatus {
     id?: number;
     attendanceStatusName!: string;
@@ -3960,6 +3996,7 @@ export class GeocodeResult implements IGeocodeResult {
     lat?: string | undefined;
     lon?: string | undefined;
     display_name?: string | undefined;
+    address?: Address;
 
     constructor(data?: IGeocodeResult) {
         if (data) {
@@ -3975,6 +4012,7 @@ export class GeocodeResult implements IGeocodeResult {
             this.lat = _data["lat"];
             this.lon = _data["lon"];
             this.display_name = _data["display_name"];
+            this.address = _data["address"] ? Address.fromJS(_data["address"]) : undefined as any;
         }
     }
 
@@ -3990,6 +4028,7 @@ export class GeocodeResult implements IGeocodeResult {
         data["lat"] = this.lat;
         data["lon"] = this.lon;
         data["display_name"] = this.display_name;
+        data["address"] = this.address ? this.address.toJSON() : undefined as any;
         return data;
     }
 }
@@ -3998,6 +4037,7 @@ export interface IGeocodeResult {
     lat?: string | undefined;
     lon?: string | undefined;
     display_name?: string | undefined;
+    address?: Address;
 }
 
 export class LoginModel implements ILoginModel {

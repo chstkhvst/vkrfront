@@ -154,15 +154,15 @@ export const PendingOrganizersPage: React.FC = () => {
                     startIcon={<CheckCircle />}
                     disabled={approvingId === user.id}
                     onClick={() => handleApprove(user.id)}
-sx={{
-  mt: "auto",
-  borderRadius: 2,
-  textTransform: "none",
-  bgcolor: "#949cff",
-  "&:hover": {
-    bgcolor: "#7c84f4",
-  },
-}}
+                    sx={{
+                      mt: "auto",
+                      borderRadius: 2,
+                      textTransform: "none",
+                      bgcolor: "#949cff",
+                      "&:hover": {
+                        bgcolor: "#7c84f4",
+                      },
+                    }}
                   >
                     {approvingId === user.id
                       ? "Одобрение..."

@@ -113,7 +113,7 @@ export const customTheme = createTheme({
     
     containedPrimary: {
       background: '#949cff',
-      color: '#ffed86', // ← желтый текст на синей кнопке
+      color: '#ffed86', 
       '&:hover': {
         background: 'linear-gradient(135deg, #7c84f4, #6c74e6)',
       },
@@ -121,7 +121,7 @@ export const customTheme = createTheme({
 
     containedSecondary: {
       background: 'linear-gradient(135deg, #ffed86, #ffe45c)',
-      color: '#949cff', // ← синий текст на желтой кнопке
+      color: '#949cff',
       '&:hover': {
         background: 'linear-gradient(135deg, #ffe45c, #f4d96a)',
       },
