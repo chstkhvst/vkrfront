@@ -2369,8 +2369,8 @@ export class Client {
      * @param body (optional) 
      * @return OK
      */
-    updateEvent(id: number, body?: VolunteerEventDTO | undefined): Promise<void> {
-        let url_ = this.baseUrl + "/api/Event/UpdateEvent/{id}";
+    updateModerator(id: number, body?: VolunteerEventDTO | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/Event/update-moderator/{id}";
         if (id === undefined || id === null)
             throw new globalThis.Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
@@ -2387,11 +2387,52 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processUpdateEvent(_response);
+            return this.processUpdateModerator(_response);
         });
     }
 
-    protected processUpdateEvent(response: Response): Promise<void> {
+    protected processUpdateModerator(response: Response): Promise<void> {
+        const status = response.status;
+        let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
+        if (status === 200) {
+            return response.text().then((_responseText) => {
+            return;
+            });
+        } else if (status !== 200 && status !== 204) {
+            return response.text().then((_responseText) => {
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+            });
+        }
+        return Promise.resolve<void>(null as any);
+    }
+
+    /**
+     * @param body (optional) 
+     * @return OK
+     */
+    updateOrganizer(id: number, body?: UpdateEventDTO | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/Event/update-organizer/{id}";
+        if (id === undefined || id === null)
+            throw new globalThis.Error("The parameter 'id' must be defined.");
+        url_ = url_.replace("{id}", encodeURIComponent("" + id));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body);
+
+        let options_: RequestInit = {
+            body: content_,
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        };
+
+        return this.http.fetch(url_, options_).then((_response: Response) => {
+            return this.processUpdateOrganizer(_response);
+        });
+    }
+
+    protected processUpdateOrganizer(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {
@@ -4490,6 +4531,70 @@ export class ReportStatusDTO implements IReportStatusDTO {
 export interface IReportStatusDTO {
     id?: number;
     name?: string | undefined;
+}
+
+export class UpdateEventDTO implements IUpdateEventDTO {
+    id?: number;
+    description?: string | undefined;
+    eventDateTime?: Date | undefined;
+    lat?: number | undefined;
+    lng?: number | undefined;
+    address?: string | undefined;
+    participantsLimit?: number | undefined;
+    eventStatusId?: number | undefined;
+
+    constructor(data?: IUpdateEventDTO) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            this.id = _data["id"];
+            this.description = _data["description"];
+            this.eventDateTime = _data["eventDateTime"] ? new Date(_data["eventDateTime"].toString()) : undefined as any;
+            this.lat = _data["lat"];
+            this.lng = _data["lng"];
+            this.address = _data["address"];
+            this.participantsLimit = _data["participantsLimit"];
+            this.eventStatusId = _data["eventStatusId"];
+        }
+    }
+
+    static fromJS(data: any): UpdateEventDTO {
+        data = typeof data === 'object' ? data : {};
+        let result = new UpdateEventDTO();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        data["id"] = this.id;
+        data["description"] = this.description;
+        data["eventDateTime"] = this.eventDateTime ? this.eventDateTime.toISOString() : undefined as any;
+        data["lat"] = this.lat;
+        data["lng"] = this.lng;
+        data["address"] = this.address;
+        data["participantsLimit"] = this.participantsLimit;
+        data["eventStatusId"] = this.eventStatusId;
+        return data;
+    }
+}
+
+export interface IUpdateEventDTO {
+    id?: number;
+    description?: string | undefined;
+    eventDateTime?: Date | undefined;
+    lat?: number | undefined;
+    lng?: number | undefined;
+    address?: string | undefined;
+    participantsLimit?: number | undefined;
+    eventStatusId?: number | undefined;
 }
 
 export class User implements IUser {

@@ -15,7 +15,8 @@ import {
   DialogActions,
   Divider,
   LinearProgress,
-  Paper
+  Paper,
+  TextField
 } from "@mui/material";
 import { 
   LocationOn, 
@@ -35,7 +36,7 @@ import { VolunteerEventContext } from "../context/EventContext";
 import { AttendanceContext } from "../context/AttendanceContext";
 import { useNotification } from '../components/Notification';
 import { useAuth } from "../context/AuthContext";
-import { EventAttendanceDTO } from "../client/apiClient";
+import { EventAttendanceDTO, VolunteerEventDTO } from "../client/apiClient";
 import { MapView } from "../components/MapView";
 import { ReportUserModal } from "../components/ReportUserModal";
 import { useLocation } from "react-router-dom";
@@ -56,8 +57,10 @@ export const EventDetailsPage: React.FC = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<number | null>(null);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [editPointsMode, setEditPointsMode] = useState(false);
+  const [points, setPoints] = useState<number>(10);
 
-  const { fetchEventById, updateEvent } = context!;
+  const { fetchEventById, updateEventByModerator } = context!;
   const { createAttendance, getParticipantsCount } = attContext!;
 
   useEffect(() => {
@@ -67,6 +70,7 @@ export const EventDetailsPage: React.FC = () => {
       console.log('Event data:', data)
       
       setEvent(data);
+      setPoints(data?.eventPoints ?? 10);
       setLoading(false);
       if (data?.id) {
           const count = await getParticipantsCount(data.id);
@@ -107,49 +111,56 @@ const handleRegister = async (eventId: number) => {
       }
       
       if (success) {
-          showNotification('Вы успешно зарегистрированы на событие!', 'success');
+          showNotification('Вы успешно зарегистрированы на мероприятие!', 'success');
           context?.fetchEventsForUser();
           setIsRegistered(true);
-          // Обновляем количество участников для этого события
+          // Обновляем количество участников
           const count = await getParticipantsCount(eventId);
           setParticipantsCount(count);
       } else {
-          showNotification('Ошибка при регистрации на событие', 'error');
+          showNotification('Ошибка при регистрации на мероприятие', 'error');
       }
   };
 
   const handleModeration = async (statusId: number) => {
-  setProcessingStatus(statusId);
+    setProcessingStatus(statusId);
 
-  const status = context!.eventStatuses.find(s => s.id === statusId);
-  const actionName = status?.eventStatusName?.toLowerCase() || 'изменено';
-  
-  try {
-    const success = await updateEvent(event.id, {
-      ...event,
-      eventStatusId: statusId,
-    });
-    
-    if (success) {
-      showNotification(`Событие ${actionName}`, 'success');
-      const updatedEvent = await fetchEventById(Number(id));
-      setEvent(updatedEvent);
-    } else {
-      showNotification(`Ошибка при ${actionName} события`, 'error');
+    const status = context!.eventStatuses.find(s => s.id === statusId);
+    const actionName = status?.eventStatusName?.toLowerCase() || 'изменено';
+
+    try {
+      const updated = new VolunteerEventDTO({
+        ...event,
+        eventStatusId: statusId,
+        eventPoints: editPointsMode ? points : event.eventPoints,
+      });
+
+      const success = await updateEventByModerator(event.id, updated);
+
+      if (success) {
+        showNotification(`Мероприятие ${actionName}`, 'success');
+
+        const updatedEvent = await fetchEventById(Number(id));
+        setEvent(updatedEvent);
+        setPoints(updatedEvent?.eventPoints ?? points);
+        setEditPointsMode(false);
+      } else {
+        showNotification(`Ошибка при ${actionName} мероприятия`, 'error');
+      }
+    } catch (error) {
+      showNotification(`Ошибка при ${actionName} мероприятия`, 'error');
+    } finally {
+      setProcessingStatus(null);
     }
-  } catch (error) {
-    showNotification(`Ошибка при ${actionName} события`, 'error');
-  } finally {
-    setProcessingStatus(null);
-  }
-};
+  };
+  
   if (loading) return (
     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
       <CircularProgress />
     </Box>
   );
 
-  if (!event) return <Alert severity="error">Событие не найдено</Alert>;
+  if (!event) return <Alert severity="error">Мероприятие не найдено</Alert>;
 
   const participantsRatio = event.participantsLimit 
     ? (participantsCount / event.participantsLimit) * 100 
@@ -311,7 +322,7 @@ const handleRegister = async (eventId: number) => {
                 color: '#1c022c'
               }}
             >
-              Детали события
+              Подробности мероприятия
             </Typography>
             
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -358,14 +369,87 @@ const handleRegister = async (eventId: number) => {
                   }}
                 >
                   <Star sx={{ fontSize: 24, color: '#FFD700' }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600, color: '#1c022c' }}>
-                    {event.eventPoints}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    баллов
-                  </Typography>
+
+                  {!editPointsMode ? (
+                    <>
+                      <Typography variant="h6" sx={{ fontWeight: 600, color: '#1c022c' }}>
+                        {event.eventPoints}
+                      </Typography>
+
+                      <Typography variant="body2" color="text.secondary">
+                        баллов
+                      </Typography>
+
+                      {user?.role === "moderator" && event.eventStatusId === 1 && (
+                        <Button
+                          size="small"
+                          onClick={() => setEditPointsMode(true)}
+                          sx={{
+                            ml: 1,
+                            textTransform: 'none',
+                            color: '#949cff',
+                            fontWeight: 500,
+                            minWidth: 0,
+                            px: 1
+                          }}
+                        >
+                          Изменить
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <TextField
+                        type="number"
+                        size="small"
+                        value={points}
+                        onChange={(e) => {
+                          const value = Number(e.target.value);
+
+                          if (value >= 0 && value <= 100) {
+                            setPoints(value);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (points < 10) setPoints(10);
+                          if (points > 100) setPoints(100);
+                        }}
+                        inputProps={{ min: 10, max: 100 }}
+                        sx={{ width: 90 }}
+                      />
+
+                      <Typography variant="body2" color="text.secondary">
+                        баллов
+                      </Typography>
+
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          setEvent((prev: any) => ({
+                            ...prev,
+                            eventPoints: points,
+                          }));
+                          setEditPointsMode(false);
+                        }}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Ок
+                      </Button>
+
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          setPoints(event.eventPoints);
+                          setEditPointsMode(false);
+                        }}
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Отмена
+                      </Button>
+                    </>
+                  )}
                 </Paper>
-                )}
+              )}
               </Box>
             </Box>
           </Box>
@@ -473,67 +557,80 @@ const handleRegister = async (eventId: number) => {
                 borderRadius: 2
               }}
             >
-              Зарегистрироваться на событие
+              Зарегистрироваться на мероприятие
             </Button>
           )}
 
-          {/* МОДЕРАТОР */}
-          {user?.role === "moderator" && event.eventStatusId === 1 && (
-          <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
-            <Button
-              variant="outlined"
-              color="success"
-              startIcon={processingStatus === 2 ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />}
-              fullWidth
-              onClick={() => handleModeration(2)}
-              disabled={!!processingStatus}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                py: 1.5,
-                fontSize: '1rem',
-                fontWeight: 600,
-                boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)',
-                },
-                '&:active': {
-                  transform: 'translateY(0)',
-                },
-              }}
-            >
-              {processingStatus === 2 ? "Обработка..." : "Одобрить событие"}
-            </Button>
-            
-            <Button
-              variant="outlined"
-              color="error"
-              startIcon={processingStatus === 3 ? <CircularProgress size={20} /> : <Cancel />}
-              fullWidth
-              onClick={() => handleModeration(3)}
-              disabled={!!processingStatus}
-              sx={{
-                borderRadius: 2,
-                textTransform: 'none',
-                py: 1.5,
-                fontSize: '1rem',
-                fontWeight: 600,
-                borderWidth: 2,
-                transition: 'all 0.2s ease',
-                '&:hover': {
+        {/* МОДЕРАТОР */}
+        {user?.role === "moderator" && event.eventStatusId === 1 && (
+          <Box sx={{ mt: 3 }}>
+
+            {/* КНОПКИ МОДЕРАЦИИ */}
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                variant="outlined"
+                color="success"
+                startIcon={
+                  processingStatus === 2
+                    ? <CircularProgress size={20} color="inherit" />
+                    : <CheckCircle />
+                }
+                fullWidth
+                onClick={() => handleModeration(2)}
+                disabled={!!processingStatus}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  py: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  },
+                }}
+              >
+                {processingStatus === 2 ? "Обработка..." : "Одобрить мероприятие"}
+              </Button>
+
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={
+                  processingStatus === 3
+                    ? <CircularProgress size={20} />
+                    : <Cancel />
+                }
+                fullWidth
+                onClick={() => handleModeration(3)}
+                disabled={!!processingStatus}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  py: 1.5,
+                  fontSize: '1rem',
+                  fontWeight: 600,
                   borderWidth: 2,
-                  transform: 'translateY(-2px)',
-                  bgcolor: 'rgba(244, 67, 54, 0.04)',
-                },
-                '&:active': {
-                  transform: 'translateY(0)',
-                },
-              }}
-            >
-              {processingStatus === 3 ? "Обработка..." : "Отклонить событие"}
-            </Button>
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    borderWidth: 2,
+                    transform: 'translateY(-2px)',
+                    bgcolor: 'rgba(244, 67, 54, 0.04)',
+                  },
+                  '&:active': {
+                    transform: 'translateY(0)',
+                  },
+                }}
+              >
+                {processingStatus === 3 ? "Обработка..." : "Отклонить мероприятие"}
+              </Button>
+            </Box>
+
           </Box>
         )}
         </CardContent>
@@ -553,7 +650,7 @@ const handleRegister = async (eventId: number) => {
         <DialogTitle sx={{ fontWeight: 600 }}>Подтверждение регистрации</DialogTitle>
         <DialogContent>
           <Typography>
-            Вы действительно хотите зарегистрироваться на событие <strong>"{event.name}"</strong>?
+            Вы действительно хотите зарегистрироваться на мероприятие <strong>"{event.name}"</strong>?
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>

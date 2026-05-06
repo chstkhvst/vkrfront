@@ -2,6 +2,7 @@ import { createContext, ReactNode, useEffect, useState } from "react"
 import { 
     Client, 
     VolunteerEventDTO, 
+    UpdateEventDTO,
     EventCategory,
     EventStatus,
     City,
@@ -55,7 +56,10 @@ interface VolunteerEventContextProps {
     fetchEventById: (id: number) => Promise<VolunteerEventDTO | null>;
     getEventsByUserId: (userId: string) => Promise<VolunteerEventDTO[]>;
     createEvent: (eventData: CreateEventData) => Promise<VolunteerEventDTO | null>;
-    updateEvent: (id: number, eventData: VolunteerEventDTO) => Promise<boolean>;
+    
+    updateEventByModerator: (id: number, eventData: VolunteerEventDTO) => Promise<boolean>;
+    updateEventByOrganizer: (id: number, eventData: UpdateEventDTO) => Promise<boolean>;
+
     deleteEvent: (id: number, softDelete?: boolean) => Promise<boolean>;
     
     geocode: (query: string) => Promise<GeocodeResult[]>;
@@ -284,24 +288,59 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
     };
 
     // Обновление события
-    const updateEvent = async (id: number, eventData: VolunteerEventDTO): Promise<boolean> => {
+    // const updateEvent = async (id: number, eventData: VolunteerEventDTO): Promise<boolean> => {
+    //     setIsLoading(true);
+    //     setError(null);
+        
+    //     try {
+    //         await apiClient.updateEvent(id, eventData);
+    //         // Обновляем список событий
+    //         await fetchEvents(filterParams);
+    //         return true;
+    //     } catch (error) {
+    //         console.error(`Ошибка при обновлении события с ID ${id}:`, error);
+    //         setError("Не удалось обновить событие");
+    //         return false;
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
+    const updateEventByModerator = async (id: number, eventData: VolunteerEventDTO): Promise<boolean> => {
         setIsLoading(true);
         setError(null);
         
         try {
-            await apiClient.updateEvent(id, eventData);
-            // Обновляем список событий
+            await apiClient.updateModerator(id, eventData);
+
             await fetchEvents(filterParams);
+
             return true;
         } catch (error) {
-            console.error(`Ошибка при обновлении события с ID ${id}:`, error);
+            console.error(`Ошибка при обновлении события модератором ${id}:`, error);
             setError("Не удалось обновить событие");
             return false;
         } finally {
             setIsLoading(false);
         }
     };
+    const updateEventByOrganizer = async (id: number, eventData: UpdateEventDTO): Promise<boolean> => {
+        setIsLoading(true);
+        setError(null);
+        
+        try {
+            await apiClient.updateOrganizer(id, eventData);
 
+            await fetchEvents(filterParams);
+
+            return true;
+        } catch (error) {
+            console.error(`Ошибка при обновлении события организатором ${id}:`, error);
+            setError("Не удалось обновить событие");
+            return false;
+        } finally {
+            setIsLoading(false);
+        }
+    };
     // Удаление события
     const deleteEvent = async (id: number, softDelete: boolean = true): Promise<boolean> => {
         setIsLoading(true);
@@ -403,7 +442,8 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
             fetchEvents,
             fetchEventById,
             createEvent,
-            updateEvent,
+            updateEventByModerator,
+            updateEventByOrganizer,
             deleteEvent,
             getEventsByUserId,
             fetchEventsForUser,

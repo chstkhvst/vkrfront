@@ -31,10 +31,13 @@ import { VolunteerEventContext } from '../context/EventContext';
 import { NotificationForUserContext } from '../context/NotificationForUserContext';
 import { useAuth } from '../context/AuthContext';
 import { ParticipantsList } from "../components/ParticipantsList";
-import { CreateNotificationDTO, EventAttendanceDTO, VolunteerEventDTO } from '../client/apiClient';
+import { CreateNotificationDTO, EventAttendanceDTO, VolunteerEventDTO, UpdateEventDTO } from '../client/apiClient';
 import { useNotification } from '../components/Notification';
+import { useNavigate } from "react-router-dom";
 
 export const MyEventPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const context = useContext(AttendanceContext);
   const eventContext = useContext(VolunteerEventContext);
   const notificationContext = useContext(NotificationForUserContext);
@@ -169,7 +172,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
     return eventLocal < todayLocal;
   });
 
-  const canCancelEvent = (eventDateTime: Date | undefined): boolean => {
+  const canEditEvent = (eventDateTime: Date | undefined): boolean => {
     if (!eventDateTime) return false;
     
     const now = new Date();
@@ -192,13 +195,13 @@ const getEventStatusSx = (statusId: number | undefined) => {
           return;
         }
       }    
-      // Обновляем статус 
-      const updatedEvent = new VolunteerEventDTO({
-        ...eventToCancel,
-        eventStatusId: 4, 
-      });
       
-      const updateSuccess = await eventContext.updateEvent(eventToCancel.id, updatedEvent);
+      const dto = new UpdateEventDTO({
+        id: eventToCancel.id,
+        eventStatusId: 4,
+      });
+
+      const updateSuccess = await eventContext.updateEventByOrganizer(eventToCancel.id, dto);
       
       if (updateSuccess) {
         showNotification('Мероприятие успешно отменено', 'success');
@@ -295,7 +298,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
               </CardContent>
               <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
                 {(event.eventStatus?.id === EVENT_STATUS.APPROVED || event.eventStatus?.id === EVENT_STATUS.ON_MODERATION) && tab === 0 &&
-                  canCancelEvent(event.eventDateTime) && (
+                  canEditEvent(event.eventDateTime) && (
                     <Button
                       variant="outlined"
                       color="error"
@@ -312,7 +315,8 @@ const getEventStatusSx = (statusId: number | undefined) => {
                     <Button
                       variant="contained"
                       color="primary"
-                      onClick={() => {/*АПДЕЙТ? */}}
+                      onClick={() => navigate(`/edit-event/${event.id}`)}
+                      disabled={!canEditEvent(event.eventDateTime)}
                     >
                       Редактировать
                     </Button>

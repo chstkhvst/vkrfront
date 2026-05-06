@@ -39,6 +39,7 @@ import { EventDetailsPage } from './pages/EventDetailsPage';
 import { EventsToVisitPage } from './pages/EventsToVisitPage';
 import { RatingPage } from './pages/RatingPage';
 import { PendingOrganizersPage } from './pages/PendingOrganizersPage';
+import { EditEventPage } from './pages/EditEventPage';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement, allowedRoles?: string[] }> = ({
   children,
@@ -236,6 +237,18 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={['moderator']}>
                           <PendingOrganizersPage/>
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/edit-event/:id"
+                    element={
+                      <ProtectedRoute allowedRoles={['organizer']}>
+                        <VolunteerEventProvider>
+                          <AttendanceProvider>
+                              <EditEventPage />
+                          </AttendanceProvider>
+                        </VolunteerEventProvider>
                       </ProtectedRoute>
                     }
                   />
