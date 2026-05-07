@@ -74,7 +74,7 @@ export const EditEventPage: React.FC = () => {
             return false;
         }
         if (eventData.participantsLimit < participantsCount) {
-            showNotification("Установиите лимит участников не менее, чем количество зарегистрированных на мероприятие пользователей", "error");
+            showNotification("Установите лимит участников не менее, чем количество зарегистрированных на мероприятие пользователей", "error");
             return false;
         }
         try {
@@ -104,9 +104,7 @@ export const EditEventPage: React.FC = () => {
                 dto.eventDateTime = eventData.eventDateTime;
             }
 
-            const success = await updateEventByOrganizer(Number(id), dto);
-
-            if (success) {
+            await updateEventByOrganizer(Number(id), dto);
             showNotification('Данные изменены', 'success');
             // рассылка уведов
             await notificationContext!.createForEvent(
@@ -117,12 +115,16 @@ export const EditEventPage: React.FC = () => {
                 typeId: 2,
                 })
             );
-                navigate(`/events/${event.id}`, { state: { isCommunity: false } });
+            navigate(`/events/${event.id}`, { state: { isCommunity: false } });
+            return true;
+        } catch (e: any) {
+            if (e?.status === 400){
+                if (e?.response?.includes("move")) {
+                    showNotification("Нельзя переместить мероприятие более чем на 15 км от исходной точки", "error");
+                    return false;
+                }
             }
-
-            return success;
-        } catch (e) {
-            console.error(e);
+            showNotification("Произошла ошибка при обновлении мероприятия", "error");
             return false;
         } finally {
             setSubmitting(false);
@@ -155,8 +157,10 @@ export const EditEventPage: React.FC = () => {
                     cityId: event.cityId?.toString(),
                     address: event.address,
                     eventDateTime: event.eventDateTime
-                        ? new Date(event.eventDateTime).toISOString().slice(0, 16)
-                        : "",
+                    ? new Date(event.eventDateTime.getTime() - event.eventDateTime.getTimezoneOffset() * 60000)
+                        .toISOString()
+                        .slice(0, 16)
+                    : "",
                     eventPoints: event.eventPoints,
                     participantsLimit: event.participantsLimit?.toString()
                 }}

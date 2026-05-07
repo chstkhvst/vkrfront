@@ -336,7 +336,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         } catch (error) {
             console.error(`Ошибка при обновлении события организатором ${id}:`, error);
             setError("Не удалось обновить событие");
-            return false;
+            throw error;
         } finally {
             setIsLoading(false);
         }

@@ -184,7 +184,7 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
             )}
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="h6">
-                    Участники ({filteredParticipants.length})
+                    Зарегистрировано: ({filteredParticipants.length})
                 </Typography>
                     <TextField
                     size="small"

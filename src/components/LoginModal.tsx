@@ -3,7 +3,6 @@ import { Modal, Box, Typography, TextField, Button, Stack, CircularProgress } fr
 // Импорт компонентов из Material UI для создания пользовательского интерфейса.
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/AuthContext"
-import { BanContext } from "../context/BanContext"
 import { LoginModel } from "../client/apiClient";
 
 const modalStyle = {
@@ -66,7 +65,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ open, onClose }) => {
       setIsLoading(false);
     }
   };
-    useEffect(() => {
+  useEffect(() => {
     if (user) {
       navigate(
         user.role === "moderator"

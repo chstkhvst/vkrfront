@@ -10,7 +10,7 @@ import {
   CircularProgress,
   TextField,
 } from "@mui/material";
-import { Pending, CheckCircle } from "@mui/icons-material";
+import { Pending, CheckCircle, ExpandMore, ExpandLess } from "@mui/icons-material";
 import { ReportContext } from "../context/ReportContext";
 import { BanUserModal } from "../components/BanUserModal";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,7 @@ export const ReportsListPage: React.FC = () => {
     const [search, setSearch] = useState("");
     const [banModalOpen, setBanModalOpen] = useState(false);
     const [selectedGroup, setSelectedGroup] = useState<ReportGroupDTO | null>(null);
+    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
     const {
         reportGroups,
@@ -83,6 +84,18 @@ export const ReportsListPage: React.FC = () => {
     const hasPendingReports = (group: ReportGroupDTO) => {
         return group.reports?.some(r => r.reportStatusId === 1);
     };
+    
+    const toggleGroup = (groupId: string) => {
+        setExpandedGroups(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(groupId)) {
+                newSet.delete(groupId);
+            } else {
+                newSet.add(groupId);
+            }
+            return newSet;
+        });
+    };
   return (
     <Box p={4}>
       <Typography variant="h4" mb={3}>
@@ -116,95 +129,117 @@ export const ReportsListPage: React.FC = () => {
       {/* Список */}
       <Stack spacing={2}>
         {!isLoading &&
-            filteredGroups.map((group) => (
-            <Card key={group.reportedUserId}>
-                <CardContent>
-                <Stack spacing={2}>
+            filteredGroups.map((group) => {
+                const reports = group.reports || [];
+                const hasManyReports = reports.length > 2;
+                const isExpanded = expandedGroups.has(group.reportedUserId!);
+                const displayedReports = hasManyReports && !isExpanded 
+                    ? reports.slice(0, 2) 
+                    : reports;
                     
-                    {/* HEADER */}
-                    <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    width="100%"
-                    >
-                    <Typography variant="h6">  
-                        {"Жалобы на пользователя " + group.reportedUser?.userName}
-                    </Typography>
-
-                    <Chip
-                        label={`Всего: ${group.count}`}
-                        color="primary"
-                        variant="outlined"
-                        size="small"
-                    />
-                    </Box>
-
-                    {/* СПИСОК ЖАЛОБ */}
-                    <Stack spacing={1}>
-                    {group.reports?.map((report: UserReportDTO) => (
-                        <Box
-                        key={report.id}
-                        sx={{
-                            p: 1.5,
-                            borderRadius: 2,
-                            backgroundColor: "rgba(0,0,0,0.03)",
-                        }}
-                        >
-                        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                            <Typography variant="body2" fontWeight={600}>
-                            {report.sender?.userName || "Неизвестный пользователь"}
-                            </Typography>
-                            {getStatusChip(report)}
-                        </Box>
-
-                        <Typography variant="body2" color="text.secondary" mt={0.5}>
-                            {report.reportReason}
-                        </Typography>
-                        </Box>
-                    ))}
-                    </Stack>
-
-                    {/* ACTIONS */}
-                    <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    >
-                    <Button
-                        variant="text"
-                        onClick={() => navigate(`/user-for-moder/${group.reportedUserId}`)}
-                    >
-                        Перейти в профиль пользователя
-                    </Button>
-
-                    <Stack direction="row" spacing={1}>
-                        {hasPendingReports(group) && (
-                            <>
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    onClick={() => handleOpenBanModal(group)}
+                return (
+                    <Card key={group.reportedUserId}>
+                        <CardContent>
+                            <Stack spacing={2}>
+                    
+                                {/* HEADER */}
+                                <Box
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                    width="100%"
                                 >
-                                    Заблокировать
-                                </Button>
+                                    <Typography variant="h6">  
+                                        {"Жалобы на пользователя " + group.reportedUser?.userName}
+                                    </Typography>
 
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    onClick={() => handleUpdateReports(group)}
+                                    <Chip
+                                        label={`Всего: ${group.count}`}
+                                        color="primary"
+                                        variant="outlined"
+                                        size="small"
+                                    />
+                                </Box>
+
+                                {/* СПИСОК ЖАЛОБ */}
+                                <Stack spacing={1}>
+                                    {displayedReports.map((report: UserReportDTO) => (
+                                        <Box
+                                            key={report.id}
+                                            sx={{
+                                                p: 1.5,
+                                                borderRadius: 2,
+                                                backgroundColor: "rgba(0,0,0,0.03)",
+                                            }}
+                                        >
+                                            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                                                <Typography variant="body2" fontWeight={600}>
+                                                    {report.sender?.userName || "Неизвестный пользователь"}
+                                                </Typography>
+                                                {getStatusChip(report)}
+                                            </Box>
+
+                                            <Typography variant="body2" color="text.secondary" mt={0.5}>
+                                                {report.reportReason}
+                                            </Typography>
+                                        </Box>
+                                    ))}
+                                </Stack>
+                                
+                                {/* КНОПКА РАЗВЕРНУТЬ/СВЕРНУТЬ */}
+                                {hasManyReports && (
+                                    <Box display="flex" justifyContent="center">
+                                        <Button
+                                            size="small"
+                                            onClick={() => toggleGroup(group.reportedUserId!)}
+                                            startIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
+                                        >
+                                            {isExpanded ? "Свернуть" : `Показать еще ${reports.length - 2}`}
+                                        </Button>
+                                    </Box>
+                                )}
+
+                                {/* ACTIONS */}
+                                <Stack
+                                    direction="row"
+                                    justifyContent="space-between"
+                                    alignItems="center"
                                 >
-                                    Отклонить жалобы
-                                </Button>
-                            </>
-                        )}
-                    </Stack>
-                </Stack>
+                                    <Button
+                                        variant="text"
+                                        onClick={() => navigate(`/user-for-moder/${group.reportedUserId}`)}
+                                    >
+                                        Перейти в профиль пользователя
+                                    </Button>
 
-                </Stack>
-                </CardContent>
-            </Card>
-            ))}
+                                    <Stack direction="row" spacing={1}>
+                                        {hasPendingReports(group) && (
+                                            <>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    onClick={() => handleOpenBanModal(group)}
+                                                >
+                                                    Заблокировать
+                                                </Button>
+
+                                                <Button
+                                                    variant="outlined"
+                                                    color="primary"
+                                                    onClick={() => handleUpdateReports(group)}
+                                                >
+                                                    Отклонить жалобы
+                                                </Button>
+                                            </>
+                                        )}
+                                    </Stack>
+                                </Stack>
+
+                            </Stack>
+                        </CardContent>
+                    </Card>
+                );
+            })}
         </Stack>
         <BanUserModal
             open={banModalOpen}

@@ -34,9 +34,10 @@ import {
 import { useParams } from "react-router-dom";
 import { VolunteerEventContext } from "../context/EventContext";
 import { AttendanceContext } from "../context/AttendanceContext";
+import { NotificationForUserContext } from "../context/NotificationForUserContext";
 import { useNotification } from '../components/Notification';
 import { useAuth } from "../context/AuthContext";
-import { EventAttendanceDTO, VolunteerEventDTO } from "../client/apiClient";
+import { CreateNotificationDTO, EventAttendanceDTO, VolunteerEventDTO } from "../client/apiClient";
 import { MapView } from "../components/MapView";
 import { ReportUserModal } from "../components/ReportUserModal";
 import { useLocation } from "react-router-dom";
@@ -47,6 +48,7 @@ export const EventDetailsPage: React.FC = () => {
   const { id } = useParams();
   const context = useContext(VolunteerEventContext);
   const attContext = useContext(AttendanceContext);
+  const notificationContext = useContext(NotificationForUserContext);
   const { user } = useAuth();
   const { showNotification } = useNotification();
 
@@ -139,6 +141,31 @@ const handleRegister = async (eventId: number) => {
 
       if (success) {
         showNotification(`Мероприятие ${actionName}`, 'success');
+
+        // Отправка уведомления создателю 
+        if (event.user?.id && notificationContext) {
+          const notificationMessage = statusId === 2 
+            ? `Ваше мероприятие "${event.name}" одобрено модератором`
+            : statusId === 3 
+            ? `Ваше мероприятие "${event.name}" отклонено модератором`
+            : `Статус мероприятия "${event.name}" изменен на "${actionName}"`;
+
+          const dto = new CreateNotificationDTO({
+            recipientId: event.user.id,
+            message: notificationMessage,
+            eventId: event.id
+          });
+          
+          if (statusId === 2) dto.typeId = 3;
+          else if (statusId === 3) dto.typeId = 4;
+          else dto.typeId = 1;
+
+          try {
+            await notificationContext.createNotification(dto);
+          } catch (notifError) {
+            console.error('Ошибка при отправке уведомления:', notifError);
+          }
+        }
 
         const updatedEvent = await fetchEventById(Number(id));
         setEvent(updatedEvent);

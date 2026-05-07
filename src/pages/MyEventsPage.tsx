@@ -343,7 +343,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
           maxWidth="md"
           fullWidth
       >
-          <DialogTitle>Участники события</DialogTitle>
+          <DialogTitle>Участники мероприятия</DialogTitle>
 
           <DialogContent>
               {selectedEvent && participantsOpen && (
