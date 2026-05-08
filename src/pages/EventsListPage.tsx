@@ -30,6 +30,7 @@ import { VolunteerEventContext } from '../context/EventContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CalendarToday, Category, FilterList, FilterListOff, LocationOn, Search, Star } from '@mui/icons-material';
+import { SURFACE } from '../theme';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
@@ -116,37 +117,80 @@ export const EventsListPage: React.FC = () => {
         CANCELLED: 4,
         ENDED: 5,
     };
-    const getEventStatusIcon = (statusId: number | undefined) => {
-        switch (statusId) {
+    const getEventStatusIcon = (statusId: number | undefined, color: string) => {
+    switch (statusId) {
         case EVENT_STATUS.ON_MODERATION:
-            return <PendingIcon fontSize="small" />;
+        return <PendingIcon fontSize="small" sx={{ color }} />;
         case EVENT_STATUS.APPROVED:
-            return <ApprovedIcon fontSize="small" />;
+        return <ApprovedIcon fontSize="small" sx={{ color }} />;
         case EVENT_STATUS.DECLINED:
-            return <DeclinedIcon fontSize="small" />;
+        return <DeclinedIcon fontSize="small" sx={{ color }} />;
         case EVENT_STATUS.CANCELLED:
-            return <CancelledIcon fontSize="small" />;
+        return <CancelledIcon fontSize="small" sx={{ color }} />;
         case EVENT_STATUS.ENDED:
-            return <EndedIcon fontSize="small" />;
+        return <EndedIcon fontSize="small" sx={{ color }} />;
         default:
-            return undefined;
-        }
+        return undefined;
+    }
     };
+
     const getEventStatusSx = (statusId: number | undefined) => {
-      switch (statusId) {
+    switch (statusId) {
         case EVENT_STATUS.ON_MODERATION:
-          return { borderColor: '#ff9800', color: '#ff9800' };
+        return {
+            bgcolor: SURFACE.softWarning,
+            color: 'warning.main',
+            border: 'none',
+            '& .MuiChip-icon': {
+            color: 'warning.main',
+            },
+        };
         case EVENT_STATUS.APPROVED:
-          return { borderColor: '#4caf50', color: '#4caf50' };
+        return {
+            bgcolor: SURFACE.softSuccess,
+            color: 'success.main',
+            border: 'none',
+            '& .MuiChip-icon': {
+            color: 'success.main',
+            },
+        };
         case EVENT_STATUS.DECLINED:
-          return { borderColor: '#f44336', color: '#f44336' };
+        return {
+            bgcolor: SURFACE.softError,
+            color: 'error.main',
+            border: 'none',
+            '& .MuiChip-icon': {
+            color: 'error.main',
+            },
+        };
         case EVENT_STATUS.CANCELLED:
-          return { borderColor: '#5f6388', color: '#5f6388' };
+        return {
+            bgcolor: SURFACE.borderLight,
+            color: 'text.secondary',
+            border: 'none',
+            '& .MuiChip-icon': {
+            color: 'text.secondary',
+            },
+        };
         case EVENT_STATUS.ENDED:
-          return { borderColor: '#5f6388', color: '#5f6388' };
+        return {
+            bgcolor: SURFACE.borderLight,
+            color: 'text.secondary',
+            border: 'none',
+            '& .MuiChip-icon': {
+            color: 'text.secondary',
+            },
+        };
         default:
-          return { borderColor: '#949cff', color: '#949cff' };
-      }
+        return {
+            bgcolor: SURFACE.softPrimary,
+            color: 'primary.main',
+            border: 'none',
+            '& .MuiChip-icon': {
+            color: 'primary.main',
+            },
+        };
+    }
     };
 
     return (
@@ -164,7 +208,7 @@ export const EventsListPage: React.FC = () => {
                 <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center',  }}>
                     {/* Поиск */}
                     <TextField
-                        label="Поиск"
+                        placeholder="Поиск"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         size="small"
@@ -379,7 +423,7 @@ export const EventsListPage: React.FC = () => {
                                 '&:hover': {
                                 transform: 'scale(1.01)',
                                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
-                                background: 'rgba(148, 156, 255, 0.01)',
+                                //background: 'rgba(148, 156, 255, 0.01)',
                                 }
                             }}
                             onClick={() => navigate(`/events/${event.id}`, { state: { isCommunity: false } })}
@@ -418,30 +462,32 @@ export const EventsListPage: React.FC = () => {
                                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                             
                                             {event.eventCategory?.name && (
-                                                <Chip
-                                                    icon={<Category sx={{ fontSize: 18 }} />}
-                                                    label={event.eventCategory.name}
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor: 'rgba(148, 156, 255, 0.1)',
-                                                        color: '#949cff',
-                                                        fontWeight: 500,
-                                                        border: '1px solid rgba(148, 156, 255, 0.3)'
-                                                    }}
-                                                />
+                                            <Chip
+                                                icon={<Category sx={{ fontSize: 18, color: 'primary.main' }} />}
+                                                label={event.eventCategory.name}
+                                                size="small"
+                                                sx={{
+                                                bgcolor: SURFACE.softPrimary,
+                                                color: 'primary.main',
+                                                fontWeight: 500,
+                                                border: 'none',
+                                                '& .MuiChip-icon': {
+                                                    color: 'primary.main',
+                                                },
+                                                }}
+                                            />
                                             )}
 
                                             {user?.role === "moderator" && event.eventStatus && (
-                                                <Chip
-                                                    icon={getEventStatusIcon(event.eventStatus.id)}
-                                                    label={event.eventStatus.name}
-                                                    size="small"
-                                                    variant="outlined"
-                                                    sx={{
-                                                        fontWeight: 500,
-                                                        ...getEventStatusSx(event.eventStatus.id)
-                                                    }}
-                                                />
+                                            <Chip
+                                                icon={getEventStatusIcon(event.eventStatus.id, getEventStatusSx(event.eventStatus.id).color)}
+                                                label={event.eventStatus.name}
+                                                size="small"
+                                                sx={{
+                                                fontWeight: 500,
+                                                ...getEventStatusSx(event.eventStatus.id),
+                                                }}
+                                            />
                                             )}
 
                                         </Box>
@@ -463,14 +509,14 @@ export const EventsListPage: React.FC = () => {
                                     }}>
                                         <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap', flex: 1 }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <LocationOn sx={{ fontSize: 20, color: '#949cff' }} />
+                                                <LocationOn sx={{ fontSize: 20, color: 'primary.main' }} />
                                                 <Typography variant="body2" color="text.secondary">
                                                     {event.address || 'Адрес не указан'}
                                                 </Typography>
                                             </Box>
                                             
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <CalendarToday sx={{ fontSize: 20, color: '#949cff' }} />
+                                                <CalendarToday sx={{ fontSize: 20, color: 'primary.main' }} />
                                                 <Typography variant="body2" color="text.secondary">
                                                     {event.eventDateTime 
                                                         ? new Date(event.eventDateTime).toLocaleString('ru-RU', {
@@ -510,14 +556,19 @@ export const EventsListPage: React.FC = () => {
                 ))}
             </Grid>
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Pagination
+            {totalPages > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                <Pagination
                 count={totalPages}
                 page={pageNumber}
                 onChange={(_, value) => setPageNumber(value)}
                 color="primary"
-                siblingCount={0}
-                boundaryCount={1}
-            />
+                size="large"
+                showFirstButton
+                showLastButton
+                />
+            </Box>
+            )}
             </Box>
         </Container>
     );

@@ -9,6 +9,8 @@ import {
   Button,
   CircularProgress,
   TextField,
+  InputAdornment,
+  Paper,
 } from "@mui/material";
 import { Pending, CheckCircle, ExpandMore, ExpandLess } from "@mui/icons-material";
 import { ReportContext } from "../context/ReportContext";
@@ -16,6 +18,7 @@ import { BanUserModal } from "../components/BanUserModal";
 import { useNavigate } from "react-router-dom";
 import { ReportGroupDTO, UserReportDTO } from "../client/apiClient";
 import { useNotification } from '../components/Notification';
+import Search from "@mui/icons-material/Search";
 
 export const ReportsListPage: React.FC = () => {
     const context = useContext(ReportContext);
@@ -103,15 +106,37 @@ export const ReportsListPage: React.FC = () => {
       </Typography>
 
       {/* Поиск */}
-      <Box mb={3}>
-        <TextField
-          fullWidth
-          placeholder="Поиск по пользователю..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </Box>
-
+        <Paper
+          elevation={0}
+          sx={{
+            p: 2,
+            border: "1px solid rgba(148, 156, 255, 0.2)",
+            borderRadius: 2,
+            bgcolor: "rgba(148, 156, 255, 0.02)",
+          }}
+        >
+          <TextField
+            placeholder="Поиск " 
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            size="medium"
+            fullWidth
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search sx={{ color: "#949cff" }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                bgcolor: "white",
+                "&:hover fieldset": { borderColor: "#949cff" },
+                "&.Mui-focused fieldset": { borderColor: "#949cff" },
+              },
+            }}
+          />
+        </Paper>
       {/* Лоадер */}
       {isLoading && (
         <Box display="flex" justifyContent="center" mt={5}>

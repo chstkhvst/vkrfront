@@ -85,7 +85,7 @@ export const UsersListPage: React.FC = () => {
           }}
         >
           <TextField
-            label="Поиск по логину или ФИО"
+            placeholder="Поиск по логину или ФИО" 
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             size="medium"

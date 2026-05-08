@@ -1,35 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import {
-  Container,
-  Typography,
-  Box,
-  CircularProgress,
-  Alert,
-  Card,
-  CardContent,
-  Chip,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Divider,
-  LinearProgress,
-  Paper,
-  TextField
+  Container,Typography,Box,CircularProgress,Alert,Card,CardContent,Chip,Button,Dialog,DialogTitle,DialogContent,DialogActions,
+  Divider, LinearProgress, Paper,TextField
 } from "@mui/material";
 import { 
-  LocationOn, 
-  CalendarToday, 
-  LocationCity, 
-  Star, 
-  People,
-  Category,
-  CheckCircle,
-  Cancel,
-  HowToReg,
-  Map,
-  Flag 
+  LocationOn, CalendarToday, LocationCity, Star, People,Category,CheckCircle, Cancel, HowToReg, Map, Flag,
+  PendingOutlined as PendingIcon, CheckCircleOutline as ApprovedIcon,CancelOutlined as DeclinedIcon,EventBusy as CancelledIcon,EventAvailable as EndedIcon,
 } from '@mui/icons-material';
 import { useParams } from "react-router-dom";
 import { VolunteerEventContext } from "../context/EventContext";
@@ -41,6 +17,7 @@ import { CreateNotificationDTO, EventAttendanceDTO, VolunteerEventDTO } from "..
 import { MapView } from "../components/MapView";
 import { ReportUserModal } from "../components/ReportUserModal";
 import { useLocation } from "react-router-dom";
+import { SURFACE } from '../theme';
 
 export const EventDetailsPage: React.FC = () => {
   const location = useLocation();
@@ -81,6 +58,90 @@ export const EventDetailsPage: React.FC = () => {
       };
       load();
   }, [id]);
+
+  const EVENT_STATUS = {
+    ON_MODERATION: 1,
+    APPROVED: 2,
+    DECLINED: 3,
+    CANCELLED: 4,
+    ENDED: 5,
+  };
+
+  const getEventStatusIcon = (statusId: number | undefined, color: string) => {
+    switch (statusId) {
+      case EVENT_STATUS.ON_MODERATION:
+        return <PendingIcon fontSize="small" sx={{ color }} />;
+      case EVENT_STATUS.APPROVED:
+        return <ApprovedIcon fontSize="small" sx={{ color }} />;
+      case EVENT_STATUS.DECLINED:
+        return <DeclinedIcon fontSize="small" sx={{ color }} />;
+      case EVENT_STATUS.CANCELLED:
+        return <CancelledIcon fontSize="small" sx={{ color }} />;
+      case EVENT_STATUS.ENDED:
+        return <EndedIcon fontSize="small" sx={{ color }} />;
+      default:
+        return undefined;
+    }
+  };
+
+  const getEventStatusSx = (statusId: number | undefined) => {
+    switch (statusId) {
+      case EVENT_STATUS.ON_MODERATION:
+        return {
+          bgcolor: SURFACE.softWarning,
+          color: 'warning.main',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'warning.main',
+          },
+        };
+      case EVENT_STATUS.APPROVED:
+        return {
+          bgcolor: SURFACE.softSuccess,
+          color: 'success.main',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'success.main',
+          },
+        };
+      case EVENT_STATUS.DECLINED:
+        return {
+          bgcolor: SURFACE.softError,
+          color: 'error.main',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'error.main',
+          },
+        };
+      case EVENT_STATUS.CANCELLED:
+        return {
+          bgcolor: SURFACE.borderLight,
+          color: 'text.secondary',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'text.secondary',
+          },
+        };
+      case EVENT_STATUS.ENDED:
+        return {
+          bgcolor: SURFACE.borderLight,
+          color: 'text.secondary',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'text.secondary',
+          },
+        };
+      default:
+        return {
+          bgcolor: SURFACE.softPrimary,
+          color: 'primary.main',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'primary.main',
+          },
+        };
+    }
+  };
 
 const handleRegister = async (eventId: number) => {
       if (!createAttendance || !user?.user?.id) {
@@ -253,44 +314,32 @@ const handleRegister = async (eventId: number) => {
               {event.name}
             </Typography>
             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-              {event.eventCategory?.name && (
-                <Chip 
-                  icon={<Category sx={{ fontSize: 18 }} />}
-                  label={event.eventCategory.name} 
-                  sx={{ 
-                    bgcolor: 'rgba(148, 156, 255, 0.1)',
-                    color: '#949cff',
-                    fontWeight: 500,
-                    border: '1px solid rgba(148, 156, 255, 0.3)',
-                    px: 1
-                  }}
-                />
-              )}
-              {event.eventStatus?.name && (
-                <Chip 
-                  label={event.eventStatus.name}
-                  sx={{ 
-                    bgcolor: event.eventStatusId === 2 
-                      ? 'rgba(76, 175, 80, 0.1)' 
-                      : event.eventStatusId === 3 
-                      ? 'rgba(244, 67, 54, 0.1)'
-                      : 'rgba(255, 152, 0, 0.1)',
-                    color: event.eventStatusId === 2 
-                      ? '#4caf50' 
-                      : event.eventStatusId === 3 
-                      ? '#f44336'
-                      : '#ff9800',
-                    border: `1px solid ${event.eventStatusId === 2 
-                      ? 'rgba(76, 175, 80, 0.3)' 
-                      : event.eventStatusId === 3 
-                      ? 'rgba(244, 67, 54, 0.3)'
-                      : 'rgba(255, 152, 0, 0.3)'}`,
-                    fontWeight: 500,
-                    px: 1
-                  }}
-                />
-              )}
-            </Box>
+            {event.eventCategory?.name && (
+              <Chip 
+                icon={<Category sx={{ fontSize: 18, color: 'primary.main' }} />}
+                label={event.eventCategory.name} 
+                sx={{ 
+                  bgcolor: SURFACE.softPrimary,
+                  color: 'primary.main',
+                  fontWeight: 500,
+                  border: 'none',
+                  '& .MuiChip-icon': {
+                    color: 'primary.main',
+                  },
+                }}
+              />
+            )}
+            {event.eventStatus?.name && (
+              <Chip 
+                icon={getEventStatusIcon(event.eventStatusId, getEventStatusSx(event.eventStatusId).color)}
+                label={event.eventStatus.name}
+                sx={{
+                  fontWeight: 500,
+                  ...getEventStatusSx(event.eventStatusId),
+                }}
+              />
+            )}
+          </Box>
           </Box>
 
           {/* Описание */}
@@ -611,11 +660,10 @@ const handleRegister = async (eventId: number) => {
                   py: 1.5,
                   fontSize: '1rem',
                   fontWeight: 600,
-                  boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)',
                   transition: 'all 0.2s ease',
                   '&:hover': {
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.4)',
+                    bgcolor: 'rgba(76, 175, 80, 0.04)',
                   },
                   '&:active': {
                     transform: 'translateY(0)',
@@ -630,7 +678,7 @@ const handleRegister = async (eventId: number) => {
                 color="error"
                 startIcon={
                   processingStatus === 3
-                    ? <CircularProgress size={20} />
+                    ? <CircularProgress size={20} color="inherit" />
                     : <Cancel />
                 }
                 fullWidth
@@ -642,10 +690,8 @@ const handleRegister = async (eventId: number) => {
                   py: 1.5,
                   fontSize: '1rem',
                   fontWeight: 600,
-                  borderWidth: 2,
                   transition: 'all 0.2s ease',
                   '&:hover': {
-                    borderWidth: 2,
                     transform: 'translateY(-2px)',
                     bgcolor: 'rgba(244, 67, 54, 0.04)',
                   },

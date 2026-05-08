@@ -76,9 +76,37 @@ const NotificationBell: React.FC<Props> = ({ userId }) => {
           sx: { width: 320, maxHeight: 400 },
         }}
       >
-        <Box px={2} py={1}>
-          <Typography fontWeight={600}>Уведомления</Typography>
-        </Box>
+      <Box
+        px={2}
+        py={1}
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{
+          position: "sticky",
+          top: 0,
+          backgroundColor: "background.paper",
+          zIndex: 1,
+        }}
+      >
+        <Typography fontWeight={600}>Уведомления</Typography>
+
+        {notifications.length > 0 && (
+          <Button
+            size="small"
+            onClick={handleReadAll}
+            sx={{
+              minWidth: "auto",
+              textTransform: "none",
+              fontSize: "0.75rem",
+            }}
+          >
+            Отметить все 
+          </Button>
+        )}
+      </Box>
+
+      <Divider />
 
         <Divider />
 
@@ -119,12 +147,6 @@ const NotificationBell: React.FC<Props> = ({ userId }) => {
         )}
 
         <Divider />
-
-        <Box p={1} display="flex" justifyContent="space-between">
-          <Button size="small" onClick={handleReadAll}>
-            Отметить все как прочитанные
-          </Button>
-        </Box>
       </Menu>
     </>
   );

@@ -150,7 +150,7 @@ export const CommunityEventsPage: React.FC = () => {
                 <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center',  }}>
                     {/* Поиск */}
                     <TextField
-                        label="Поиск"
+                        placeholder="Поиск"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         size="small"
@@ -455,11 +455,24 @@ export const CommunityEventsPage: React.FC = () => {
             </Grid>
 
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <Pagination
+                {/* <Pagination
                     count={communityTotalPages}
                     page={communityPageNumber}
                     onChange={(_, value) => setCommunityPageNumber(value)}
-                />
+                /> */}
+                {communityTotalPages > 1 && (
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+                    <Pagination
+                    count={communityTotalPages}
+                    page={communityPageNumber}
+                    onChange={(_, value) => setCommunityPageNumber(value)}
+                    color="primary"
+                    size="large"
+                    showFirstButton
+                    showLastButton
+                    />
+                </Box>
+                )}
             </Box>
         </Container>
     );

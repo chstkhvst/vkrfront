@@ -5,18 +5,29 @@ import {
     List,
     ListItem,
     Button,
-    Chip,
     CircularProgress,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogContentText,
     DialogActions,
-    TextField  
+    TextField,
+    IconButton,
+    Tooltip,
+    InputAdornment
 } from "@mui/material";
+
+import {
+    Check,
+    Close,
+    Search
+} from "@mui/icons-material";
+
 import { AttendanceContext } from "../context/AttendanceContext";
 import { EventAttendanceDTO } from "../client/apiClient";
 import { useNotification } from '../components/Notification';
+import { SURFACE } from '../theme'
+
 type Props = {
     eventId: number;
     eventDateTime: Date;
@@ -31,13 +42,16 @@ const STATUS = {
 
 export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) => {
     const context = useContext(AttendanceContext);
-    
+
     const [participants, setParticipants] = useState<EventAttendanceDTO[]>([]);
     const [loading, setLoading] = useState(false);
     const [markingAllNoShow, setMarkingAllNoShow] = useState(false);
+
     const { showNotification } = useNotification();
+
     const [searchTerm, setSearchTerm] = useState("");
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+
     const isMounted = useRef(true);
 
     const {
@@ -55,7 +69,9 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
 
             if (isMounted.current) {
                 setParticipants(
-                    (data || []).filter(p => p.attendanceStatusId !== STATUS.CANCELLED)
+                    (data || []).filter(
+                        p => p.attendanceStatusId !== STATUS.CANCELLED
+                    )
                 );
             }
         } catch {
@@ -82,15 +98,21 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
     const activeParticipants = participants.filter(
         p => p.attendanceStatusId !== STATUS.CANCELLED
     );
+
     const filteredParticipants = activeParticipants.filter(p => {
         const search = searchTerm.toLowerCase().trim();
+
         if (!search) return true;
-        
+
         const fullname = p.user?.fullname?.toLowerCase() || "";
         const username = p.user?.userName?.toLowerCase() || "";
-        
-        return fullname.includes(search) || username.includes(search);
+
+        return (
+            fullname.includes(search) ||
+            username.includes(search)
+        );
     });
+
     const canMarkAttendance = (() => {
         if (!eventDateTime) return false;
 
@@ -99,26 +121,29 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
 
         const diffMs = event.getTime() - now.getTime();
 
-        return diffMs <= 2 * 60 * 60 * 1000; // 2 часа
+        return diffMs <= 2 * 60 * 60 * 1000;
     })();
 
     const handleOpenConfirmDialog = useCallback(() => {
         setConfirmDialogOpen(true);
     }, []);
+
     const handleMarkAllAsNoShow = useCallback(async () => {
         setMarkingAllNoShow(true);
+
         try {
             await markNoShow(eventId);
-            await loadParticipants(); 
+            await loadParticipants();
+
             showNotification("Неявки успешно отмечены", "success");
         } catch {
             showNotification("Ошибка при отметке неявок", "error");
         } finally {
             setMarkingAllNoShow(false);
         }
-    }, [eventId, markNoShow, loadParticipants]);
-    
-   const handleMarkAttendance = async (attendance: EventAttendanceDTO) => {
+    }, [eventId, markNoShow]);
+
+    const handleMarkAttendance = async (attendance: EventAttendanceDTO) => {
         if (!attendance.id) return;
 
         try {
@@ -145,31 +170,40 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
         }
     };
 
-    const getStatusLabel = useCallback((statusId?: number) => {
+    const getStatusData = useCallback((statusId?: number) => {
         switch (statusId) {
             case STATUS.ATTENDED:
-                return "Присутствовал";
-            case STATUS.NO_SHOW:
-                return "Неявка";
-            default:
-                return "Ожидается";
-        }
-    }, []);
+                return {
+                    label: "Присутствовал",
+                    color: "#5fa777",
+                    background: SURFACE.softSuccess,
+                };
 
-    const getStatusColor = useCallback((statusId?: number) => {
-        switch (statusId) {
-            case STATUS.ATTENDED:
-                return "success";
             case STATUS.NO_SHOW:
-                return "error";
+                return {
+                    label: "Неявка",
+                    color: "#d96b7d",
+                    background: SURFACE.softError,
+                };
+
             default:
-                return "warning";
+                return {
+                    label: "Ожидается",
+                    color: "#d6a63f",
+                    background: SURFACE.softWarning,
+                };
         }
     }, []);
 
     if (loading) {
         return (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    py: 3,
+                }}
+            >
                 <CircularProgress />
             </Box>
         );
@@ -177,132 +211,310 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
 
     return (
         <Box>
-            {filteredParticipants.length === 0 &&  (
-                <Typography color="text.secondary" sx={{ textAlign: "center", py: 3 }}>
-                    Нет участников
-                </Typography>
-            )}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                <Typography variant="h6">
-                    Зарегистрировано: ({filteredParticipants.length})
-                </Typography>
-                    <TextField
-                    size="small"
-                    placeholder="Поиск по имени или логину"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    sx={{ width: 250 }}
-                />
-                {canMarkAttendance && (
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleOpenConfirmDialog}
-                        disabled={markingAllNoShow || activeParticipants.every(p => 
-                            p.attendanceStatusId === STATUS.ATTENDED || 
-                            p.attendanceStatusId === STATUS.NO_SHOW
-                        )}
-                        startIcon={markingAllNoShow ? <CircularProgress size={20} /> : null}
-                    >
-                        {markingAllNoShow ? "Отметка..." : "Отметить оставшихся как неявку"}
-                    </Button>
-                )}
-            </Box>
-
-            <List sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-            {filteredParticipants.map(p => {
-                const user = p.user;
-                const isFinal =
-                p.attendanceStatusId === STATUS.ATTENDED ||
-                p.attendanceStatusId === STATUS.NO_SHOW;
-
-                return (
-                <ListItem
-                    key={p.id}
-                    sx={{
-                    border: "1px solid #e0e0e0",
-                    borderRadius: 2,
-                    px: 2,
-                    py: 1.5,
+            <Box
+                sx={{
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
-                    backgroundColor: "#fff",
-                    }}
-                >
-                    {/* Левая часть */}
-                    <Box sx={{ display: "flex", flexDirection: "column" }}>
-                    <Typography fontWeight={500}>
-                        {user?.fullname ||
-                        user?.userName ||
-                        `Пользователь ID: ${user?.id}` ||
-                        "Без имени"}
+                    gap: 2,
+                    mb: 2.5,
+                    flexWrap: "wrap",
+                }}
+            >
+                <Box>
+                    <Typography
+                        variant="h6"
+                        fontWeight={700}
+                    >
+                        Участники
                     </Typography>
 
-                    {user?.userName && (
-                        <Typography variant="body2" color="text.secondary">
-                        @{user.userName}
-                        </Typography>
-                    )}
-                    </Box>
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                    >
+                        Зарегистрировано: {filteredParticipants.length}
+                    </Typography>
+                </Box>
 
-                    {/* Правая часть */}
-                    <Box
+                <Box
                     sx={{
                         display: "flex",
                         alignItems: "center",
                         gap: 1.5,
+                        flexWrap: "wrap",
                     }}
-                    >
-                    <Chip
-                        label={getStatusLabel(p.attendanceStatusId)}
-                        color={getStatusColor(p.attendanceStatusId)}
-                        variant="outlined"
+                >
+                    <TextField
+                        size="small"
+                        placeholder="Поиск"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        sx={{
+                            width: 240,
+                            backgroundColor: "#fff",
+                        }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <Search fontSize="small" />
+                                </InputAdornment>
+                            ),
+                        }}
                     />
 
-                    {!isFinal && canMarkAttendance && (
-                        <Box sx={{ display: "flex", gap: 1 }}>
-                        <Button
-                            variant="outlined"
-                            color="primary"
-                            onClick={() => handleMarkAttendance(p)}
-                        >
-                            Присутствовал
-                        </Button>
-
+                    {canMarkAttendance && (
                         <Button
                             variant="outlined"
                             color="error"
-                            onClick={() => handleMarkNoShowSingle(p)}
+                            onClick={handleOpenConfirmDialog}
+                            disabled={
+                                markingAllNoShow ||
+                                activeParticipants.every(
+                                    p =>
+                                        p.attendanceStatusId === STATUS.ATTENDED ||
+                                        p.attendanceStatusId === STATUS.NO_SHOW
+                                )
+                            }
+                            startIcon={
+                                markingAllNoShow
+                                    ? <CircularProgress size={16} />
+                                    : undefined
+                            }
+                            sx={{
+                                whiteSpace: "nowrap",
+                            }}
                         >
-                            Неявка
+                            {markingAllNoShow
+                                ? "Отметка..."
+                                : "Отметить оставшихся"}
                         </Button>
-                        </Box>
                     )}
-                    </Box>
-                </ListItem>
-                );
-            })}
+                </Box>
+            </Box>
+
+            {filteredParticipants.length === 0 && (
+                <Typography
+                    color="text.secondary"
+                    sx={{
+                        textAlign: "center",
+                        py: 5,
+                    }}
+                >
+                    Нет участников
+                </Typography>
+            )}
+
+            <List
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    p: 0,
+                }}
+            >
+                {filteredParticipants.map(p => {
+                    const user = p.user;
+
+                    const isFinal =
+                        p.attendanceStatusId === STATUS.ATTENDED ||
+                        p.attendanceStatusId === STATUS.NO_SHOW;
+
+                    const status = getStatusData(
+                        p.attendanceStatusId
+                    );
+
+                    return (
+                        <ListItem
+                            key={p.id}
+                            sx={{
+                                border: `1px solid ${SURFACE.borderLight}`,
+                                borderRadius: 3,
+                                px: 4,
+                                py: 1.5,
+                                backgroundColor: "#fff",
+                                transition: "background-color 0.18s ease",
+
+                                "&:hover": {
+                                    backgroundColor: SURFACE.softPrimary,
+                                },
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: "100%",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    gap: 2,
+                                }}
+                            >
+                                {/* LEFT */}
+                                <Box
+                                    sx={{
+                                        minWidth: 0,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: 0.3,
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            flexWrap: "wrap",
+                                            minWidth: 0,
+                                        }}
+                                    >
+                                        <Typography
+                                            fontWeight={600}
+                                            sx={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {
+                                                user?.fullname ||
+                                                user?.userName ||
+                                                `Пользователь ID: ${user?.id}` ||
+                                                "Без имени"
+                                            }
+                                        </Typography>   
+                                    </Box>
+
+                                    {user?.userName && (
+                                        <Typography
+                                            variant="body2"
+                                            color="text.secondary"
+                                            sx={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            @{user.userName}
+                                        </Typography>
+                                    )}
+                                </Box>
+
+                                {/* RIGHT */}
+                                {!isFinal && canMarkAttendance && (
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                            flexShrink: 0,
+                                        }}
+                                    >
+                                        <Tooltip title="Отметить неявку">
+                                            <IconButton
+                                                onClick={() => handleMarkNoShowSingle(p)}
+                                                size="small"
+                                                sx={{
+                                                    width: 36,
+                                                    height: 36,
+                                                    backgroundColor: SURFACE.softError,
+                                                    color: "#d96b7d",
+
+                                                    "&:hover": {
+                                                        backgroundColor: "#ffe4e8",
+                                                    },
+                                                }}
+                                            >
+                                                <Close fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                        <Tooltip title="Отметить присутствие">
+                                            <IconButton
+                                                onClick={() => handleMarkAttendance(p)}
+                                                size="small"
+                                                sx={{
+                                                    width: 36,
+                                                    height: 36,
+                                                    backgroundColor: SURFACE.softSuccess,
+                                                    color: "#5fa777",
+
+                                                    "&:hover": {
+                                                        backgroundColor: "#dff0e5",
+                                                    },
+                                                }}
+                                            >
+                                                <Check fontSize="small" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Box>
+                                )}
+                                {isFinal && (
+                                <Box
+                                sx={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 0.7,
+                                    px: 0.9,
+                                    py: 0.2,
+                                    height: 22,
+                                    borderRadius: 999,
+                                    backgroundColor: status.background,
+                                    flexShrink: 0,
+                                }}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: 6,
+                                            height: 6,
+                                            borderRadius: "50%",
+                                            backgroundColor: status.color,
+                                            flexShrink: 0,
+                                        }}
+                                    />
+
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            color: status.color,
+                                            fontWeight: 600,
+                                            lineHeight: 1,
+                                            fontSize: 11,
+                                        }}
+                                    >
+                                        {status.label}
+                                    </Typography>
+                                </Box>
+                                )}
+                            </Box>
+                        </ListItem>
+                    );
+                })}
             </List>
+
             <Dialog
                 open={confirmDialogOpen}
                 onClose={() => setConfirmDialogOpen(false)}
             >
-                <DialogTitle sx={{ color: '#f44336' }}>
+                <DialogTitle>
                     Отметка всех участников
                 </DialogTitle>
+
                 <DialogContent>
                     <DialogContentText>
-                        Вы уверены, что хотите отметить всех неотмеченных участников как неявившихся?
+                        Вы уверены, что хотите отметить всех
+                        неотмеченных участников как неявившихся?
                     </DialogContentText>
                 </DialogContent>
+
                 <DialogActions>
-                    <Button onClick={() => setConfirmDialogOpen(false)}>
+                    <Button
+                        onClick={() => setConfirmDialogOpen(false)}
+                    >
                         Отмена
                     </Button>
-                    <Button 
-                        onClick={handleMarkAllAsNoShow} 
-                        variant="contained" 
+
+                    <Button
+                        onClick={handleMarkAllAsNoShow}
+                        variant="contained"
                         color="error"
                         autoFocus
                     >

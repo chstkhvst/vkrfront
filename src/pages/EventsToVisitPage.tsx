@@ -13,7 +13,6 @@ import {
   Alert,
   Grid,
   Chip,
-  GridLegacy,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -24,7 +23,9 @@ import {
   Cancel as CancelledAttendanceIcon,
   CheckCircle as AttendedIcon,
   DoNotDisturb as NoShowIcon,
-  Flag
+  Flag,
+  CalendarMonthOutlined as CalendarIcon,
+  LocationOnOutlined as LocationIcon,
 } from '@mui/icons-material';
 import IconButton from '@mui/material/IconButton';
 import { AttendanceContext } from '../context/AttendanceContext';
@@ -33,6 +34,7 @@ import { useAuth } from '../context/AuthContext';
 import { EventAttendanceDTO } from '../client/apiClient';
 import { useNotification } from '../components/Notification';
 import { ReportUserModal } from '../components/ReportUserModal';
+import { SURFACE } from '../theme';
 
 export const EventsToVisitPage: React.FC = () => {
   const context = useContext(AttendanceContext);
@@ -85,39 +87,76 @@ export const EventsToVisitPage: React.FC = () => {
     NO_SHOW: 4,
   };
 
-  const getAttendanceStatusIcon = (statusId: number | undefined) => {
-    switch (statusId) {
-      case ATTENDANCE_STATUS.UPCOMING:
-        return <UpcomingIcon fontSize="small" />;
-      case ATTENDANCE_STATUS.CANCELLED:
-        return <CancelledAttendanceIcon fontSize="small" />;
-      case ATTENDANCE_STATUS.ATTENDED:
-        return <AttendedIcon fontSize="small" />;
-      case ATTENDANCE_STATUS.NO_SHOW:
-        return <NoShowIcon fontSize="small" />;
-      default:
-        return undefined;
-    }
-  };
+const getAttendanceStatusIcon = (statusId: number | undefined, color: string) => {
+  switch (statusId) {
+    case ATTENDANCE_STATUS.UPCOMING:
+      return <UpcomingIcon fontSize="small" sx={{ color }} />;
+    case ATTENDANCE_STATUS.CANCELLED:
+      return <CancelledAttendanceIcon fontSize="small" sx={{ color }} />;
+    case ATTENDANCE_STATUS.ATTENDED:
+      return <AttendedIcon fontSize="small" sx={{ color }} />;
+    case ATTENDANCE_STATUS.NO_SHOW:
+      return <NoShowIcon fontSize="small" sx={{ color }} />;
+    default:
+      return undefined;
+  }
+};
 
   const getAttendanceStatusSx = (statusId: number | undefined) => {
     switch (statusId) {
       case ATTENDANCE_STATUS.UPCOMING:
-        return { borderColor: '#949cff', color: '#949cff' };
+        return { 
+          bgcolor: SURFACE.softPrimary,
+          color: 'primary.main',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'primary.main',
+          },
+        };
       case ATTENDANCE_STATUS.CANCELLED:
-        return { borderColor: '#f44336', color: '#f44336' };
+        return { 
+          bgcolor: SURFACE.softError,
+          color: 'error.main',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'error.main',
+          },
+        };
       case ATTENDANCE_STATUS.ATTENDED:
-        return { borderColor: '#4caf50', color: '#4caf50' };
+        return { 
+          bgcolor: SURFACE.softSuccess,
+          color: 'success.main',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'success.main',
+          },
+        };
       case ATTENDANCE_STATUS.NO_SHOW:
-        return { borderColor: '#5f6388', color: '#5f6388' };
+        return { 
+          bgcolor: SURFACE.softWarning,
+          color: 'text.secondary',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'text.secondary',
+          },
+        };
       default:
-        return { borderColor: '#5f6388', color: '#5f6388' };
+        return { 
+          bgcolor: SURFACE.borderLight,
+          color: 'text.secondary',
+          border: 'none',
+          '& .MuiChip-icon': {
+            color: 'text.secondary',
+          },
+        };
     }
   };
+  
   const isEventInPast = (event: any) => {
     if (!event?.eventDateTime) return true;
     return new Date(event.eventDateTime) <= new Date();
   };
+  
   const volunteerUpcoming = data
     .filter(a => 
       a.attendanceStatusId === ATTENDANCE_STATUS.UPCOMING && 
@@ -127,6 +166,7 @@ export const EventsToVisitPage: React.FC = () => {
       new Date(a.volunteerEvent?.eventDateTime || 0).getTime() - 
       new Date(b.volunteerEvent?.eventDateTime || 0).getTime()
     );
+    
   const volunteerHistory = data
     .filter(a => 
       a.attendanceStatusId !== ATTENDANCE_STATUS.UPCOMING || 
@@ -136,12 +176,14 @@ export const EventsToVisitPage: React.FC = () => {
       new Date(b.volunteerEvent?.eventDateTime || 0).getTime() - 
       new Date(a.volunteerEvent?.eventDateTime || 0).getTime()
     );
+    
   const canCancelAttendance = (event: any) => {
     if (!event?.eventDateTime) return false;
     const eventDate = new Date(event.eventDateTime);
     const now = new Date();
     return eventDate > now;
   };
+  
   const handleConfirmCancelAttendance = async () => {
       const userId = user?.user?.id;
       if (!attendanceToCancel?.id || !userId) return;
@@ -165,6 +207,7 @@ export const EventsToVisitPage: React.FC = () => {
       setCancelAttendanceDialogOpen(false);
       setAttendanceToCancel(null);
   };
+  
   const getCurrentList = () => {
     if (tab === 0) return volunteerUpcoming;
     return [...volunteerHistory];
@@ -172,7 +215,7 @@ export const EventsToVisitPage: React.FC = () => {
 
   const currentList = getCurrentList();
 
-return (
+  return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" sx={{ mb: 3 }}>
         События для посещения
@@ -181,10 +224,33 @@ return (
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
-        sx={{ mb: 3 }}
+        sx={{
+          mb: 3,
+          '& .MuiTabs-indicator': {
+            backgroundColor: 'primary.main',
+            height: 3,
+            borderRadius: 2,
+          },
+        }}
       >
-        <Tab label="Предстоящие" />
-        <Tab label="История" />
+        <Tab
+          label="Предстоящие"
+          sx={{
+            color: 'default',
+            '&.Mui-selected': {
+              color: 'primary.main',
+            },
+          }}
+        />
+        <Tab
+          label="История"
+          sx={{
+            color: 'default',
+            '&.Mui-selected': {
+              color: 'primary.main',
+            },
+          }}
+        />
       </Tabs>
 
       {error && <Alert severity="error">{error}</Alert>}
@@ -208,7 +274,11 @@ return (
                   '&:hover': tab === 0 ? {
                     transform: 'translateY(-4px)',
                     boxShadow: '0 8px 20px rgba(0,0,0,0.1)'
-                  } : {}
+                  } : {},
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  backgroundColor: tab === 0 ? 'rgba(255,255,255,0.78)' : 'rgba(255,255,255,0.72)',
                 }}
                 onClick={() => {
                   if (tab === 0 && event?.id) {
@@ -216,75 +286,121 @@ return (
                   }
                 }}
               >
-                {/* Кнопка жалобы в правом верхнем углу */}
-                {tab === 1 && event?.userId && (
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedReportEvent(event);
-                      setReportModalOpen(true);
-                    }}
+
+                <CardContent sx={{ flexGrow: 1, minWidth: 0 }}>
+                <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  mb: 2,
+                  gap: 1,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="h6"
                     sx={{
-                      position: 'absolute',
-                      top: 8,
-                      right: 8,
-                      zIndex: 1,
-                      '&:hover': {
-                        bgcolor: 'rgba(211, 47, 47, 0.04)',
-                      }
+                      wordBreak: 'break-word',
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
                     }}
                   >
-                    <Flag sx={{ fontSize: 20 }} />
-                  </IconButton>
-                )}
-
-                <CardContent
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                  }}
-                >
-                  <Typography variant="h6" sx={{ mb: 1 }}>
                     {event?.name || 'Без названия'}
                   </Typography>
 
-                  <Typography color="text.secondary">
-                    📅{' '}
-                    {event?.eventDateTime
-                      ? new Date(event.eventDateTime).toLocaleString()
-                      : 'Нет даты'}
-                  </Typography>
-
-                  <Typography color="text.secondary">
-                    📍 {event?.address || 'Без адреса'}
-                  </Typography>
-
-                  <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                    <Chip
-                      icon={getAttendanceStatusIcon(a.attendanceStatusId)}
-                      label={a.attendanceStatus?.name}
-                      variant="outlined"
+                  {tab === 1 && event?.userId && (
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedReportEvent(event);
+                        setReportModalOpen(true);
+                      }}
                       sx={{
-                        ...getAttendanceStatusSx(a.attendanceStatusId),
-                        '& .MuiChip-icon': {
-                          fontSize: '1rem',
-                        },
+                        flexShrink: 0,
+                        p: 0.5,
+                        ml: 0.5,
+                        '&:hover': {
+                          bgcolor: 'rgba(211, 47, 47, 0.04)',
+                        }
+                      }}
+                    >
+                      <Flag sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  )}
+                </Box>
+
+                <Chip
+                  icon={getAttendanceStatusIcon(a.attendanceStatusId, getAttendanceStatusSx(a.attendanceStatusId).color)}
+                  label={a.attendanceStatus?.name || 'Статус неизвестен'}
+                  sx={{
+                    ...getAttendanceStatusSx(a.attendanceStatusId),
+                    flexShrink: 0,
+                  }}
+                />
+              </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      color: 'text.secondary',
+                      mb: 0.5,
+                      minWidth: 0,
+                    }}
+                  >
+                    <CalendarIcon
+                      sx={{
+                        fontSize: 20,
+                        color: 'primary.main',
+                        flexShrink: 0,
                       }}
                     />
+
+                    <Typography color="inherit" noWrap>
+                      {event?.eventDateTime
+                        ? new Date(event.eventDateTime).toLocaleString()
+                        : 'Нет даты'}
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      color: 'text.secondary',
+                      minWidth: 0,
+                    }}
+                  >
+                    <LocationIcon
+                      sx={{
+                        fontSize: 20,
+                        color: 'secondary.dark',
+                        flexShrink: 0,
+                      }}
+                    />
+
+                    <Typography 
+                      color="inherit" 
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {event?.address || 'Без адреса'}
+                    </Typography>
                   </Box>
                 </CardContent>
                 
-                <CardActions
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    pb: 2,
-                  }}
-                >
+                <CardActions sx={{ justifyContent: 'flex-end', pt: 0, flexWrap: 'wrap', gap: 1 }}>
                   {tab === 0 && canCancelAttendance(event) && (
                     <Button
                       variant="contained"
@@ -332,7 +448,7 @@ return (
           </Button>
           <Button
             onClick={handleConfirmCancelAttendance}
-            variant="contained"
+            variant="text"
             color="error"
             autoFocus
           >
@@ -340,6 +456,7 @@ return (
           </Button>
         </DialogActions>
       </Dialog>
+      
       {/* Модальное окно жалобы */}
       <ReportUserModal
         open={reportModalOpen}

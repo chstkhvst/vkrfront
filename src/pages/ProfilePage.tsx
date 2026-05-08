@@ -234,7 +234,7 @@ export const ProfilePage: React.FC = () => {
                         <Box>
                           {isEditing ? (
                             <TextField
-                              label="Логин"
+                              placeholder="Логин"
                               name="userName"
                               value={formData.userName}
                               onChange={handleChange}
@@ -275,7 +275,7 @@ export const ProfilePage: React.FC = () => {
                           label={`Баллы: ${currentUser.volunteerProfile.totalPoints || 0}`}
                           color="primary"
                           sx={{
-                            color: "secondary.main",
+                            color: "primary.main",
                             fontWeight: 600,
                             boxShadow: 1,
                           }}
@@ -286,7 +286,7 @@ export const ProfilePage: React.FC = () => {
                               label={currentUser.volunteerProfile.rank.name}
                           color="primary"
                           sx={{
-                            color: "secondary.main",
+                            color: "primary.main",
                             fontWeight: 600,
                             boxShadow: 1,
                           }}
