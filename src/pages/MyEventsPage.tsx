@@ -341,7 +341,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
 
       {currentList.length === 0 && (
         <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-          У вас пока нет созданных мероприятий
+          На данный момент мероприятий нет
         </Typography>
       )}
 

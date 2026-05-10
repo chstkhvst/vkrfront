@@ -26,7 +26,6 @@ import {
   EventBusy as CancelledIcon,
   EventAvailable as EndedIcon,
   Search,
-  FilterList,
   FilterListOff,
 } from '@mui/icons-material';
 import { VolunteerEventContext } from '../context/EventContext';
@@ -40,10 +39,8 @@ export const CommunityEventsPage: React.FC = () => {
     const navigate = useNavigate();
 
     const [search, setSearch] = useState('');
-    const [categoryId, setCategoryId] = useState<number | ''>('');
-    const [cityId, setCityId] = useState<number | ''>('');
     const [citySearch, setCitySearch] = useState('');
-    const [statusId, setStatusId] = useState<number | ''>('');
+
     const {
         communityEvents,
         isLoading,
@@ -54,11 +51,13 @@ export const CommunityEventsPage: React.FC = () => {
         eventCategories,
         cities,
         clearFilters,
+        filterParams,
+        setFilterParams
     } = context!;
 
     useEffect(() => {
-        context!.fetchCommunityEvents();
-    }, [communityPageNumber]);
+        context!.fetchCommunityEvents(filterParams);
+    }, [communityPageNumber, filterParams]);
 
     useEffect(() => {
         const delay = setTimeout(() => {
@@ -124,13 +123,9 @@ export const CommunityEventsPage: React.FC = () => {
             return a.name!.localeCompare(b.name!);
     });
 
-    const handleChangeFilters = (overrideParams?: any) => {
-        const params = overrideParams ?? {
-            keyWords: search || undefined,
-            catId: categoryId || undefined,
-            cityId: cityId || undefined,
-            statusId: user?.role === "moderator" ? (statusId || undefined) : undefined
-        };
+    const handleChangeFilters = () => {
+        const params = ({...filterParams, keyWords: search, statusId: user?.role === "moderator" ? (filterParams.statusId || undefined) : undefined})
+
 
         context!.setFilterParams(params);
         context!.fetchCommunityEvents(params);
@@ -189,9 +184,9 @@ export const CommunityEventsPage: React.FC = () => {
                             },
                         }}>Категория</InputLabel>
                         <Select
-                            value={categoryId}
+                            value={filterParams.catId ?? ""}
                             label="Категория"
-                            onChange={(e) => setCategoryId(e.target.value as number)}
+                            onChange={(e) => setFilterParams({...filterParams, catId: Number(e.target.value)})}
                             sx={{
                                 bgcolor: 'white',
                                 '& .MuiOutlinedInput-notchedOutline': {
@@ -245,9 +240,9 @@ export const CommunityEventsPage: React.FC = () => {
                                 }}
                             />
                         )}
-                        value={cities.find(c => c.id === cityId) || null}
+                        value={cities.find(c => c.id === filterParams.cityId) || null}
                         onChange={(_, newValue) => {
-                            setCityId(newValue?.id || '');
+                            setFilterParams({...filterParams, cityId: newValue?.id});
                         }}
                         isOptionEqualToValue={(option, value) => option.id === value?.id}
                         sx={{ minWidth: 200, flex: '0 1 auto' }}
@@ -262,9 +257,9 @@ export const CommunityEventsPage: React.FC = () => {
                             },
                         }}>Статус</InputLabel>
                         <Select
-                            value={statusId}
-                            label="Категория"
-                            onChange={(e) => setStatusId(e.target.value as number)}
+                            value={filterParams.statusId ?? ""}
+                            label="Статус"
+                            onChange={(e) => setFilterParams({...filterParams, statusId: e.target.value})}
                             sx={{
                                 bgcolor: 'white',
                                 '& .MuiOutlinedInput-notchedOutline': {
@@ -284,28 +279,6 @@ export const CommunityEventsPage: React.FC = () => {
                     </FormControl>
                     )}
 
-                    {/* Применить */}
-                    <Button
-                        variant="contained"
-                        startIcon={<FilterList />}
-                        onClick={() => handleChangeFilters({
-                            keyWords: search || undefined,
-                            catId: categoryId || undefined,
-                            cityId: cityId || undefined,
-                            statusId: user?.role === "moderator" ? (statusId || undefined) : undefined
-                        })}
-                        sx={{
-                            bgcolor: '#949cff',
-                            '&:hover': {
-                                bgcolor: '#7c84f4',
-                            },
-                            textTransform: 'none',
-                            px: 3
-                        }}
-                    >
-                        Применить
-                    </Button>
-
                     {/* Сброс */}
                     <Button
                         variant="outlined"
@@ -318,12 +291,7 @@ export const CommunityEventsPage: React.FC = () => {
                                 statusId: undefined
                             };
 
-                            setSearch('');
-                            setCategoryId('');
-                            setCityId('');
-                            setStatusId('');
                             clearFilters();
-                            handleChangeFilters(params);
                         }}
                         sx={{
                             borderColor: '#949cff',

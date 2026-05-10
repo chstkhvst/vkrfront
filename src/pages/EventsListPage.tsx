@@ -31,13 +31,16 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CalendarToday, Category, FilterList, FilterListOff, LocationOn, Search, Star } from '@mui/icons-material';
 import { SURFACE } from '../theme';
+import { useSearchParams } from 'react-router-dom';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
     const { user, isLoading: authLoading } = useAuth(); 
     const navigate = useNavigate();
-    
+
     const [search, setSearch] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams(); //это для пагинации
+    const currentPage = Number(searchParams.get("page")) || 1;
 
     const [citySearch, setCitySearch] = useState('');
 
@@ -76,15 +79,30 @@ export const EventsListPage: React.FC = () => {
     //         context!.fetchEventsForUser();
     //     }
     // }, [pageNumber, user?.role, authLoading]);
+
+    // useEffect(() => {
+    //     if(authLoading) return;
+    //     if (user?.role === "moderator") {
+    //         context!.fetchEvents(filterParams);
+    //     } else {
+    //         context!.fetchEventsForUser(filterParams);
+    //     }
+    // }, [pageNumber, user?.role, authLoading, filterParams]);
     useEffect(() => {
-        if(authLoading) return;
-console.log(filterParams.catId)
+        setPageNumber(currentPage);
+    }, [currentPage]);
+
+    useEffect(() => {
+        if (authLoading) return;
+
+        if (pageNumber !== currentPage) return;
+
         if (user?.role === "moderator") {
             context!.fetchEvents(filterParams);
         } else {
             context!.fetchEventsForUser(filterParams);
         }
-    }, [pageNumber, user?.role, authLoading, filterParams]);
+    }, [pageNumber, currentPage, user?.role, authLoading, filterParams]);
 
 
     const filteredCities = [...cities].sort((a, b) => {
@@ -326,7 +344,7 @@ console.log(filterParams.catId)
                         }}>Статус</InputLabel>
                         <Select
                             value={filterParams.statusId ?? ""}
-                            label="Категория"
+                            label="Статус"
                             onChange={(e) => setFilterParams({...filterParams, statusId: e.target.value})}
                             sx={{
                                 bgcolor: 'white',
@@ -371,7 +389,8 @@ console.log(filterParams.catId)
 
                     {/* Сброс */}
                     <Button
-                        variant="outlined"
+                        variant="contained"
+                        color='primary'
                         startIcon={<FilterListOff />}
                         onClick={() => {
 
@@ -379,11 +398,8 @@ console.log(filterParams.catId)
                             //handleChangeFilters();
                         }}
                         sx={{
-                            borderColor: '#949cff',
-                            color: '#949cff',
                             '&:hover': {
-                                borderColor: '#7c84f4',
-                                bgcolor: 'rgba(148, 156, 255, 0.05)',
+                                backgroundColor: 'primary.dark',
                             },
                             textTransform: 'none'
                         }}
@@ -553,15 +569,21 @@ console.log(filterParams.catId)
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             {totalPages > 1 && (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-                <Pagination
-                count={totalPages}
-                page={pageNumber}
-                onChange={(_, value) => setPageNumber(value)}
-                color="primary"
-                size="large"
-                showFirstButton
-                showLastButton
-                />
+<Pagination
+    count={totalPages}
+    page={currentPage}
+    onChange={(_, value) => {
+        setSearchParams({
+            page: value.toString(),
+        });
+
+        setPageNumber(value);
+    }}
+    color="primary"
+    size="large"
+    showFirstButton
+    showLastButton
+/>
             </Box>
             )}
             </Box>
