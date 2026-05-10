@@ -423,13 +423,18 @@ export class Client {
     }
 
     /**
+     * @param isApproved (optional) 
      * @return OK
      */
-    approveOrganizer(userId: string): Promise<void> {
-        let url_ = this.baseUrl + "/api/Account/approve-organizer/{userId}";
+    moderateOrganizer(userId: string, isApproved?: boolean | undefined): Promise<void> {
+        let url_ = this.baseUrl + "/api/Account/moderate-organizer/{userId}?";
         if (userId === undefined || userId === null)
             throw new globalThis.Error("The parameter 'userId' must be defined.");
         url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (isApproved === null)
+            throw new globalThis.Error("The parameter 'isApproved' cannot be null.");
+        else if (isApproved !== undefined)
+            url_ += "isApproved=" + encodeURIComponent("" + isApproved) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: RequestInit = {
@@ -439,11 +444,11 @@ export class Client {
         };
 
         return this.http.fetch(url_, options_).then((_response: Response) => {
-            return this.processApproveOrganizer(_response);
+            return this.processModerateOrganizer(_response);
         });
     }
 
-    protected processApproveOrganizer(response: Response): Promise<void> {
+    protected processModerateOrganizer(response: Response): Promise<void> {
         const status = response.status;
         let _headers: any = {}; if (response.headers && response.headers.forEach) { response.headers.forEach((v: any, k: any) => _headers[k] = v); };
         if (status === 200) {

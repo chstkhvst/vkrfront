@@ -44,7 +44,7 @@ interface AuthContextType {
   getAllUsers: (page?: number, pageSize?: number, search?: string) => Promise<UserDTOPaginatedResponse>;
   getRatingMonthly: () => Promise<UserDTO[]>;
   getRatingAll: () => Promise<UserDTO[]>;
-  approveOrganizer: (userId: string) => Promise<void>;
+  moderateOrganizer: (userId: string, isApproved : boolean) => Promise<void>;
   getPendingOrganizers: () => Promise<UserForModerDTO[]>;
 }
 
@@ -177,8 +177,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getRatingAll = async (): Promise<UserDTO[]> => {
     return await client.rating();
   };
-  const approveOrganizer = async (userId: string) => {
-    await client.approveOrganizer(userId);
+  const moderateOrganizer = async (userId: string, isApproved: boolean) => {
+    await client.moderateOrganizer(userId, isApproved);
   };
   const getPendingOrganizers = async (): Promise<UserForModerDTO[]> => {
     return await client.pending();
@@ -201,7 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         getAllUsers,
         getRatingMonthly,
         getRatingAll,
-        approveOrganizer,
+        moderateOrganizer,
         getPendingOrganizers,
       }}
     >

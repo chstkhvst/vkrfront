@@ -49,6 +49,9 @@ interface VolunteerEventContextProps {
     communityTotalPages: number;
     setPageNumber: (page: number) => void;
     setCommunityPageNumber: (page: number) => void;
+
+    filterParams: EventFilterParams;
+
     // Методы для работы с событиями
     fetchEvents: (filterParams?: EventFilterParams) => Promise<void>;
     fetchEventsForUser: (filterParams?: EventFilterParams) => Promise<void>;
@@ -117,7 +120,10 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
         fetchEventStatuses();
         fetchCities();
     }, []);
-
+    // Загрузка справочников при монтировании
+    useEffect(() => {
+console.log(filterParams)
+    }, [filterParams]);
     // Получение всех событий с фильтрацией
     const fetchEvents = async (params?: EventFilterParams): Promise<void> => {
         setIsLoading(true);
@@ -459,6 +465,7 @@ export const VolunteerEventProvider: React.FC<{ children: ReactNode }> = ({ chil
 
             // Методы для фильтрации
             setFilterParams,
+            filterParams,
             clearFilters,
             
             // Метод для выбора события

@@ -3,6 +3,7 @@ import { CircularProgress } from '@mui/material';
 import ErrorBoundary from './components/layout/ErrorBoundary';
 import { Layout } from './components/layout/Layout';
 import { AdminPanel } from './components/layout/AdminPanel';
+import { ScrollToTop } from './components/layout/ScrollToTop';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { VolunteerEventProvider } from './context/EventContext';
@@ -69,6 +70,7 @@ function App() {
     <ErrorBoundary>
       <NotificationProvider>
         <BrowserRouter>
+        <ScrollToTop/>
           <AuthProvider>
             <NotificationForUserProvider>
               <Layout>
@@ -76,36 +78,44 @@ function App() {
 
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route
+                    path="/events/*"
+                    element={
+                      <VolunteerEventProvider>
+                        <Routes>
 
-                  <Route
-                    path="/"
-                    element={
-                      <AttendanceProvider>
-                      <VolunteerEventProvider>
-                        <EventsListPage />
-                      </VolunteerEventProvider>
-                      </AttendanceProvider>
-                    }
-                  />
-
-                  <Route
-                    path="/events"
-                    element={
-                      <AttendanceProvider>
-                      <VolunteerEventProvider>
-                        <EventsListPage />
-                      </VolunteerEventProvider>
-                      </AttendanceProvider>
-                    }
-                  />
-                  <Route
-                    path="/community-events"
-                    element={
-                      <VolunteerEventProvider>
-                        <CommunityEventsPage />
-                      </VolunteerEventProvider>
-                    }
-                  />
+                          <Route
+                            path=""
+                            element={
+                              <AttendanceProvider>
+                                <EventsListPage />
+                              </AttendanceProvider>
+                            }
+                          />
+                          <Route
+                            path="community"
+                            element={
+                                <CommunityEventsPage />
+                            }
+                          />
+                          <Route
+                            path=":id"
+                            element={
+                              <ProtectedRoute >
+                                  <AttendanceProvider>
+                                    <ReportProvider>
+                                      <EventDetailsPage/>
+                                    </ReportProvider>
+                                  </AttendanceProvider>
+                              </ProtectedRoute>
+                            }
+                          />
+                      </Routes>
+                    </VolunteerEventProvider>
+                  }
+                  >
+                  </Route>
+                  
                   <Route
                     path="/events/add"
                     element={
@@ -123,7 +133,9 @@ function App() {
                       <ProtectedRoute>
                         <AttendanceProvider>
                           <VolunteerEventProvider>
-                            <MyEventPage />
+                            <ReportProvider>
+                              <MyEventPage />
+                            </ReportProvider>
                           </VolunteerEventProvider>
                         </AttendanceProvider>
                       </ProtectedRoute>
@@ -141,20 +153,6 @@ function App() {
                             </ReportProvider>
                           </VolunteerEventProvider>
                         </AttendanceProvider>
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/events/:id"
-                    element={
-                      <ProtectedRoute >
-                        <VolunteerEventProvider>
-                          <AttendanceProvider>
-                            <ReportProvider>
-                              <EventDetailsPage/>
-                            </ReportProvider>
-                          </AttendanceProvider>
-                        </VolunteerEventProvider>
                       </ProtectedRoute>
                     }
                   />

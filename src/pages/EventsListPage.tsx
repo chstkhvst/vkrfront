@@ -38,10 +38,9 @@ export const EventsListPage: React.FC = () => {
     const navigate = useNavigate();
     
     const [search, setSearch] = useState('');
-    const [categoryId, setCategoryId] = useState<number | ''>('');
-    const [cityId, setCityId] = useState<number | ''>('');
+
     const [citySearch, setCitySearch] = useState('');
-    const [statusId, setStatusId] = useState<number | ''>('');
+
     const {
         events,
         isLoading,
@@ -53,6 +52,8 @@ export const EventsListPage: React.FC = () => {
         eventCategories,
         cities,
         clearFilters,
+        filterParams,
+        setFilterParams,
 
         setPageNumber,  
     } = context!;
@@ -65,16 +66,25 @@ export const EventsListPage: React.FC = () => {
         return () => clearTimeout(delay);
     }, [search]);
 
-    useEffect(() => {
+    // useEffect(() => {
         
+    //     if(authLoading) return;
+    //     console.log(user)
+    //     if (user?.role === "moderator") {
+    //         context!.fetchEvents();
+    //     } else {
+    //         context!.fetchEventsForUser();
+    //     }
+    // }, [pageNumber, user?.role, authLoading]);
+    useEffect(() => {
         if(authLoading) return;
-        console.log(user)
+console.log(filterParams.catId)
         if (user?.role === "moderator") {
-            context!.fetchEvents();
+            context!.fetchEvents(filterParams);
         } else {
-            context!.fetchEventsForUser();
+            context!.fetchEventsForUser(filterParams);
         }
-    }, [pageNumber, user?.role, authLoading]);
+    }, [pageNumber, user?.role, authLoading, filterParams]);
 
 
     const filteredCities = [...cities].sort((a, b) => {
@@ -86,13 +96,8 @@ export const EventsListPage: React.FC = () => {
             return a.name!.localeCompare(b.name!);
     });
 
-    const handleChangeFilters = (overrideParams?: any) => {
-        const params = overrideParams ?? {
-            keyWords: search || undefined,
-            catId: categoryId || undefined,
-            cityId: cityId || undefined,
-            statusId: user?.role === "moderator" ? (statusId || undefined) : undefined
-        };
+    const handleChangeFilters = () => {
+        const params = ({...filterParams, keyWords: search, statusId: user?.role === "moderator" ? (filterParams.statusId || undefined) : undefined})
 
         context!.setFilterParams(params);
 
@@ -247,9 +252,9 @@ export const EventsListPage: React.FC = () => {
                             },
                         }}>Категория</InputLabel>
                         <Select
-                            value={categoryId}
+                            value={filterParams.catId ?? ""}
                             label="Категория"
-                            onChange={(e) => setCategoryId(e.target.value as number)}
+                            onChange={(e) => setFilterParams({...filterParams, catId: Number(e.target.value)})}
                             sx={{
                                 bgcolor: 'white',
                                 '& .MuiOutlinedInput-notchedOutline': {
@@ -303,9 +308,9 @@ export const EventsListPage: React.FC = () => {
                                 }}
                             />
                         )}
-                        value={cities.find(c => c.id === cityId) || null}
+                        value={cities.find(c => c.id === filterParams.cityId) || null}
                         onChange={(_, newValue) => {
-                            setCityId(newValue?.id || '');
+                            setFilterParams({...filterParams, cityId: newValue?.id});
                         }}
                         isOptionEqualToValue={(option, value) => option.id === value?.id}
                         sx={{ minWidth: 200, flex: '0 1 auto' }}
@@ -320,9 +325,9 @@ export const EventsListPage: React.FC = () => {
                             },
                         }}>Статус</InputLabel>
                         <Select
-                            value={statusId}
+                            value={filterParams.statusId ?? ""}
                             label="Категория"
-                            onChange={(e) => setStatusId(e.target.value as number)}
+                            onChange={(e) => setFilterParams({...filterParams, statusId: e.target.value})}
                             sx={{
                                 bgcolor: 'white',
                                 '& .MuiOutlinedInput-notchedOutline': {
@@ -343,7 +348,7 @@ export const EventsListPage: React.FC = () => {
                     )}
 
                     {/* Применить */}
-                    <Button
+                    {/* <Button
                         variant="contained"
                         startIcon={<FilterList />}
                         onClick={() => handleChangeFilters({
@@ -362,26 +367,16 @@ export const EventsListPage: React.FC = () => {
                         }}
                     >
                         Применить
-                    </Button>
+                    </Button> */}
 
                     {/* Сброс */}
                     <Button
                         variant="outlined"
                         startIcon={<FilterListOff />}
                         onClick={() => {
-                            const params = {
-                                keyWords: undefined,
-                                catId: undefined,
-                                cityId: undefined,
-                                statusId: undefined
-                            };
 
-                            setSearch('');
-                            setCategoryId('');
-                            setCityId('');
-                            setStatusId('');
                             clearFilters();
-                            handleChangeFilters(params);
+                            //handleChangeFilters();
                         }}
                         sx={{
                             borderColor: '#949cff',

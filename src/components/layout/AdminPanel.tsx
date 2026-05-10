@@ -69,7 +69,7 @@ export const AdminPanel = () => {
                 fullWidth
                 variant="outlined"
                 startIcon={<EventNote />}
-                onClick={() => navigate('/community-events')}
+                onClick={() => navigate('/events/community')}
                 sx={{
                 justifyContent: 'flex-start',
                 py: 1.5,

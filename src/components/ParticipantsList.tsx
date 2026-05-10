@@ -20,13 +20,15 @@ import {
 import {
     Check,
     Close,
-    Search
+    Search,
+    Flag
 } from "@mui/icons-material";
 
 import { AttendanceContext } from "../context/AttendanceContext";
 import { EventAttendanceDTO } from "../client/apiClient";
 import { useNotification } from '../components/Notification';
 import { SURFACE } from '../theme'
+import { ReportUserModal } from "./ReportUserModal";
 
 type Props = {
     eventId: number;
@@ -51,6 +53,9 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
 
     const [searchTerm, setSearchTerm] = useState("");
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+
+    const [reportModalOpen, setReportModalOpen] = useState(false);
+    const [selectedReportedUser, setSelectedReportedUser] = useState<any>(null);
 
     const isMounted = useRef(true);
 
@@ -382,6 +387,26 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
                                                 "Без имени"
                                             }
                                         </Typography>   
+                                        <IconButton
+    size="small"
+    color="error"
+    onClick={(e) => {
+        e.stopPropagation();
+
+        setSelectedReportedUser(user);
+        setReportModalOpen(true);
+    }}
+    sx={{
+        flexShrink: 0,
+        p: 0.4,
+
+        "&:hover": {
+            bgcolor: "rgba(211, 47, 47, 0.04)",
+        },
+    }}
+>
+    <Flag sx={{ fontSize: 17 }} />
+</IconButton>
                                     </Box>
 
                                     {user?.userName && (
@@ -522,6 +547,28 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
                     </Button>
                 </DialogActions>
             </Dialog>
+            <ReportUserModal
+                open={reportModalOpen}
+                onClose={() => {
+                    setReportModalOpen(false);
+                    setSelectedReportedUser(null);
+                }}
+                reportedUserId={selectedReportedUser?.id || ""}
+                reportedUserName={
+                    selectedReportedUser?.fullname ||
+                    selectedReportedUser?.userName ||
+                    "Пользователь"
+                }
+                onReportSuccess={() => {
+                    setReportModalOpen(false);
+                    setSelectedReportedUser(null);
+
+                    showNotification(
+                        "Жалоба отправлена",
+                        "success"
+                    );
+                }}
+            />
         </Box>
     );
 };

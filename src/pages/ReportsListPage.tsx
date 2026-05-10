@@ -11,6 +11,7 @@ import {
   TextField,
   InputAdornment,
   Paper,
+  Divider,
 } from "@mui/material";
 import { Pending, CheckCircle, ExpandMore, ExpandLess } from "@mui/icons-material";
 import { ReportContext } from "../context/ReportContext";
@@ -110,11 +111,13 @@ export const ReportsListPage: React.FC = () => {
           elevation={0}
           sx={{
             p: 2,
+            mb: 3,
             border: "1px solid rgba(148, 156, 255, 0.2)",
             borderRadius: 2,
             bgcolor: "rgba(148, 156, 255, 0.02)",
           }}
         >
+
           <TextField
             placeholder="Поиск " 
             value={search}
@@ -129,6 +132,7 @@ export const ReportsListPage: React.FC = () => {
               ),
             }}
             sx={{
+
               "& .MuiOutlinedInput-root": {
                 bgcolor: "white",
                 "&:hover fieldset": { borderColor: "#949cff" },
@@ -137,19 +141,19 @@ export const ReportsListPage: React.FC = () => {
             }}
           />
         </Paper>
-      {/* Лоадер */}
-      {isLoading && (
-        <Box display="flex" justifyContent="center" mt={5}>
-          <CircularProgress />
-        </Box>
-      )}
+        {/* Лоадер */}
+        {isLoading && (
+            <Box display="flex" justifyContent="center" mt={5}>
+            <CircularProgress />
+            </Box>
+        )}
 
-      {/* Ошибка */}
-      {error && (
-        <Typography color="error" mt={2}>
-          {error}
-        </Typography>
-      )}
+        {/* Ошибка */}
+        {error && (
+            <Typography color="error" mt={2}>
+            {error}
+            </Typography>
+        )}
 
       {/* Список */}
       <Stack spacing={2}>
@@ -273,11 +277,11 @@ export const ReportsListPage: React.FC = () => {
             userName={selectedGroup?.reportedUser?.userName}
             onBanSuccess={handleBanSuccess}
         />
-      {!isLoading && filteredGroups.length === 0 && (
-        <Typography mt={4} textAlign="center" color="text.secondary">
-          Ничего не найдено
-        </Typography>
-      )}
+        {!isLoading && filteredGroups.length === 0 && (
+            <Typography mt={4} textAlign="center" color="text.secondary">
+            Ничего не найдено
+            </Typography>
+        )}
     </Box>
   );
 };
