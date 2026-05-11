@@ -31,18 +31,14 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CalendarToday, Category, FilterList, FilterListOff, LocationOn, Search, Star } from '@mui/icons-material';
 import { SURFACE } from '../theme';
-import { useSearchParams } from 'react-router-dom';
 
 export const EventsListPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
     const { user, isLoading: authLoading } = useAuth(); 
     const navigate = useNavigate();
 
-    const [search, setSearch] = useState('');
-    const [searchParams, setSearchParams] = useSearchParams(); //это для пагинации
-    const currentPage = Number(searchParams.get("page")) || 1;
-
     const [citySearch, setCitySearch] = useState('');
+    const [isFirstRender, setIsFirstRender] = useState(true);
 
     const {
         events,
@@ -60,8 +56,14 @@ export const EventsListPage: React.FC = () => {
 
         setPageNumber,  
     } = context!;
-    
-     useEffect(() => {
+    const [search, setSearch] = useState(filterParams.keyWords || '');
+        
+    useEffect(() => {
+        if (isFirstRender) {
+            setIsFirstRender(false);
+            return;
+        }
+
         const delay = setTimeout(() => {
             handleChangeFilters();
         }, 300);
@@ -79,30 +81,14 @@ export const EventsListPage: React.FC = () => {
     //         context!.fetchEventsForUser();
     //     }
     // }, [pageNumber, user?.role, authLoading]);
-
-    // useEffect(() => {
-    //     if(authLoading) return;
-    //     if (user?.role === "moderator") {
-    //         context!.fetchEvents(filterParams);
-    //     } else {
-    //         context!.fetchEventsForUser(filterParams);
-    //     }
-    // }, [pageNumber, user?.role, authLoading, filterParams]);
     useEffect(() => {
-        setPageNumber(currentPage);
-    }, [currentPage]);
-
-    useEffect(() => {
-        if (authLoading) return;
-
-        if (pageNumber !== currentPage) return;
-
+        if(authLoading) return;
         if (user?.role === "moderator") {
             context!.fetchEvents(filterParams);
         } else {
             context!.fetchEventsForUser(filterParams);
         }
-    }, [pageNumber, currentPage, user?.role, authLoading, filterParams]);
+    }, [pageNumber, user?.role, authLoading, filterParams]);
 
 
     const filteredCities = [...cities].sort((a, b) => {
@@ -569,21 +555,15 @@ export const EventsListPage: React.FC = () => {
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             {totalPages > 1 && (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-<Pagination
-    count={totalPages}
-    page={currentPage}
-    onChange={(_, value) => {
-        setSearchParams({
-            page: value.toString(),
-        });
-
-        setPageNumber(value);
-    }}
-    color="primary"
-    size="large"
-    showFirstButton
-    showLastButton
-/>
+                <Pagination
+                count={totalPages}
+                page={pageNumber}
+                onChange={(_, value) => setPageNumber(value)}
+                color="primary"
+                size="large"
+                showFirstButton
+                showLastButton
+                />
             </Box>
             )}
             </Box>

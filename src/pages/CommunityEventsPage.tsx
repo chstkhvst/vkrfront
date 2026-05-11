@@ -38,8 +38,8 @@ export const CommunityEventsPage: React.FC = () => {
     const context = useContext(VolunteerEventContext);
     const navigate = useNavigate();
 
-    const [search, setSearch] = useState('');
     const [citySearch, setCitySearch] = useState('');
+    const [isFirstRender, setIsFirstRender] = useState(true);
 
     const {
         communityEvents,
@@ -55,11 +55,18 @@ export const CommunityEventsPage: React.FC = () => {
         setFilterParams
     } = context!;
 
+    const [search, setSearch] = useState(filterParams.keyWords || '');
+
     useEffect(() => {
         context!.fetchCommunityEvents(filterParams);
     }, [communityPageNumber, filterParams]);
 
     useEffect(() => {
+        if (isFirstRender) {
+            setIsFirstRender(false);
+            return;
+        }
+
         const delay = setTimeout(() => {
             handleChangeFilters();
         }, 300);
