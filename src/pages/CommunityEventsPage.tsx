@@ -32,6 +32,7 @@ import { VolunteerEventContext } from '../context/EventContext';
 import { useNavigate } from 'react-router-dom';
 import { CalendarToday, Category, LocationOn, Star } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
+import { SURFACE } from '../theme';
 
 export const CommunityEventsPage: React.FC = () => {
     const { user } = useAuth();
@@ -88,37 +89,79 @@ export const CommunityEventsPage: React.FC = () => {
         CANCELLED: 4,
         ENDED: 5,
     };
-    const getEventStatusIcon = (statusId: number | undefined) => {
+    const getEventStatusIcon = (statusId: number | undefined, color: string) => {
         switch (statusId) {
-        case EVENT_STATUS.ON_MODERATION:
-            return <PendingIcon fontSize="small" />;
-        case EVENT_STATUS.APPROVED:
-            return <ApprovedIcon fontSize="small" />;
-        case EVENT_STATUS.DECLINED:
-            return <DeclinedIcon fontSize="small" />;
-        case EVENT_STATUS.CANCELLED:
-            return <CancelledIcon fontSize="small" />;
-        case EVENT_STATUS.ENDED:
-            return <EndedIcon fontSize="small" />;
-        default:
-            return undefined;
+            case EVENT_STATUS.ON_MODERATION:
+                return <PendingIcon fontSize="small" sx={{ color }} />;
+            case EVENT_STATUS.APPROVED:
+                return <ApprovedIcon fontSize="small" sx={{ color }} />;
+            case EVENT_STATUS.DECLINED:
+                return <DeclinedIcon fontSize="small" sx={{ color }} />;
+            case EVENT_STATUS.CANCELLED:
+                return <CancelledIcon fontSize="small" sx={{ color }} />;
+            case EVENT_STATUS.ENDED:
+                return <EndedIcon fontSize="small" sx={{ color }} />;
+            default:
+                return undefined;
         }
     };
     const getEventStatusSx = (statusId: number | undefined) => {
-      switch (statusId) {
-        case EVENT_STATUS.ON_MODERATION:
-          return { borderColor: '#ff9800', color: '#ff9800' };
-        case EVENT_STATUS.APPROVED:
-          return { borderColor: '#4caf50', color: '#4caf50' };
-        case EVENT_STATUS.DECLINED:
-          return { borderColor: '#f44336', color: '#f44336' };
-        case EVENT_STATUS.CANCELLED:
-          return { borderColor: '#5f6388', color: '#5f6388' };
-        case EVENT_STATUS.ENDED:
-          return { borderColor: '#5f6388', color: '#5f6388' };
-        default:
-          return { borderColor: '#949cff', color: '#949cff' };
-      }
+        switch (statusId) {
+            case EVENT_STATUS.ON_MODERATION:
+                return {
+                    bgcolor: SURFACE.softWarning,
+                    color: 'warning.main',
+                    border: 'none',
+                    '& .MuiChip-icon': {
+                        color: 'warning.main',
+                    },
+                };
+            case EVENT_STATUS.APPROVED:
+                return {
+                    bgcolor: SURFACE.softSuccess,
+                    color: 'success.main',
+                    border: 'none',
+                    '& .MuiChip-icon': {
+                        color: 'success.main',
+                    },
+                };
+            case EVENT_STATUS.DECLINED:
+                return {
+                    bgcolor: SURFACE.softError,
+                    color: 'error.main',
+                    border: 'none',
+                    '& .MuiChip-icon': {
+                        color: 'error.main',
+                    },
+                };
+            case EVENT_STATUS.CANCELLED:
+                return {
+                    bgcolor: SURFACE.borderLight,
+                    color: 'text.secondary',
+                    border: 'none',
+                    '& .MuiChip-icon': {
+                        color: 'text.secondary',
+                    },
+                };
+            case EVENT_STATUS.ENDED:
+                return {
+                    bgcolor: SURFACE.borderLight,
+                    color: 'text.secondary',
+                    border: 'none',
+                    '& .MuiChip-icon': {
+                        color: 'text.secondary',
+                    },
+                };
+            default:
+                return {
+                    bgcolor: SURFACE.softPrimary,
+                    color: 'primary.main',
+                    border: 'none',
+                    '& .MuiChip-icon': {
+                        color: 'primary.main',
+                    },
+                };
+        }
     };
 
     const filteredCities = [...cities].sort((a, b) => {
@@ -372,27 +415,30 @@ export const CommunityEventsPage: React.FC = () => {
                                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                         
                                         {event.eventCategory?.name && (
-                                            <Chip
-                                                icon={<Category sx={{ fontSize: 18 }} />}
-                                                label={event.eventCategory.name}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: 'rgba(148, 156, 255, 0.1)',
-                                                    fontWeight: 500,
-                                                    border: '1px solid rgba(148, 156, 255, 0.3)'
-                                                }}
-                                            />
+                                        <Chip
+                                            icon={<Category sx={{ fontSize: 18, color: 'primary.main' }} />}
+                                            label={event.eventCategory.name}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: SURFACE.softPrimary,
+                                                color: 'primary.main',
+                                                fontWeight: 500,
+                                                border: 'none',
+                                                '& .MuiChip-icon': {
+                                                    color: 'primary.main',
+                                                },
+                                            }}
+                                        />  
                                         )}
 
                                         {user?.role === "moderator" && event.eventStatus && (
                                             <Chip
-                                                icon={getEventStatusIcon(event.eventStatus.id)}
+                                                icon={getEventStatusIcon(event.eventStatus.id, getEventStatusSx(event.eventStatus.id).color)}
                                                 label={event.eventStatus.name}
                                                 size="small"
-                                                variant="outlined"
                                                 sx={{
                                                     fontWeight: 500,
-                                                    ...getEventStatusSx(event.eventStatus.id)
+                                                    ...getEventStatusSx(event.eventStatus.id),
                                                 }}
                                             />
                                         )}

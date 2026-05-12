@@ -110,7 +110,7 @@ export const Header = () => {
                   lineHeight: 1.2,
                 }}
               >
-                Volunteering
+                Доброплан
               </Typography>
               <Typography
                 variant="caption"
@@ -179,7 +179,7 @@ export const Header = () => {
                     
                     <MenuItem 
                       onClick={() => {
-                        navigate('/community-events');
+                        navigate('/events/community');
                         setCatalogAnchorEl(null);
                       }}
                       sx={{ py: 1.5, px: 2.5, gap: 1.5 }}

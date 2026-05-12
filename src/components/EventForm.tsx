@@ -85,6 +85,7 @@ export const EventForm: React.FC<EventFormProps> = ({
     const [citySearch, setCitySearch] = useState('');
     const [image, setImage] = useState<File | undefined>(initialImage);
     const [selectedAddress, setSelectedAddress] = useState<any | null>(initialSelectedAddress);
+    const [open, setOpen] = useState(false);
     const [coords, setCoords] = useState<{
         lat: number | null;
         lng: number | null;
@@ -117,10 +118,17 @@ export const EventForm: React.FC<EventFormProps> = ({
         }
 
         debounceRef.current = setTimeout(async () => {
-            if (!value) return;
+            if (!value.trim()) {
+                setSuggestions([]);
+                setOpen(false);
+                return;
+            }
 
             const data = await geocode(value);
             setSuggestions(data);
+            if (data.length > 0) {
+                setOpen(true);
+            }
         }, 600);
     };
 
@@ -405,6 +413,10 @@ export const EventForm: React.FC<EventFormProps> = ({
                     </FormControl>
 
                     <Autocomplete
+                        open={open}
+                        onOpen={() => setOpen(true)}
+                        onClose={() => setOpen(false)}
+                        filterOptions={(x) => x}
                         options={suggestions}
                         value={selectedAddress}
                         getOptionLabel={(option) => option.display_name || ""}

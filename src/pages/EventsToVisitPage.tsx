@@ -218,7 +218,7 @@ const getAttendanceStatusIcon = (statusId: number | undefined, color: string) =>
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" sx={{ mb: 3 }}>
-        События для посещения
+        Мероприятия для посещения
       </Typography>
 
       <Tabs
@@ -257,7 +257,7 @@ const getAttendanceStatusIcon = (statusId: number | undefined, color: string) =>
 
       {currentList.length === 0 && (
         <Typography color="text.secondary" sx={{ textAlign: 'center', mt: 4 }}>
-          В настоящий момент Вы не зарегистрированы ни на одно мероприятие
+          На данный момент мероприятий нет
         </Typography>
       )}
 

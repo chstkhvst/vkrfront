@@ -12,6 +12,7 @@ import {
   InputAdornment,
   Paper,
   Divider,
+  Grid,
 } from "@mui/material";
 import { Pending, CheckCircle, ExpandMore, ExpandLess } from "@mui/icons-material";
 import { ReportContext } from "../context/ReportContext";
@@ -167,54 +168,66 @@ export const ReportsListPage: React.FC = () => {
                     : reports;
                     
                 return (
-                    <Card key={group.reportedUserId}>
-                        <CardContent>
+                    <Card key={group.reportedUserId} elevation={2}>
+                        <CardContent sx={{ p: 2.5 }}>
                             <Stack spacing={2}>
-                    
-                                {/* HEADER */}
-                                <Box
-                                    display="flex"
-                                    justifyContent="space-between"
-                                    alignItems="center"
-                                    width="100%"
-                                >
-                                    <Typography variant="h6">  
-                                        {"Жалобы на пользователя " + group.reportedUser?.userName}
-                                    </Typography>
 
-                                    <Chip
-                                        label={`Всего: ${group.count}`}
-                                        color="primary"
-                                        variant="outlined"
-                                        size="small"
-                                    />
+                                {/* HEADER */}
+                                <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+                                    <Box display="flex" alignItems="baseline" gap={1}>
+                                        <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", fontSize: "0.7rem", letterSpacing: "0.3px" }}>Жалобы на</Typography>
+                                        <Typography variant="h6" fontWeight={600}>{group.reportedUser?.userName}</Typography>
+                                    </Box>
+                                    <Chip label={`Всего жалоб: ${group.count}`} color="primary" variant="outlined" size="small" />
                                 </Box>
 
+                                <Divider />
+
                                 {/* СПИСОК ЖАЛОБ */}
-                                <Stack spacing={1}>
+                                <Stack spacing={1.5}>
                                     {displayedReports.map((report: UserReportDTO) => (
-                                        <Box
+                                        <Paper
                                             key={report.id}
+                                            elevation={0}
                                             sx={{
                                                 p: 1.5,
-                                                borderRadius: 2,
-                                                backgroundColor: "rgba(0,0,0,0.03)",
+                                                border: "1px solid rgba(0,0,0,0.08)",
+                                                borderRadius: 1.5,
+                                                backgroundColor: "rgba(0,0,0,0.01)",
                                             }}
                                         >
-                                            <Box display="flex" justifyContent="space-between" alignItems="flex-start">
-                                                <Typography variant="body2" fontWeight={600}>
-                                                    {report.sender?.userName || "Неизвестный пользователь"}
-                                                </Typography>
+                                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1.5} mb={1}>
+                                                <Box flex={1}>
+                                                    <Typography
+                                                        variant="caption"
+                                                        color="text.secondary"
+                                                        sx={{ fontSize: "0.7rem" }}
+                                                    >
+                                                        Отправитель:
+                                                    </Typography>
+                                                    <Typography variant="body2" fontWeight={600} component="span" ml={0.5}>
+                                                        {report.sender?.userName || "Неизвестный пользователь"}
+                                                    </Typography>
+                                                </Box>
                                                 {getStatusChip(report)}
                                             </Box>
 
-                                            <Typography variant="body2" color="text.secondary" mt={0.5}>
-                                                {report.reportReason}
-                                            </Typography>
-                                        </Box>
+                                            <Box>
+                                                <Typography
+                                                    variant="caption"
+                                                    color="text.secondary"
+                                                    sx={{ fontSize: "0.7rem" }}
+                                                >
+                                                    Причина:
+                                                </Typography>
+                                                <Typography variant="body2" color="text.primary" component="span" ml={0.5}>
+                                                    {report.reportReason}
+                                                </Typography>
+                                            </Box>
+                                        </Paper>
                                     ))}
                                 </Stack>
-                                
+
                                 {/* КНОПКА РАЗВЕРНУТЬ/СВЕРНУТЬ */}
                                 {hasManyReports && (
                                     <Box display="flex" justifyContent="center">
@@ -222,11 +235,14 @@ export const ReportsListPage: React.FC = () => {
                                             size="small"
                                             onClick={() => toggleGroup(group.reportedUserId!)}
                                             startIcon={isExpanded ? <ExpandLess /> : <ExpandMore />}
+                                            sx={{ color: "primary" }}
                                         >
                                             {isExpanded ? "Свернуть" : `Показать еще ${reports.length - 2}`}
                                         </Button>
                                     </Box>
                                 )}
+
+                                <Divider />
 
                                 {/* ACTIONS */}
                                 <Stack

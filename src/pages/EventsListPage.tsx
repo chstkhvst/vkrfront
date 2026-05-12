@@ -71,16 +71,6 @@ export const EventsListPage: React.FC = () => {
         return () => clearTimeout(delay);
     }, [search]);
 
-    // useEffect(() => {
-        
-    //     if(authLoading) return;
-    //     console.log(user)
-    //     if (user?.role === "moderator") {
-    //         context!.fetchEvents();
-    //     } else {
-    //         context!.fetchEventsForUser();
-    //     }
-    // }, [pageNumber, user?.role, authLoading]);
     useEffect(() => {
         if(authLoading) return;
         if (user?.role === "moderator") {
@@ -381,6 +371,7 @@ export const EventsListPage: React.FC = () => {
                         onClick={() => {
 
                             clearFilters();
+                            setSearch('');
                             //handleChangeFilters();
                         }}
                         sx={{
