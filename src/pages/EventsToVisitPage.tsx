@@ -218,7 +218,7 @@ const getAttendanceStatusIcon = (statusId: number | undefined, color: string) =>
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" sx={{ mb: 3 }}>
-        Мероприятия для посещения
+        Мои посещения
       </Typography>
 
       <Tabs
@@ -234,7 +234,7 @@ const getAttendanceStatusIcon = (statusId: number | undefined, color: string) =>
         }}
       >
         <Tab
-          label="Предстоящие"
+          label="Активные"
           sx={{
             color: 'default',
             '&.Mui-selected': {

@@ -28,7 +28,7 @@ interface AttendanceContextProps {
     selectAttendance: (attendance: EventAttendanceDTO | null) => void;
     markNoShow: (eventId: number) => Promise<boolean>;
     markCancelled: (eventId: number) => Promise<boolean>;
-    markAttendance: (attendanceId: number) => Promise<boolean>;
+    markAttendance: (attendanceId: number, showLoading: boolean) => Promise<boolean>;
 }
 
 // Создание контекста
@@ -198,8 +198,9 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({ children
             setIsLoading(false);
         }
     };
-    const markAttendance = async (attendanceId: number): Promise<boolean> => {
-        setIsLoading(true);
+    const markAttendance = async (attendanceId: number, showLoading = true): Promise<boolean> => {
+        if(showLoading)
+            setIsLoading(true);
         setError(null);
 
         try {

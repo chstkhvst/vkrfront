@@ -62,11 +62,14 @@ export const MyEventPage: React.FC = () => {
     error,
   } = context!;
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const userId = user?.user?.id;
     if (!userId) return;
 
     const load = async () => {
+      setLoading(true);
       const attendances = await fetchAttendancesByUserId(userId);
       setData(attendances);
 
@@ -76,6 +79,7 @@ export const MyEventPage: React.FC = () => {
         const events = await eventContext.getEventsByUserId(userId);
         setMyEvents(events);
       }
+      setLoading(false);
     };
 
     load();
@@ -283,11 +287,11 @@ const getEventStatusSx = (statusId: number | undefined) => {
     setEventToCancel(null);
   };
 
-  if (isLoading) {
+  if (loading || isLoading) {
     return (
-      <Container sx={{ mt: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
         <CircularProgress />
-      </Container>
+      </Box>
     );
   }
 
@@ -317,7 +321,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
         }}
       >
         <Tab
-          label="Предстоящие"
+          label="Активные"
           sx={{
             color: 'default',
             '&.Mui-selected': {
@@ -468,6 +472,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
 
                 {isOrganizer && (
                   <>
+                  {tab === 0 && (
                     <Button
                       variant="contained"
                       color="primary"
@@ -476,7 +481,7 @@ const getEventStatusSx = (statusId: number | undefined) => {
                     >
                       Редактировать
                     </Button>
-
+                  )}
                     <Button
                       variant="outlined"
                       color="primary"

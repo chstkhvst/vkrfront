@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import {
     Button,
     TextField,
@@ -17,6 +17,7 @@ import {
 import { Autocomplete } from '@mui/material';
 import { MapPicker } from "../components/MapPicker";
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { useNotification } from '../components/Notification';
 
 export interface EventFormData {
     name: string;
@@ -80,7 +81,7 @@ export const EventForm: React.FC<EventFormProps> = ({
         eventPoints: initialData.eventPoints || 10,
         participantsLimit: initialData.participantsLimit || ''
     });
-
+    const { showNotification } = useNotification();
     const [errorMessage, setErrorMessage] = useState('');
     const [citySearch, setCitySearch] = useState('');
     const [image, setImage] = useState<File | undefined>(initialImage);
@@ -91,6 +92,7 @@ export const EventForm: React.FC<EventFormProps> = ({
         lng: number | null;
     }>(initialCoords);
     const [suggestions, setSuggestions] = useState<any[]>([]);
+    
     const debounceRef = useRef<any>(null);
     
     const [fieldErrors, setFieldErrors] = useState({
@@ -155,7 +157,16 @@ export const EventForm: React.FC<EventFormProps> = ({
 
         } catch (err: any) {
             console.error("REVERSE ERROR", err);
-            setErrorMessage(err?.response?.data?.message || "Ошибка при определении адреса");
+
+            if (err?.status === 400) {
+                if (err?.response?.includes("Location must be within Russia")) {
+                    showNotification("Можно выбирать только локации в пределах РФ", "error");
+                } else {
+                    showNotification("Некорректная локация", "error");
+                }
+            } else {
+                showNotification("Ошибка сервера", "error");
+            }
         }
     };
 
@@ -487,7 +498,7 @@ export const EventForm: React.FC<EventFormProps> = ({
                                     type="number"
                                     fullWidth
                                     required
-                                    value={formData.eventPoints}
+                                    value={formData.eventPoints.toString()}
                                     onChange={(e) => handlePointsChange(Number(e.target.value))}
                                     error={!!fieldErrors.eventPoints}
                                     inputProps={{ step: 1, min: 10, max: 100 }}

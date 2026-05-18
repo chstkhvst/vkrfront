@@ -66,9 +66,10 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
         markAttendance
     } = context!;
 
-    const loadParticipants = async () => {
+    const loadParticipants = async (showLoading = true) => {
         try {
-            setLoading(true);
+            if (showLoading)
+                setLoading(true);
 
             const data = await fetchAttendancesByEventId(eventId);
 
@@ -152,8 +153,8 @@ export const ParticipantsList: React.FC<Props> = ({ eventId, eventDateTime }) =>
         if (!attendance.id) return;
 
         try {
-            await markAttendance(attendance.id);
-            await loadParticipants();
+            await markAttendance(attendance.id, false);
+            await loadParticipants(false);
         } catch {
             showNotification("Ошибка при отметке посещения", "error");
         }

@@ -110,7 +110,7 @@ export const Header = () => {
                   lineHeight: 1.2,
                 }}
               >
-                Доброплан
+                КалендарьДобра
               </Typography>
               <Typography
                 variant="caption"
@@ -358,7 +358,7 @@ export const Header = () => {
                   onClick={() => navigate('/admin-panel')}
                   sx={{ fontWeight: 500 }}
                 >
-                  Панель администратора
+                  Панель модератора
                 </Button>
               )}
             </Stack>
@@ -464,7 +464,7 @@ export const Header = () => {
                 <MenuItem onClick={() => navigate('/admin-panel')} sx={{ py: 1.5, px: 2.5, gap: 1.5 }}>
                   <Settings sx={{ fontSize: 20, color: theme.palette.primary.main }} />
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    Панель администратора
+                    Панель модератора
                   </Typography>
                 </MenuItem>
               )}

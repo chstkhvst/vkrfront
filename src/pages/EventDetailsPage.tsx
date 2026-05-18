@@ -59,6 +59,22 @@ export const EventDetailsPage: React.FC = () => {
       load();
   }, [id]);
 
+  useEffect(() => {
+    const checkRegistration = async () => {
+      if (!user?.user?.id || !event?.id) return;
+      
+      const existing = await attContext!.fetchAttendanceByUserAndEvent(
+        user.user.id,
+        event.id
+      );
+      setIsRegistered(!!existing && existing.attendanceStatusId === 1);
+    };
+    
+    if (event) {
+      checkRegistration();
+    }
+  }, [event, user?.user?.id]);
+
   const EVENT_STATUS = {
     ON_MODERATION: 1,
     APPROVED: 2,
@@ -368,7 +384,7 @@ const handleRegister = async (eventId: number) => {
                 )}
               </Typography>
             </Box>
-            {user?.user?.id && event.user?.id && user.user.id !== event.user.id && (
+            {user?.user?.id && event.user?.id && user.user.id !== event.user.id && user?.role !== "moderator" && (
               <Button
                 size="small"
                 color="error"

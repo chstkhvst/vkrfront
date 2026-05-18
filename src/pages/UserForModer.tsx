@@ -242,12 +242,6 @@ export const UserForModer: React.FC = () => {
                       color={user.organizerProfile ? "primary" : "default"}
                     />
                   </Box>
-
-                  {!user.volunteerProfile && !user.organizerProfile && (
-                    <Typography color="text.secondary">
-                      Нет профилей
-                    </Typography>
-                  )}
                 </Stack>
               </CardContent>
             </Card>
@@ -278,26 +272,27 @@ export const UserForModer: React.FC = () => {
                 </Stack>
 
                   {/* Правая часть */}
-                  <Stack direction="column" spacing={1} alignItems="center">
-                    {hasActiveBan ? (
-                      <Button
-                        variant="outlined"
-                        color="success"
-                        onClick={handleUnban}
-                      >
-                        Разблокировать
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleOpenBanModal}
-                      >
-                        Заблокировать
-                      </Button>
-                    )}
-
-                  </Stack>
+                  {(user.volunteerProfile || user.organizerProfile) && (
+                    <Stack direction="column" spacing={1} alignItems="center">
+                      {hasActiveBan ? (
+                        <Button
+                          variant="outlined"
+                          color="success"
+                          onClick={handleUnban}
+                        >
+                          Разблокировать
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={handleOpenBanModal}
+                        >
+                          Заблокировать
+                        </Button>
+                      )}
+                    </Stack>
+                  )}
 
                 </Stack>
             </CardContent>
